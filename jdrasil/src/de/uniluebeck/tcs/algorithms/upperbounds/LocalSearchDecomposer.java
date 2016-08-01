@@ -95,6 +95,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 					graph, perm, TreeDecompositionQuality.Heuristic
 					);
 
+			dec.call();
 			Map<T, Bag<T>> map = dec.eliminatedVertexToBag;
 			Map<T,Integer> pos = toMap(perm);
 			int eval = evalPerm(perm);
@@ -162,6 +163,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 					dec = new EliminationOrderDecomposer<T>(
 							graph, perm, TreeDecompositionQuality.Heuristic
 							);
+					dec.call();
 					map = dec.eliminatedVertexToBag;
 					eval = evalPerm(perm);
 					pos = toMap(perm);
