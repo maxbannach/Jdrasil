@@ -1,5 +1,6 @@
 # Jdrasil
 A Modular Tool to Compute Tree Decompositions
+Authors: [Max Bannach](http://www.tcs.uni-luebeck.de/de/mitarbeiter/bannach/), [Sebastian Berndt](http://www.tcs.uni-luebeck.de/de/mitarbeiter/berndt/), and [Thorsten Ehlers](http://www.zs.informatik.uni-kiel.de/de/mitarbeiter)
 
 # About
 Jdrasil is a tool to compute tree decompositions of simple, undirected graphs. It was developed for the first Parameterized Algorithms and Computational Experiments Challenge [(PACE)](https://pacechallenge.wordpress.com). It provides exact sequential and parallel, as well as heuristic algorithms.
