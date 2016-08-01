@@ -1,5 +1,6 @@
 # Jdrasil
 A Modular Tool to Compute Tree Decompositions
+
 Authors: [Max Bannach](http://www.tcs.uni-luebeck.de/de/mitarbeiter/bannach/), [Sebastian Berndt](http://www.tcs.uni-luebeck.de/de/mitarbeiter/berndt/), and [Thorsten Ehlers](http://www.zs.informatik.uni-kiel.de/de/mitarbeiter)
 
 # About
