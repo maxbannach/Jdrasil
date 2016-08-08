@@ -123,13 +123,14 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 		solver.addFormula(encoder.addAtMost(k));
 		
 		// as long as we can improve, improve
-		while (solver.solve() && k >= lb) {		
+		while (solver.solve() && k >= lb) {
 			if (k < ub) App.reportNewSolution(k);
 			permutation = encoder.getPermutation(solver.getModel());
 			k = k - 1;
 			Formula psi = encoder.addAtMost(k);
 			solver.addFormula(psi);
 		}
+				
 		// done
 		return permutation;
 	}

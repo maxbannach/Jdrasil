@@ -394,7 +394,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * @return
 	 */
 	public Set<T> getMaximumClique(int timeout) {
-		CliqueLowerbound<T> sat = new CliqueLowerbound<T>(this, timeout);
+		CliqueLowerbound<T> sat = new CliqueLowerbound<T>(this);
 		try {
 			sat.call();
 			return sat.getModel();

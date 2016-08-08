@@ -235,7 +235,7 @@ public class Formula implements Iterable<List<Integer>> {
 		// insert a default header
 		sb.append("c formula created by treewidth\n");
 		sb.append("p cnf " + this.numberOfAllVariables() + " " + this.numberOfClauses() + "\n");
-				
+		
 		// output the clauses
 		for (List<Integer> C : this) {
 			for (Integer l : C) {

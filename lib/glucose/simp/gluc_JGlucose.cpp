@@ -80,7 +80,7 @@ static void catchalrm (int sig) {
 
 /**
  * Solve the formula with a timeout
- * 
+ * @deprecated
  * @param handle the glucose object
  * @param t the allowed time
  * @return true, if the formula is satisfiable within time t
@@ -89,15 +89,15 @@ jboolean JNICALL Java_gluc_JGlucose_gsat_1time (JNIEnv *, jclass, jlong handle, 
   Glucose::SimpSolver *S = reinterpret_cast<Glucose::SimpSolver *>(handle);
 
   // setup the timeout handler
-  signal (SIGALRM, catchalrm);
-  alarm (t);
+  // signal (SIGALRM, catchalrm);
+  // alarm (t);
   
   bool res = S->solve();
 
   // test whether a timeout occured
-  if(terminated){
-    return false;
-  }
+  // if(terminated){
+  //   return false;
+  // }
   return res;  
 }
 

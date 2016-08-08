@@ -31,25 +31,23 @@ public class GlucoseSATSolver extends SATSolver {
 	
 	
 	/** Default constructor without formula. */
-	public GlucoseSATSolver(int timeout) {
-		super(timeout);
+	public GlucoseSATSolver() {
+		super();
 	}
 	
 	/** Default constructor with a start formula. */
-	public GlucoseSATSolver(Formula phi, int timeout) {
-		super(phi, timeout);
+	public GlucoseSATSolver(Formula phi) {
+		super(phi);
 	}
 	
 	@Override
-	void init() {
-		
+	void init() {		
 		variables = new HashSet<>();
 	}
+	
 	@Override
 	public void initSolver() {
-		solver = new JGlucose();
-        solver.setTimeOut(timeout);
-		
+		solver = new JGlucose();		
 	}
 	
 	@Override
@@ -80,7 +78,7 @@ public class GlucoseSATSolver extends SATSolver {
 
 	@Override
 	public SATSolver newInstance() {
-		return new GlucoseSATSolver(this.timeout);
+		return new GlucoseSATSolver();
 	}
 
 }

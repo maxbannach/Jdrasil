@@ -49,11 +49,6 @@ public class App {
 		} else {
 			dice = new Random(System.currentTimeMillis());
 		}
-		
-		// initialize the timeout
-		if (!parameters.containsKey("t")) {
-			parameters.put("t", ""+(Integer.MAX_VALUE/2));
-		}
 
 		// set encoding for SAT-solver
 		if (parameters.containsKey("e")) {
@@ -62,7 +57,7 @@ public class App {
 				
 		try{
 			Graph<Integer> input = GraphFactory.graphFromStdin();
-	
+			
 			/* Compute a explicit decomposition */
 			long tstart = System.nanoTime();
 			TreeDecomposition<Integer> decomposition = null;	
@@ -70,13 +65,13 @@ public class App {
 			if (parameters.containsKey("heuristic")) {
 				
 				/* compute a tree-decomposition heuristically */				
-				HeuristicDecomposer<Integer> heuristic = new HeuristicDecomposer<Integer>(input, parameters.containsKey("parallel"), Integer.parseInt(parameters.get("t")));
+				HeuristicDecomposer<Integer> heuristic = new HeuristicDecomposer<Integer>(input, parameters.containsKey("parallel"));
 				decomposition = heuristic.call();
 				
 			} else {
 				
 				/* Default case: compute an exact tree-decomposition */	
-				ExactDecomposer<Integer> exact = new ExactDecomposer<Integer>(input, parameters.containsKey("parallel"), Integer.parseInt(parameters.get("t")));				
+				ExactDecomposer<Integer> exact = new ExactDecomposer<Integer>(input, parameters.containsKey("parallel"));				
 				decomposition = exact.call();
 			}
 			long tend = System.nanoTime();
@@ -171,7 +166,6 @@ public class App {
 		System.out.println("Parameters:");
 		System.out.println("  -h : print this dialog");
 		System.out.println("  -s <seed> : set a random seed");
-		System.out.println("  -t <time> : set a timeout");
 		System.out.println("  -parallel : enable parallel processing");
 		System.out.println("  -heuristic : compute a heuristic solution");
 		System.out.println("  -log : enable log output");

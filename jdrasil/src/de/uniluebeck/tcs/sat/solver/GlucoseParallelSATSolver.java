@@ -34,14 +34,14 @@ public class GlucoseParallelSATSolver extends SATSolver {
 	private Set<Integer> variables;
 	
 	/** Default constructor without formula. */
-	public GlucoseParallelSATSolver(int timeout) {
-		super(timeout);
+	public GlucoseParallelSATSolver() {
+		super();
         clauses = new ArrayList<>();
 	}
 	
 	/** Default constructor with a start formula. */
-	public GlucoseParallelSATSolver(Formula phi, int timeout) {
-		super(phi, timeout);
+	public GlucoseParallelSATSolver(Formula phi) {
+		super(phi);
         clauses = new ArrayList<>();
         for(List<Integer> c: phi){
         	clauses.add(c);      	
@@ -55,7 +55,6 @@ public class GlucoseParallelSATSolver extends SATSolver {
 	
 	@Override
 	public void initSolver() {
-		
 	}
 
 	@Override
@@ -72,9 +71,7 @@ public class GlucoseParallelSATSolver extends SATSolver {
 
 	@Override
 	public boolean solve() {
-
 		solver = new JPGlucose();
-        solver.setTimeOut(timeout);
         for(List<Integer> C : clauses){
         	solver.addClause(C);
         	
@@ -95,7 +92,7 @@ public class GlucoseParallelSATSolver extends SATSolver {
 
 	@Override
 	public SATSolver newInstance() {
-		return new GlucoseParallelSATSolver(this.timeout);
+		return new GlucoseParallelSATSolver();
 	}
 
 }

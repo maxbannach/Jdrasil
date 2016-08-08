@@ -37,14 +37,14 @@ public class CliqueLowerbound<T extends Comparable<T>> implements Lowerbound<T>{
 	private Set<T> model;
 	
 	/**
-	 * Initialize the sat-solver with a graph and a timeout.
+	 * Initialize the sat-solver with a graph.
 	 * @param graph
 	 * @param timeout
 	 */
-	public CliqueLowerbound(Graph<T> graph, int timeout) {
+	public CliqueLowerbound(Graph<T> graph) {
 		this.graph = graph;
 		this.model = new HashSet<T>();
-		this.sat = new GlucoseSATSolver(timeout);
+		this.sat = new GlucoseSATSolver();
 	}
 	
 	private int cliqueSAT() {

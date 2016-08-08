@@ -35,9 +35,6 @@ public class HeuristicDecomposer<T extends Comparable<T>> implements TreeDecompo
 	/** Preprocessor to reduce the graph size. */
 	private final ReductionRuleDecomposer<T> preprocessor;
 	
-	/** A timeout for the sat-solver. */
-	private final int timeout;
-	
 	/** the graph we wish to decompose */
 	private final Graph<T> graph;
 	
@@ -90,10 +87,8 @@ public class HeuristicDecomposer<T extends Comparable<T>> implements TreeDecompo
 	 * Default constructor to initialize data structures. 
 	 * @param graph
 	 * @param parallel – should the graph be decomposed in parallel?
-	 * @param timeout – timeout for the sat-solver
 	 */
-	public HeuristicDecomposer(Graph<T> graph, boolean parallel, int timeout) {
-		this.timeout = timeout;
+	public HeuristicDecomposer(Graph<T> graph, boolean parallel) {
 		this.parallel = parallel;
 		this.graph = graph;
 		this.preprocessor = new ReductionRuleDecomposer<T>(graph);		
@@ -113,6 +108,7 @@ public class HeuristicDecomposer<T extends Comparable<T>> implements TreeDecompo
 		this.currentPhase = Phase.Preprocessing;
 		App.log("starting preprocessing");
 		if (this.preprocessor.reduce()) return preprocessor.getTreeDecomposition();
+		App.log("reduced to from " + graph.getVertices().size() + " to " + this.preprocessor.getReducedGraph().getVertices().size() + " vertices");
 		
 		/* start the first phase */
 		App.log("starting minFill phase");
@@ -126,9 +122,9 @@ public class HeuristicDecomposer<T extends Comparable<T>> implements TreeDecompo
 			App.log("starting SAT phase");
 			this.currentPhase = Phase.SatPhase;
 			if (parallel) {
-				satDecomposer = new SATDecomposer<T>(preprocessor.getReducedGraph(), new GlucoseSATSolver(timeout), Encoding.IMPROVED, 0, ub-1);
+				satDecomposer = new SATDecomposer<T>(preprocessor.getReducedGraph(), new GlucoseSATSolver(), Encoding.IMPROVED, 0, ub-1);
 			} else {
-				satDecomposer = new SATDecomposer<T>(preprocessor.getReducedGraph(), new GlucoseParallelSATSolver(timeout), Encoding.IMPROVED, 0, ub-1);
+				satDecomposer = new SATDecomposer<T>(preprocessor.getReducedGraph(), new GlucoseParallelSATSolver(), Encoding.IMPROVED, 0, ub-1);
 			}
 			TreeDecomposition<T> from_SAT =satDecomposer.call(); 
 			if(from_SAT != null && from_SAT.getWidth() < currentDecomposition.getWidth())

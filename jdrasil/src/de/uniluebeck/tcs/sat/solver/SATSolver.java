@@ -18,18 +18,11 @@ import de.uniluebeck.tcs.sat.Formula;
 public abstract class SATSolver implements java.io.Serializable {
 
 	private static final long serialVersionUID = -1709627316648034823L;
-	
-	/**
-	 * A timeout, after which the the @see solve() method should be canceled.
-	 * If a implementation does not use the timeout, this value should be set to -1;
-	 */
-	final int timeout;
 		
 	/**
 	 * Initialize the SAT-solver with an empty formula. 
 	 */
-	public SATSolver(int timeout) {
-		this.timeout = timeout;
+	public SATSolver() {
 		this.init();
 	}
 	
@@ -37,8 +30,7 @@ public abstract class SATSolver implements java.io.Serializable {
 	 * Initialize the SAT-solver and provide a given formula phi to it.
 	 * @param phi
 	 */
-	public SATSolver(Formula phi, int timeout) {
-		this.timeout = timeout;
+	public SATSolver(Formula phi) {
 		this.init();
 		this.addFormula(phi);
 	}
@@ -92,14 +84,6 @@ public abstract class SATSolver implements java.io.Serializable {
 	 * @return
 	 */
 	public abstract Map<Integer, Boolean> getModel();
-	
-	/**
-	 * Checks if the SAT-solver uses a timeout.
-	 * @return
-	 */
-	public boolean usesTimeout() {
-		return timeout != -1;
-	}
 	
 	/**
 	 * Creates and returns a new instance of the SATSolver. The returned solver

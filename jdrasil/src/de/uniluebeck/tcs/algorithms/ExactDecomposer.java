@@ -49,9 +49,6 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 
 	/** The graph that we wish to decompose. */
 	private final Graph<T> graph;
-		
-	/** A timeout for the sat-solver. */
-	private final int timeout;
 	
 	/** This flag is set to true, if the algorithm runs in parallel mode. */
 	private final boolean parallel;
@@ -68,9 +65,8 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 	 * @param parallel – should the graph be decomposed in parallel?
 	 * @param timeout – timeout for the sat-solver
 	 */
-	public ExactDecomposer(Graph<T> graph, boolean parallel, int timeout) {
+	public ExactDecomposer(Graph<T> graph, boolean parallel) {
 		this.graph = graph;
-		this.timeout = timeout;
 		this.parallel = parallel;
 	}
 	
@@ -93,7 +89,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 			App.log("Graph was fully reduced");
 			return preprocessor.getTreeDecomposition();
 		}
-				
+						
 		// otherwise we have to handle the rest
 		Graph<T> reduced = preprocessor.getReducedGraph();
 		int n = reduced.getVertices().size();
@@ -131,10 +127,10 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		SATSolver solver = null;
 		if (parallel) {
 			App.log("Solve with parallel Glucose SAT-Solver");
-			solver = new GlucoseParallelSATSolver(timeout);
+			solver = new GlucoseParallelSATSolver();
 		} else {
 			App.log("Solve with Glucose SAT-Solver");
-			solver = new GlucoseSATSolver(timeout);	;
+			solver = new GlucoseSATSolver();	;
 		}
 		TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, solver, Encoding.IMPROVED, lb, ub).call();		
 		preprocessor.glueTreeDecomposition(decomposition);
