@@ -9,7 +9,7 @@ fi
 
 PID=$!
 trap "kill -SIGUSR2 $PID" SIGUSR1
-trap "kill -SIGTERM $PID" SIGTERM
+trap "kill -9 $PID" SIGTERM
 
 while :
 do
