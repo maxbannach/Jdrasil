@@ -434,34 +434,33 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * @return
 	 */
 	public T getAlmostSimplicialVertex(Set<T> forbidden) {
+		
 		search: for (T v : this) {
 			if (forbidden.contains(v)) continue;
-			int delta = getNeighborhood(v).size();
-
-			Set<T> special = new HashSet<>(delta);
-			Set<T> possibleSpecial = new HashSet<>(delta);
+			Set<T> incidentVertices = null;
 			for (T x : getNeighborhood(v)) {
 				for (T y : getNeighborhood(v)) {
 					if (x.compareTo(y) >= 0) continue;
-					if (!isAdjacent(x, y)) {
-						if (possibleSpecial.contains(x)) special.add(x);
-						if (possibleSpecial.contains(y)) special.add(y);
-						if (special.size() > 1) continue search;
-						possibleSpecial.add(x);
-						possibleSpecial.add(y);
-					}					
-				}
+					if (isAdjacent(x, y)) continue;
+					if (incidentVertices == null) {
+						incidentVertices = new HashSet<>();
+						incidentVertices.add(x);
+						incidentVertices.add(y);
+					} else {
+						Set<T> E = new HashSet<>();
+						E.add(x);
+						E.add(y);
+						incidentVertices.retainAll(E);
+						if (incidentVertices.size() == 0) continue search;
+					}
+				}	
 			}
-
-			// continue if no / two many special neighbor was found
-			if (special.size() > 1) continue search;
-			if (special.size() == 0 && possibleSpecial.size() != 2) continue search;
-			return v; // v is almost simplical
+			
+			if (incidentVertices != null && incidentVertices.size() == 1) return v;
 		}
 		
 		return null;
 	}
-	
 	
 	/**
 	 * Compute all twins of the graph in time O(n+m) using the partition refinement paradigm.

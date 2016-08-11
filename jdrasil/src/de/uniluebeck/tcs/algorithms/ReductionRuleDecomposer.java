@@ -35,6 +35,9 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 	private final Graph<T> original;
 	private final Graph<T> graph;
 	
+	/** A lower bound on the tree-width. */
+	private int low;
+	
 	/** The tree-decomposition of @see graph that we compute */
 	private TreeDecomposition<T> td;
 	
@@ -50,6 +53,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 		this.graph = graph.copy();
 		this.td = new TreeDecomposition<T>(graph);
 		this.bags = new Stack<>();
+		this.low = 0;
 	}
 		
 	/**
@@ -63,6 +67,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 				Set<T> set = new HashSet<>();
 				set.add(v);
 				graph.deleteVertex(v);
+				low = Math.max(low, 1);
 				return set;
 			}
 		}
@@ -81,6 +86,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 				set.add(v);
 				set.add(graph.getNeighborhood(v).get(0));
 				graph.deleteVertex(v);
+				low = Math.max(low, 2);
 				return set;
 			}
 		}
@@ -105,6 +111,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 				set.add(v);
 				set.addAll(graph.getNeighborhood(v));
 				graph.eliminateVertex(v);
+				low = Math.max(low, 3);
 				return set;
 			}
 		}
@@ -117,6 +124,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 	 * @return
 	 */
 	public Set<T> triangleRule() {
+		low = Math.max(low, 4);
 		for (T v : graph) {
 			if (graph.getNeighborhood(v).size() != 3) continue;
 			T x = graph.getNeighborhood(v).get(0);
@@ -231,6 +239,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 		Set<T> set = new HashSet<>();
 		set.add(v);
 		set.addAll(graph.getNeighborhood(v));
+		low = Math.max(low, set.size());
 		graph.deleteVertex(v);
 		return set;
 	}
@@ -248,6 +257,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 		Set<T> set = new HashSet<>();
 		set.add(v);
 		set.addAll(graph.getNeighborhood(v));
+		if (set.size() > low) return null;
 		graph.eliminateVertex(v);
 		return set;
 	}
