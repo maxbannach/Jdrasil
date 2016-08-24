@@ -187,11 +187,20 @@ public class HeuristicDecomposer<T extends Comparable<T>> implements TreeDecompo
 			System.out.println(ub+1);
 		} else if (arg0.getName().equals(SignalType.Terminate.getName())) {
 			if(App.shouldIWrite()) {
-				if (currentDecomposition == null) { // no decomposition found, output trivial decomposition
-					this.currentDecomposition = new TreeDecomposition<T>(graph);
+				if (currentDecomposition == null) { // no decomposition found yet. Try to get one from minfill
+                                    switch (currentPhase){
+                                    case MinFillPhase:
+                                        this.currentDecomposition = minFillDecomposer.getCurrentSolution();
+                                        break;
+                                    default:
+                                        break;
+                                    }
+                                }
+                                if (currentDecomposition == null) { // no decomposition found, output trivial decomposition
+                                        this.currentDecomposition = new TreeDecomposition<T>(graph);
 					this.currentDecomposition.createBag(graph.getVertices());
-					System.out.println(currentDecomposition);
-				} else {
+                                }
+                                else {
 					preprocessor.glueTreeDecomposition(currentDecomposition);
 					System.out.println(preprocessor.getTreeDecomposition());
 				}
