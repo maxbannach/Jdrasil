@@ -1,0 +1,23 @@
+#!/bin/bash
+
+cd jdrasil/src
+if [ "$1" == "-s" ]; then
+    java  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App  -s $2 -e PBLib_incremental <&0 & 
+else
+    java  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App   -e PBLib_incremental <&0 &
+fi
+
+PID=$!
+trap "kill -SIGUSR2 $PID" SIGUSR1
+trap "kill -9 $PID" SIGTERM
+
+while :
+do
+    wait $PID
+    kill -0 $PID 2> /dev/null || break
+done
+
+
+
+
+
