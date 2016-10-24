@@ -10,7 +10,7 @@ Jdrasil is build in a very modular fashion. This allows researchers to simply ad
 
 # Installation
 For an installation that fits the PACE requirements change the path to
-the java compiler, the c++ compiler, the java directory and the java
+the java compiler, the c++ compiler, the java directory containing `jni.h` and the java
 executable in the first four lines of `Makefile`
 Afterwards you can simply execute the following:
 ```
