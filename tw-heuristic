@@ -2,9 +2,9 @@
 
 cd jdrasil/src
 if [ "$1" == "-s" ]; then
-    taskset 0x01 /usr/lib/jvm/java-8-openjdk-amd64/bin/java  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App  -heuristic -s $2  -e PBLib_incremental <&0 &
+    taskset 0x01 EXEC  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App  -heuristic -s $2  -e PBLib_incremental <&0 &
 else
-    taskset 0x01 /usr/lib/jvm/java-8-openjdk-amd64/bin/java  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App  -heuristic  -e PBLib_incremental <&0 &
+    taskset 0x01 EXEC  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App  -heuristic  -e PBLib_incremental <&0 &
 fi
     
 PID=$!

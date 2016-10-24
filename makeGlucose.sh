@@ -3,8 +3,8 @@
 cd lib/glucose/simp/
 make clean
 make
-./makeJNI_linux.sh
+./makeJNI.sh
 cd ../parallel
 make clean
 make
-./makeJNI_linux.sh
+./makeJNI.sh

@@ -1,6 +1,25 @@
-target:
-	chmod +x make.sh tw*
-	./make.sh
+export JAVA_COMPILER=/usr/bin/JAVAC
+export CXX=/usr/local/bin/g++-6
+export JAVA_INCLUDE_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/JavaVM.framework/Headers/
+export JAVA_EXECUTABLE=/usr/bin/java
+
+all:	glucose pblib java execs
+
+execs:
+	./renameExecs.sh
+	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g' tw-exact
+	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g' tw-exact-parallel
+	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g'  tw-heuristic
+	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g'  tw-heuristic-parallel
+
+glucose:
+	./makeGlucose.sh
+
+pblib:
+	./makePBLib.sh
+
+java:
+	./makeJava.sh
 
 test:
 	./tw-exact -s 1234 < instances/ClebschGraph.gr

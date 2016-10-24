@@ -3,7 +3,7 @@ PROJECT(pblib)
 cmake_minimum_required(VERSION 2.8)
 
 #SET (CMAKE_CXX_COMPILER "c++")
-SET(CMAKE_CXX_COMPILER "/usr/local/bin/g++-5")
+SET(CMAKE_CXX_COMPILER $ENV{CXX})
 
 SET (CMAKE_CXX_FLAGS "-O3 -std=c++11 -fPIC")
 # set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -static")
