@@ -9,14 +9,10 @@ Jdrasil is a tool to compute tree decompositions of simple, undirected graphs. I
 Jdrasil is build in a very modular fashion. This allows researchers to simply add new algorithms, heuristics, or preprocessing routines, which can then be combined in any way.
 
 # Installation
-For an installation that fits the PACE requirements change the path to the `javac` program in `makeJava.sh`,
-  `lib/pblib/makeJNI_linux.sh`,
-  `lib/glucose/simp/makeJNI_linux.sh`, and
-  `lib/glucose/parallel/makeJNI_linux.sh`; and the
- path to the directory containing the file `jni.h` in
-  `lib/pblib/makeJNI_linux.sh`, 
-  `lib/glucose/simp/makeJNI_linux.sh`, and
-  `lib/glucose/parallel/makeJNI_linux.sh`. Afterwards you can simply execute the following:
+For an installation that fits the PACE requirements change the path to
+the java compiler, the c++ compiler, the java directory and the java
+executable in the first four lines of `Makefile`
+Afterwards you can simply execute the following:
 ```
 cd jdrasil
 make
@@ -31,11 +27,7 @@ For a description of the graph file format, see the [PACE website](https://pacec
 # Maven
 If you wish to use Jdrasil as Maven project, you have to build the C++ dependecies first.
 ```
-cd lib/glucose/simp
-./makeJNI.sh
-cd ../parallel
-./makeJNI.sh
-cd ../../pblib/
-./makeJNI.sh
+make glucose
+make pblib
 ```
 Now you can do the "usual Maven stuff" in the folder containing `pom.xml`.
