@@ -6,11 +6,10 @@ export JAVA_EXECUTABLE=/usr/bin/java
 all:	glucose pblib java execs
 
 execs:
-	./renameExecs.sh
 	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g' tw-exact
 	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g' tw-exact-parallel
-	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g'  tw-heuristic
-	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g'  tw-heuristic-parallel
+	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g' tw-heuristic
+	sed -i -e 's@EXEC@'"$JAVA_EXECUTABLE"'@g' tw-heuristic-parallel
 
 glucose:
 	./makeGlucose.sh
