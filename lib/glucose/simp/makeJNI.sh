@@ -8,7 +8,7 @@ make clean
 make
 
 
-$CXX -c -w -I../ -I$JAVA_INCLUDE_DIR -I$JAVA_INCLUDE_DIR_LOCAL gluc_JGlucose.cpp -o JGlucose.o
+$CXX -fPIC -c -w -I../ -I$JAVA_INCLUDE_DIR -I$JAVA_INCLUDE_DIR_LOCAL gluc_JGlucose.cpp -o JGlucose.o
 $CXX -w -shared -o libJGlucose.jnilib JGlucose.o SimpSolver.o ../core/*.o
 
 #MAC

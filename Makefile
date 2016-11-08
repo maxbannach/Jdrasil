@@ -3,7 +3,7 @@ export JAVA_COMPILER=/usr/lib/jvm/java-8-openjdk-amd64/bin/javac
 export CXX=/usr/bin/g++
 export JAVA_INCLUDE_DIR=/usr/lib/jvm/java-8-openjdk-amd64/include/
 export JAVA_INCLUDE_DIR_LOCAL=/usr/lib/jvm/java-8-openjdk-amd64/include/linux/
-export JAVA_EXECUTABLE=/usr/lib/jvm/java-8-openjdk-amd64/bin/javac
+export JAVA_EXECUTABLE=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
 
 # Uncomment for MAC
 #export JAVA_COMPILER=/usr/bin/javac
