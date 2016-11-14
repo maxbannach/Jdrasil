@@ -2,15 +2,9 @@
 
 cd jdrasil/src
 if [ "$1" == "-s" ]; then
-<<<<<<< HEAD
-    taskset 0x01 /usr/bin/java  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App  -s $2 -e PBLib_incremental <&0 & 
-else
-   taskset 0x01 /usr/bin/java  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App -e PBLib_incremental <&0 &
-=======
     EXEC  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App  -s $2 -e PBLib_incremental <&0 & 
 else
    EXEC  -cp ../../lib/glucose.jar:../../lib/glucosep.jar:../../lib/pblib.jar:. -Djava.library.path=../../lib/glucose/simp/:../../lib/glucose/parallel:../../lib/pblib de.uniluebeck.tcs.App   -e PBLib_incremental <&0 &
->>>>>>> 2b70de1d013bdc2a20fb0797da683d6a018f0d4a
 fi
 
 PID=$!
@@ -22,8 +16,3 @@ do
     wait $PID
     kill -0 $PID 2> /dev/null || break
 done
-
-
-
-
-

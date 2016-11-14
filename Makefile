@@ -1,16 +1,16 @@
 # Linux Version
-export JAVA_COMPILER=/usr/lib/jvm/java-8-openjdk-amd64/bin/javac
-export CXX=/usr/bin/g++
-export JAVA_INCLUDE_DIR=/usr/lib/jvm/java-8-openjdk-amd64/include/
-export JAVA_INCLUDE_DIR_LOCAL=/usr/lib/jvm/java-8-openjdk-amd64/include/linux/
-export JAVA_EXECUTABLE=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
+#export JAVA_COMPILER=/usr/lib/jvm/java-8-openjdk-amd64/bin/javac
+#export CXX=/usr/bin/g++
+#export JAVA_INCLUDE_DIR=/usr/lib/jvm/java-8-openjdk-amd64/include/
+#export JAVA_INCLUDE_DIR_LOCAL=/usr/lib/jvm/java-8-openjdk-amd64/include/linux/
+#export JAVA_EXECUTABLE=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
 
 # Uncomment for MAC
-#export JAVA_COMPILER=/usr/bin/javac
-#export CXX=/usr/local/bin/g++-6
-#export JAVA_INCLUDE_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/JavaVM.framework/Headers/
-#export JAVA_INCLUDE_DIR_LOCAL=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/JavaVM.framework/Headers/
-#export JAVA_EXECUTABLE=/usr/bin/java
+export JAVA_COMPILER=/usr/bin/javac
+export CXX=/usr/local/bin/g++-6
+export JAVA_INCLUDE_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/JavaVM.framework/Headers/
+export JAVA_INCLUDE_DIR_LOCAL=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/JavaVM.framework/Headers/
+export JAVA_EXECUTABLE=/usr/bin/java
 
 all:	glucose pblib java execs
 
