@@ -335,6 +335,35 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 
 	/**
+	 * Represents the graph as string the the .gr file format of PACE.
+	 * In order to do so, a bijection from V to {1,...,|V|} will be computed and vertices
+	 * will be represented as integers in the output.
+	 * @return
+	 */
+	public String toValidGraphString() {
+		// compute the bijection
+		int index = 1;
+		Map<T, Integer> phi = new HashMap<T, Integer>();
+		for (T v : this.getVertices()) {
+			phi.put(v, index);
+			index = index + 1;
+		}
+		
+		// compute the string using a string builder
+		StringBuilder sb = new StringBuilder();
+		sb.append("p tw " + this.getVertices().size() + " " + this.getNumberOfEdges() + "\n");
+		for (T v : this.getVertices()) {
+			for (T w : this.getNeighborhood(v)) {
+				if (v.compareTo(w) > 0) continue;
+				sb.append(phi.get(v) + " " + phi.get(w) + "\n");				
+			}
+		}
+		
+		// done
+		return sb.toString();
+	}
+	
+	/**
 	 * Output the graph in TikZ syntax to embed it into LaTeX documents.
 	 * Compiling this code needs an actual TikZ version, LuaLaTeX, and the TikZ graphdrawing force library.
 	 * @return

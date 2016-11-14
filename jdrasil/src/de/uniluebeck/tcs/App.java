@@ -12,6 +12,7 @@ import java.util.Random;
 
 import de.uniluebeck.tcs.algorithms.ExactDecomposer;
 import de.uniluebeck.tcs.algorithms.HeuristicDecomposer;
+import de.uniluebeck.tcs.algorithms.ReductionRuleDecomposer;
 import de.uniluebeck.tcs.graph.Graph;
 import de.uniluebeck.tcs.graph.GraphFactory;
 import de.uniluebeck.tcs.graph.TreeDecomposition;
@@ -57,6 +58,20 @@ public class App {
 				
 		try{
 			Graph<Integer> input = GraphFactory.graphFromStdin();
+			
+			/* JDrasil can be used to just translate a graph to the .gr file */
+			if (parameters.containsKey("translate")) {
+				System.out.print(input);
+				System.exit(1);
+			}
+			
+			/* JDrasil can be used produce a .gr file with a reduced graph */
+			if (parameters.containsKey("reduce")) {
+				ReductionRuleDecomposer<Integer> preprocessor = new ReductionRuleDecomposer<Integer>(input);
+				preprocessor.reduce();
+				System.out.print(preprocessor.getReducedGraph().toValidGraphString());
+				System.exit(1);
+			}
 			
 			/* Compute a explicit decomposition */
 			long tstart = System.nanoTime();
@@ -169,6 +184,8 @@ public class App {
 		System.out.println("  -parallel : enable parallel processing");
 		System.out.println("  -heuristic : compute a heuristic solution");
 		System.out.println("  -log : enable log output");
+		System.out.println("  -translate : just outputs the graph in the .gr format");
+		System.out.println("  -reduce : just outputs a reduced graph of the same tree width (preprocessing)");
 		System.out.println("  -tikz : enable tikz output");
 		System.out.println("  -e <encoding> : set a cardinality encoding for SAT-solver");
 		System.out.println("     ( 1) binomial");
