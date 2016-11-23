@@ -61,7 +61,7 @@ public class App {
 			
 			/* JDrasil can be used to just translate a graph to the .gr file */
 			if (parameters.containsKey("translate")) {
-				System.out.print(input);
+				System.out.print(input.toValidGraphString());
 				System.exit(1);
 			}
 			
