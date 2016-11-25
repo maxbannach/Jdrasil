@@ -6,11 +6,11 @@
 #export JAVA_EXECUTABLE=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
 
 # Uncomment for MAC
-export JAVA_COMPILER=/usr/bin/javac
+export JAVA_COMPILER=/usr/bin/JAVAC
 export CXX=/usr/local/bin/g++-6
 export JAVA_INCLUDE_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/JavaVM.framework/Headers/
-export JAVA_INCLUDE_DIR_LOCAL=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/JavaVM.framework/Headers/
 export JAVA_EXECUTABLE=/usr/bin/java
+
 
 all:	glucose pblib java execs
 
