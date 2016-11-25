@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2016-present, Max Bannach, Sebastian Berndt, Thorsten Ehlers
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+ * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package de.uniluebeck.tcs.jdrasil.lowerbounds;
 
 import java.io.Serializable;
@@ -9,11 +27,6 @@ import de.uniluebeck.tcs.jdrasil.App;
 import de.uniluebeck.tcs.jdrasil.graph.Graph;
 
 /**
- * MinorMinWidthLowerbound.java
- * @author bannach
- */
-
-/**
  * It is a well known fact that for every minor H of G the following holds: tw(H) <= tw(G). To obtain
  * a lowerbound on the tree-width of G it is thus sufficient to find good lowerbounds for minors of G.
  * The minor-min-width heuristic devoloped by Gogate and Dechter for the QuickBB algorithm 
@@ -21,6 +34,7 @@ import de.uniluebeck.tcs.jdrasil.graph.Graph;
  * a minor of G and tries heuristically to find a good minor for this task.
  * 
  * @param <T>
+ * @author Max Bannach
  */
 public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbound<T>, Serializable {
 
