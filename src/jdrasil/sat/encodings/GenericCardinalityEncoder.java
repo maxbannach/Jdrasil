@@ -86,19 +86,19 @@ public class GenericCardinalityEncoder {
 	public void addAMK(Formula phi, int k) {
 		switch (usedEncoding) {
 		case BINOMIAL:
-			CardinalityEncoder.getInstance().binomialAMK(phi, variables, k);
+			BasicCardinalityEncoder.getInstance().binomialAMK(phi, variables, k);
 			break;
 		case BINARY:
-			CardinalityEncoder.getInstance().binaryAMK(phi, variables, k);
+			BasicCardinalityEncoder.getInstance().binaryAMK(phi, variables, k);
 			break;
 		case SEQUENTIAL:
-			CardinalityEncoder.getInstance().sequentialAMK(phi, variables, k);
+			BasicCardinalityEncoder.getInstance().sequentialAMK(phi, variables, k);
 			break;
 		case COMMANDER:
-			CardinalityEncoder.getInstance().commanderAMK(phi, variables, k);
+			BasicCardinalityEncoder.getInstance().commanderAMK(phi, variables, k);
 			break;
 		case PBLIB:
-			CardinalityEncoder.getInstance().pbAMK(phi, variables, k);
+			BasicCardinalityEncoder.getInstance().pbAMK(phi, variables, k);
 			break;
 		case PBLIB_INCREMENTAL:
 			incrementalEncoder.incrementAMK(phi, k);

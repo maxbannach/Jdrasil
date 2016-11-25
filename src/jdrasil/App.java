@@ -96,7 +96,7 @@ public class App {
 			if (parameters.containsKey("heuristic")) {
 				
 				/* compute a tree-decomposition heuristically */				
-				HeuristicDecomposer<Integer> heuristic = new HeuristicDecomposer<Integer>(input, parameters.containsKey("parallel"));
+				HeuristicDecomposer<Integer> heuristic = new HeuristicDecomposer<Integer>(input);
 				decomposition = heuristic.call();
 				
 			} else {
