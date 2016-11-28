@@ -287,8 +287,8 @@ public class Formula implements Iterable<List<Integer>> {
 	 * 
 	 * @throws SATSolverNotAvailableException if Jdrasil has no access to any SATSolver
 	 */
-	public void registerSATSolver() throws SATSolverNotAvailableException {
-		if (!SATSolver.isAvailable()) throw new SATSolverNotAvailableException();
+	public void registerSATSolver() throws SATSolver.SATSolverNotAvailableException {
+		if (!SATSolver.isAvailable()) throw new SATSolver.SATSolverNotAvailableException();
 		this.solver = new SATSolver();
 	}
 	
@@ -383,13 +383,6 @@ public class Formula implements Iterable<List<Integer>> {
 	 * @see registerSATSolver()
 	 */
 	class NoSATSolverRegisteredException extends Exception {
-		private static final long serialVersionUID = 1L;		
-	}
-	
-	/**
-	 * This exception indicates that Jdrasil has no access to a SAT-solver.
-	 */
-	class SATSolverNotAvailableException extends Exception {
 		private static final long serialVersionUID = 1L;		
 	}
 	

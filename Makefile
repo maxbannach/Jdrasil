@@ -1,7 +1,11 @@
 JAVAC = javac
 
+JNI = /Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include
+JNI2 = /Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include/darwin
+
 SRC = src/
 BIN = bin/
+LIB = lib/
 DOC = doc/
 MANUAL = manual/
 
@@ -12,16 +16,29 @@ classes = $(addprefix $(BIN), $(files:.java=.class))
 
 all: $(BIN) $(classes)
 
+$(LIB):
+	mkdir $(LIB)
+
 $(BIN):
 	mkdir $(BIN)
 
 $(BIN)%.class: $(SRC)%.java
 	$(JAVAC) -sourcepath $(SRC) -d $(BIN) $<
 
-App.jar: $(BIN) $(classes)
-	jar cvfe App.jar jdrasil.App -C $(BIN) .
+jdrasil.jar: $(BIN) $(classes)
+	jar cvfe jdrasil.jar jdrasil.App -C $(BIN) .
 
-jar: App.jar
+jar: jdrasil.jar
+
+$(LIB)jdrasil_sat_NativeSATSolver.h: $(classes)
+	javah -jni -cp bin -d lib jdrasil.sat.NativeSATSolver
+
+jni: $(LIB)jdrasil_sat_NativeSATSolver.h
+
+$(LIB)libsatsolver.dylib:
+	(cd $(LIB) && gcc -bundle -I${JNI} -I${JNI2} -o libsatsolver.dylib test.c)
+
+nativesolver: $(LIB)libsatsolver.dylib
 
 $(DOC):
 	mkdir $(DOC)
@@ -35,10 +52,11 @@ $(MANUAL)manual.pdf: $(tex)
 manual: $(MANUAL)manual.pdf
 
 clean:
+	rm jdrasil.jar
 	rm -rf $(BIN)
 	rm -rf $(DOC)
 	rm $(MANUAL)*.aux
 	rm $(MANUAL)*.log
 	rm $(MANUAL)*.pdf
 
-.PHONY: clean
+.PHONY: clean jni jar
