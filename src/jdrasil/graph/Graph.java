@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import jdrasil.lowerbounds.CliqueLowerbound;
 import jdrasil.utilities.PartitionRefinement;
 
 /**
@@ -435,15 +434,10 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	/**
 	 * Compute a maximum clique of the graph using a SAT-oracle.
 	 * If the sat-solver fails, this method returns null.
-	 * @param timeout
 	 * @return
 	 */
-	public Set<T> getMaximumClique(int timeout) {
-		CliqueLowerbound<T> sat = new CliqueLowerbound<T>(this);
-		try {
-			sat.call();
-			return sat.getModel();
-		} catch (Exception e) {}
+	public Set<T> getMaximumClique() {
+		//TODO: implement
 		return null;
 	}
 	

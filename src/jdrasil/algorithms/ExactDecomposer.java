@@ -30,20 +30,18 @@ import java.util.Map;
 import java.util.Set;
 
 import jdrasil.App;
-import jdrasil.exact.CopsAndRobber;
-import jdrasil.exact.SATDecomposer;
-import jdrasil.exact.SATDecomposer.Encoding;
+import jdrasil.algorithms.exact.CopsAndRobber;
+import jdrasil.algorithms.exact.SATDecomposer;
+import jdrasil.algorithms.exact.SATDecomposer.Encoding;
+import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
+import jdrasil.algorithms.upperbounds.StochasticMinFillDecomposer;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
-import jdrasil.lowerbounds.MinorMinWidthLowerbound;
-import jdrasil.sat.solver.GlucoseParallelSATSolver;
-import jdrasil.sat.solver.GlucoseSATSolver;
-import jdrasil.sat.solver.SATSolver;
-import jdrasil.upperbounds.StochasticMinFillDecomposer;
+import jdrasil.sat.SATSolver;
 
 /**
  * This class implements a hand-crafted algorithm that uses various of the other algorithms to compute an optimal
@@ -56,7 +54,7 @@ import jdrasil.upperbounds.StochasticMinFillDecomposer;
  *   d) a lower bound will be computed by minor-min-width
  *   e) if ub == lb the computation is done
  *   f) if n^ub is smaller then some threshold the optimal solution will be computed by the dynamic cops-and-robber game
- *   g) otherwise the optimal solution will be computed by a SAT-Encoding using Glucose, either serial or parallel
+ *   g) otherwise the optimal solution will be computed by a SAT-Encoding, either serial or parallel
  *   h) finally, all computed decompositions are merged
  *   
  * @param <T>
@@ -133,7 +131,8 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		
 		// otherwise check if the instance is small enough for the dynamic cops-and-robber game
 		// the algorithm has running time O(n choose k), so we check the size of n choose k
-		if (n <= COPS_VERTICES_THRESHOLD && ub <= COPS_TW_THRESHOLD && expectedMemory.compareTo(freeMemory) < 0) {	
+		// This is also used if no SAT-Solver is available
+		if (!SATSolver.isAvailable() || (n <= COPS_VERTICES_THRESHOLD && ub <= COPS_TW_THRESHOLD && expectedMemory.compareTo(freeMemory) < 0)) {	
 			App.log("Solve with a game of Cops and Robbers");
 			TreeDecomposition<T> decomposition = new CopsAndRobber<>(reduced).call();
 			preprocessor.glueTreeDecomposition(decomposition);
@@ -141,15 +140,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		}
 		
 		/* If everything above does not work, we solve the problem using a SAT-encoding */
-		SATSolver solver = null;
-		if (parallel) {
-			App.log("Solve with parallel Glucose SAT-Solver");
-			solver = new GlucoseParallelSATSolver();
-		} else {
-			App.log("Solve with Glucose SAT-Solver");
-			solver = new GlucoseSATSolver();	;
-		}
-		TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, solver, Encoding.IMPROVED, lb, ub).call();		
+		TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub).call();		
 		preprocessor.glueTreeDecomposition(decomposition);
 		return preprocessor.getTreeDecomposition();
 	}

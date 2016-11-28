@@ -24,11 +24,11 @@ package jdrasil.algorithms;
  */
 
 import jdrasil.App;
+import jdrasil.algorithms.upperbounds.StochasticMinFillDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
-import jdrasil.upperbounds.StochasticMinFillDecomposer;
 
 /**
  * A full algorithm to compute a tree-decomposition heuristically.

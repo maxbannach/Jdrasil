@@ -30,7 +30,6 @@ import jdrasil.algorithms.ReductionRuleDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposition;
-import jdrasil.sat.encodings.GenericCardinalityEncoder;
 
 /**
  * Jdrasil is a program to compute a small tree-decomposition of a given graph.
@@ -66,12 +65,7 @@ public class App {
 		} else {
 			dice = new Random(System.currentTimeMillis());
 		}
-
-		// set encoding for SAT-solver
-		if (parameters.containsKey("e")) {
-			setSATEncoding(parameters.get("e"));
-		}
-				
+		
 		try{
 			Graph<Integer> input = GraphFactory.graphFromStdin();
 			
@@ -203,13 +197,6 @@ public class App {
 		System.out.println("  -translate : just outputs the graph in the .gr format");
 		System.out.println("  -reduce : just outputs a reduced graph of the same tree width (preprocessing)");
 		System.out.println("  -tikz : enable tikz output");
-		System.out.println("  -e <encoding> : set a cardinality encoding for SAT-solver");
-		System.out.println("     ( 1) binomial");
-		System.out.println("     ( 2) sequential");
-		System.out.println("     ( 3) binary");
-		System.out.println("     ( 4) commander");
-		System.out.println("     ( 5) PBLib");
-		System.out.println("     ( 6) PBLib_incremental");
 	}
 	
 	/**
@@ -250,33 +237,6 @@ public class App {
 	 */
 	public static void seedRandomSource(Long seed) {
 		dice = new Random(seed);
-	}
-	
-	/**
-	 * Set the standard encoding for the at-most-k constraint used by different SAT-encodings.
-	 * @param encoding
-	 */
-	public static void setSATEncoding(String encoding) {
-		switch (encoding) {
-		case "binomial":
-			GenericCardinalityEncoder.usedEncoding = GenericCardinalityEncoder.Encoding.BINOMIAL;
-			break;
-		case "sequential":
-			GenericCardinalityEncoder.usedEncoding = GenericCardinalityEncoder.Encoding.SEQUENTIAL;
-			break;
-		case "binary":
-			GenericCardinalityEncoder.usedEncoding = GenericCardinalityEncoder.Encoding.BINARY;
-			break;
-		case "commander":
-			GenericCardinalityEncoder.usedEncoding = GenericCardinalityEncoder.Encoding.COMMANDER;
-			break;
-		case "PBLib":
-			GenericCardinalityEncoder.usedEncoding = GenericCardinalityEncoder.Encoding.PBLIB;
-			break;
-		case "PBLib_incremental":
-			GenericCardinalityEncoder.usedEncoding = GenericCardinalityEncoder.Encoding.PBLIB_INCREMENTAL;
-			break;
-		}
 	}
 	
 	/**

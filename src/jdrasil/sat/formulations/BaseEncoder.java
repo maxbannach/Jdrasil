@@ -27,7 +27,6 @@ import java.util.Set;
 
 import jdrasil.graph.Graph;
 import jdrasil.sat.Formula;
-import jdrasil.sat.encodings.GenericCardinalityEncoder;
 
 /**
  * This class produces to a given graph G=(V,E) a formula phi that is satisfiable if, and only if,
@@ -60,9 +59,9 @@ public class BaseEncoder<T extends Comparable<T>> {
 	
 	/** A single clique of the graph can be eliminated at the end*/
 	protected Set<T> clique = new HashSet<>();
-	
-	/** AMK constraints that can iteratively be improved. */
-	private final Map<T, GenericCardinalityEncoder> amkEncoder;
+		
+	/** The set of variables on wish we define cardinality constraints. */
+	protected Map<T, Set<Integer>> cardinalitySets;
 	
 	/**
 	 * Default constructor that initializes all the variables.
@@ -73,7 +72,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 		this.n = graph.getVertices().size();
 		this.ord = new int[n+1][n+1];
 		this.arc = new int[n+1][n+1];
-		this.amkEncoder = new HashMap<>();
+		this.cardinalitySets = new HashMap<>();
 		
 		// compute the bijection
 		int varCount = 0;
@@ -183,7 +182,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 	 * This method computes a maximum clique using a SAT-solver and encode it into phi.
 	 */
 	protected void encodeClique() {
-		Set<T> clique = graph.getMaximumClique(5);
+		Set<T> clique = graph.getMaximumClique();
 		if (clique == null) return;
 		
 		// All vertices not in the clique are ordered before the clique
@@ -263,8 +262,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 			for (int j = 1; j <= n; j++) {
 				C.add(arc[i][j]);
 			}
-			GenericCardinalityEncoder encoder = new GenericCardinalityEncoder(phi, C, lb, ub);
-			amkEncoder.put(u, encoder);
+			phi.addCardinalityConstraint(lb, ub, C);
 		}
 	}
 	
@@ -272,17 +270,11 @@ public class BaseEncoder<T extends Comparable<T>> {
 	 * Add constraints to phi, such that phi is satisfiable if, and only if, the initial graph has tree-width at most k.
 	 * @param k
 	 */
-	public Formula addAtMost(int k) {
-		Formula psi = new Formula();
-		psi.setHighestVariable(phi.getHighestVariable());
-		
+	public void addAtMost(int k) {		
 		// just update constraint using existent encoder
 		for (T u : graph) {
-			amkEncoder.get(u).addAMK(psi, k);
+			phi.addCardinalityConstraint(0, k, this.cardinalitySets.get(u));
 		}
-
-		phi.setHighestVariable(psi.getHighestVariable());
-		return psi;
 	}
 	
 	/**
