@@ -1,34 +1,44 @@
-# Linux Version
-#export JAVA_COMPILER=/usr/lib/jvm/java-8-openjdk-amd64/bin/javac
-#export CXX=/usr/bin/g++
-#export JAVA_INCLUDE_DIR=/usr/lib/jvm/java-8-openjdk-amd64/include/
-#export JAVA_INCLUDE_DIR_LOCAL=/usr/lib/jvm/java-8-openjdk-amd64/include/linux/
-#export JAVA_EXECUTABLE=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
+JAVAC = javac
 
-# Uncomment for MAC
-export JAVA_COMPILER=/usr/bin/JAVAC
-export CXX=/usr/local/bin/g++-6
-export JAVA_INCLUDE_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/JavaVM.framework/Headers/
-export JAVA_EXECUTABLE=/usr/bin/java
+SRC = src/
+BIN = bin/
+DOC = doc/
+MANUAL = manual/
 
+files = $(shell find src -type f -name '*.java' | sed "s|^src/||")
+sources = $(addprefix $(SRC),$(files))
+classes = $(addprefix $(BIN), $(files:.java=.class))
+#tex = $(shell find $(MANUAL) -type f -name '*.tex')
 
-all:	glucose pblib java execs
+all: $(BIN) $(classes)
 
-execs:
-	./renameExecs.sh
+$(BIN):
+	mkdir $(BIN)
 
-glucose:
-	./makeGlucose.sh
+$(BIN)%.class: $(SRC)%.java
+	$(JAVAC) -sourcepath $(SRC) -d $(BIN) $<
 
-pblib:
-	./makePBLib.sh
+App.jar: $(BIN) $(classes)
+	jar cvfe App.jar jdrasil.App -C $(BIN) .
 
-java:
-	./makeJava.sh
+jar: App.jar
 
-test:
-	./tw-exact -s 1234 < instances/ClebschGraph.gr
-	./tw-exact-parallel -s 1234 < instances/McGeeGraph.gr
-	./tw-heuristic -s 1234 < instances/NauruGraph.gr
-	./tw-heuristic-parallel -s 1234 < instances/DoubleStarSnark.gr
+$(DOC):
+	mkdir $(DOC)
 
+documentation: $(DOC)
+	javadoc -d $(DOC) -sourcepath $(SRC) -subpackages de
+
+$(MANUAL)manual.pdf: $(tex)
+	(cd $(MANUAL) && lualatex manual.tex)
+
+manual: $(MANUAL)manual.pdf
+
+clean:
+	rm -rf $(BIN)
+	rm -rf $(DOC)
+	rm $(MANUAL)*.aux
+	rm $(MANUAL)*.log
+	rm $(MANUAL)*.pdf
+
+.PHONY: clean
