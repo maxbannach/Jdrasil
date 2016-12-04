@@ -1,8 +1,5 @@
 JAVAC = javac
 
-JNI = /Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include
-JNI2 = /Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include/darwin
-
 SRC = src/
 BIN = bin/
 LIB = lib/
@@ -30,23 +27,20 @@ jdrasil.jar: $(BIN) $(classes)
 
 jar: jdrasil.jar
 
-$(LIB)jdrasil_sat_NativeSATSolver.h: $(classes)
-	javah -jni -cp bin -d lib jdrasil.sat.NativeSATSolver
+$(LIB)ipasir/jdrasil_sat_NativeSATSolver.h: $(classes)
+	javah -jni -cp bin -d $(LIB)ipasir jdrasil.sat.NativeSATSolver
 
-jni: $(LIB)jdrasil_sat_NativeSATSolver.h
-
-$(LIB)libsatsolver.dylib:
-	(cd $(LIB) && gcc -bundle -I${JNI} -I${JNI2} -o libsatsolver.dylib test.c)
-
-nativesolver: $(LIB)libsatsolver.dylib
+cinterface: $(LIB)ipasir/jdrasil_sat_NativeSATSolver.h
 
 $(DOC):
 	mkdir $(DOC)
+	mkdir $(DOC)html
+	mkdir $(DOC)manual
 
 documentation: $(DOC)
-	javadoc -d $(DOC) -sourcepath $(SRC) -subpackages de
+	javadoc -d $(DOC)html -sourcepath $(SRC) -subpackages jdrasil
 
-$(MANUAL)manual.pdf: $(tex)
+$(MANUAL)manual.pdf: $(DOC) $(tex)
 	(cd $(MANUAL) && lualatex manual.tex)
 
 manual: $(MANUAL)manual.pdf

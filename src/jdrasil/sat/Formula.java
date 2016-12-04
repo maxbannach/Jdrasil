@@ -19,11 +19,14 @@
 package jdrasil.sat;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import jdrasil.sat.ISATSolver.SATSolverNotAvailableException;
 
 /**
  * This class represents a formula of propositional logic in CNF.
@@ -31,11 +34,23 @@ import java.util.Set;
  * @author Max Bannach
  */
 public class Formula implements Iterable<List<Integer>> {
-
+	
+	
+	/**
+	 * Checks if Jdrasil can register a SAT-Solver to the formula, that is, checks
+	 * whether or not there is a SAT-Solver in Jdrasils class or library path.
+	 * @return
+	 */
+	public static boolean canRegisterSATSolver() {
+		if (NativeSATSolver.isAvailable()) return true;
+		if (SAT4JSolver.isAvailable()) return true;
+		return false;
+	}
+	
 	/**
 	 * The formula (in CNF) is represented as list of clauses, a clause 
 	 * is represented as list of integers. Each variable is represented by a positive integer, a
-	 * literal is then then represented by the signed corresponding variable.
+	 * literal is then then represented by the signed corresponding variable (DIMACS style).
 	 */
 	private final List<List<Integer>> data;
 	
@@ -52,24 +67,12 @@ public class Formula implements Iterable<List<Integer>> {
 	private final Set<Integer> auxiliaryVariables;
 	
 	/**
-	 * This SATSolver is used by methods as @see isSatisfiable().
+	 * This ISATSolver is used by methods as @see isSatisfiable().
 	 * The solver must be registered by a call to @see registerSATSolver().
 	 * Once a solver is registered, clauses of the formula will be send to the solver on the fly.
 	 * This allows incremental solving, but forbids the deletion of clauses.
 	 */
-	private SATSolver solver;
-	
-	/**
-	 * A model of the formula assigning to every variable a boolean value.
-	 * A model is only available if the formula is 
-	 * a) satisfiable
-	 * b) @see isSatisfiable() was called before
-	 * 
-	 * Note that this value will always store the _last available_ model, i.e., if @see isSatisfiable() was
-	 * called while the formula had a model, and the formula was modified after this call, the model will correspond
-	 * to the formula at the moment of the call to @see isSatisfiable()
-	 */
-	private Map<Integer, Boolean> model;
+	private ISATSolver solver;
 	
 	/**
 	 * This integer is used to store the highest variable used in this formula.
@@ -103,7 +106,22 @@ public class Formula implements Iterable<List<Integer>> {
 	}
 	
 	/**
+	 * Add the given Clause to the ISATSolver by calling add(literal) for each literal in C
+	 * as well as calling add(0);
+	 * A ISATSolver must be registered in order to use this method.
+	 * 
+	 * @param C
+	 */
+	private void transferClauseToSolver(List<Integer> C) {
+		for (int literal : C) {
+			solver.add(literal);
+		}
+		solver.add(0);
+	}
+	
+	/**
 	 * Add a clause to the formula.
+	 * If a SATSolver is registered, this will also transfer the clauce directly to the solver.
 	 * @param C
 	 */
 	public void addClause(List<Integer> C) {
@@ -113,6 +131,7 @@ public class Formula implements Iterable<List<Integer>> {
 			if (var > highestVariable) highestVariable = var;
 		}
 		data.add(C);
+		if (solver != null) transferClauseToSolver(C);
 	}
 
 	/**
@@ -123,6 +142,57 @@ public class Formula implements Iterable<List<Integer>> {
 		List<Integer> C = new ArrayList<>(vars.length);
 		for (Integer v : vars) C.add(v);
 		addClause(C);
+	}
+	
+	/**
+	 * Removes the given clause from the formula. If this will remove all occurrences of a variable in the clause,
+	 * the variable will be removed from the formula as well.
+	 * 
+	 * This method may increase the solution space of the formula and can only be called if no SAT-Solver is registered
+	 * already. If there is SAT-Solver registered an exception will be thrown.
+	 * 
+	 * @param C
+	 * @throws SATSolverRegisteredException
+	 */
+	public void removeClause(List<Integer> C) throws SATSolverRegisteredException {
+		
+		// this only supported if we have not sat solver
+		if (solver != null) throw new SATSolverRegisteredException();
+		
+		// first remove the clause
+		for (List<Integer> clause : data) {
+			if (C.equals(clause)) {
+				data.remove(clause);				
+				break;
+			}
+		}
+		
+		// remove the variable, if it is not present anymore
+		for (Integer literal : C) {
+			boolean available = false;
+			for (List<Integer> clause : data) {
+				if (clause.contains(literal) || clause.contains(-1*literal)) {
+					available = true;
+					break;
+				}
+			}
+			if (!available) {
+				this.variables.remove(Math.abs(literal));
+				this.auxiliaryVariables.remove(Math.abs(literal));
+			}
+		}		
+		
+	}
+	
+	/**
+	 * Abbreviation for @see removeClause(List<Integer> C)
+	 * @param vars
+	 * @throws SATSolverRegisteredException
+	 */
+	public void removeClause(Integer... vars) throws SATSolverRegisteredException {
+		List<Integer> C = new ArrayList<>(vars.length);
+		for (Integer v : vars) C.add(v);
+		removeClause(C);
 	}
 	
 	/**
@@ -285,11 +355,29 @@ public class Formula implements Iterable<List<Integer>> {
 	 * 
 	 * The user has no influence on which kind of solver will be registered. 
 	 * 
+	 * You can check whether or not this method will throw an exception with @see canRegisterSATSolver()
+	 * 
+	 * @return String the signature of the loaded solver
 	 * @throws SATSolverNotAvailableException if Jdrasil has no access to any SATSolver
 	 */
-	public void registerSATSolver() throws SATSolver.SATSolverNotAvailableException {
-		if (!SATSolver.isAvailable()) throw new SATSolver.SATSolverNotAvailableException();
-		this.solver = new SATSolver();
+	public String registerSATSolver() throws ISATSolver.SATSolverNotAvailableException {
+		
+		// try to load a solver
+		if (NativeSATSolver.isAvailable()) {
+			this.solver = new NativeSATSolver();
+		} else if (SAT4JSolver.isAvailable()) {
+			this.solver = new SAT4JSolver();
+		} else {
+			throw new ISATSolver.SATSolverNotAvailableException();
+		}
+		
+		// transfer all previous clauses to the solver
+		for (List<Integer> clause : data) {
+			transferClauseToSolver(clause);
+		}
+		
+		// return the signature of the solver
+		return solver.signature();
 	}
 	
 	/**
@@ -312,22 +400,35 @@ public class Formula implements Iterable<List<Integer>> {
 	 * @return true if the formula is satisfiable 
 	 * @throws NoSATSolverRegisteredException if no SAT-Solver was registered for this formula
 	 */
-	public boolean isSatisfiable() throws NoSATSolverRegisteredException {
+	public boolean isSatisfiable(Integer... assumption) throws NoSATSolverRegisteredException {
 		if (this.solver == null) throw new NoSATSolverRegisteredException();
-		//TODO: implement
-
-		return false;
+		
+		// add assumption to the solver
+		for (int i = 0; i < assumption.length; i++) {
+			solver.assume(assumption[i]);
+		}
+		
+		return solver.solve() == ISATSolver.SATISFIABLE;
 	}
 	
 	/**
 	 * If the formula is satisfiable, this method can be used to obtain a model.
-	 * A model will only be available if @see isSatisfiable() was called and has returned true.
-	 * The model will correspond to the last call of @see isSatisfiable(), even if the formula was modifed after this call.
+	 * A model will only be available if @see isSatisfiable() was called and has returned true; and if the formula was not modifed after this.
+	 * The model will correspond to the last call of @see isSatisfiable().
 	 * @return
 	 * @throws NoModelAvailableException
 	 */
 	public Map<Integer, Boolean> getModel() throws NoModelAvailableException {
-		if (model == null) throw new NoModelAvailableException();
+		if (!solver.getCurrentState().equals(ISATSolver.State.SAT)) {
+			throw new NoModelAvailableException();
+		}
+		
+		// extract the model from the solver
+		Map<Integer, Boolean> model = new HashMap<>();
+		for (Integer var : getVariables()) {
+			model.put(var, solver.val(var) == var);
+		}
+		
 		return model;
 	}
 	
@@ -383,6 +484,15 @@ public class Formula implements Iterable<List<Integer>> {
 	 * @see registerSATSolver()
 	 */
 	class NoSATSolverRegisteredException extends Exception {
+		private static final long serialVersionUID = 1L;		
+	}
+	
+	/**
+	 * This exception that there is a SATSolver registered for this Formula, and it was tried to
+	 * modify the formula in an unsupported way, i.e., deleting or modifying a clause.
+	 * @see registerSATSolver()
+	 */
+	class SATSolverRegisteredException extends Exception {
 		private static final long serialVersionUID = 1L;		
 	}
 	
