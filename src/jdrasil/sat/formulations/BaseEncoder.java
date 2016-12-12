@@ -250,7 +250,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 	}
 	
 	/**
-	 * Initialize the cardinality constraint (a sequential counter that is used multiple times)
+	 * Initialize the cardinality constraint
 	 * @param lb
 	 * @param ub
 	 */
@@ -262,6 +262,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 			for (int j = 1; j <= n; j++) {
 				C.add(arc[i][j]);
 			}
+			this.cardinalitySets.put(u, C);
 			phi.addCardinalityConstraint(lb, ub, C);
 		}
 	}
@@ -270,10 +271,10 @@ public class BaseEncoder<T extends Comparable<T>> {
 	 * Add constraints to phi, such that phi is satisfiable if, and only if, the initial graph has tree-width at most k.
 	 * @param k
 	 */
-	public void addAtMost(int k) {		
+	public void improveCardinality(int lb, int ub) {		
 		// just update constraint using existent encoder
 		for (T u : graph) {
-			phi.addCardinalityConstraint(0, k, this.cardinalitySets.get(u));
+			phi.addCardinalityConstraint(lb, ub, this.cardinalitySets.get(u));
 		}
 	}
 	

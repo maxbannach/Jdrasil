@@ -39,30 +39,13 @@ import jdrasil.sat.Formula;
  */
 public class BasicCardinalityEncoder {
 
-	/** This class is a singleton. */
-	private static BasicCardinalityEncoder instance;
-	
 	/** Hide the constructor. */
-	private BasicCardinalityEncoder() {
-		instance = this;
-	}
-	
-	/**
-	 * This class is implemented as singleton.
-	 * Use this method to get the only allocated object of this class.
-	 * @return
-	 */
-	public static BasicCardinalityEncoder getInstance() {
-		if (instance == null) {
-			instance = new BasicCardinalityEncoder();
-		}
-		return instance;
-	}
-		
+	private BasicCardinalityEncoder() {}
+			
 	//MARK: Binomial Encoding
 	
 	/** @see binomialAMK(Formula phi, List<Integer> variables, int k) */
-	private void binomialAMK(Formula phi, List<Integer> variables, List<Integer> C, int k, int pos) {
+	private static void binomialAMK(Formula phi, List<Integer> variables, List<Integer> C, int k, int pos) {
 		
 		// construction of subset complete
 		if (k == 0) {
@@ -89,7 +72,7 @@ public class BasicCardinalityEncoder {
 	 * @param variables
 	 * @param k
 	 */
-	public void binomialAMK(Formula phi, Set<Integer> variables, int k) {
+	public static void binomialAMK(Formula phi, Set<Integer> variables, int k) {
 		binomialAMK(phi, new ArrayList<>(variables), new LinkedList<>(), k+1, 0);
 	}
 	
@@ -100,7 +83,7 @@ public class BasicCardinalityEncoder {
 	 * @param variables
 	 * @param k
 	 */
-	public void binomialALK(Formula phi, Set<Integer> variables, int k) {
+	public static void binomialALK(Formula phi, Set<Integer> variables, int k) {
 		List<Integer> neg = new ArrayList<>(variables);
 		for (int i = 0; i < neg.size(); i++) neg.set(i, -1*neg.get(i));
 		binomialAMK(phi, neg, new LinkedList<>(), variables.size()-k+1, 0);
@@ -115,7 +98,7 @@ public class BasicCardinalityEncoder {
 	 * @param variables
 	 * @param k
 	 */
-	public void binaryAMK(Formula phi, Set<Integer> variables, int k) {
+	public static void binaryAMK(Formula phi, Set<Integer> variables, int k) {
 		List<Integer> vars = new ArrayList<>(variables);
 		int n = variables.size();
 		int logn = (int) Math.ceil(Math.log(n)/Math.log(2));
@@ -182,7 +165,7 @@ public class BasicCardinalityEncoder {
 	 * @param variables
 	 * @param k
 	 */
-	public void binaryALK(Formula phi, Set<Integer> variables, int k) {
+	public static void binaryALK(Formula phi, Set<Integer> variables, int k) {
 		Set<Integer> neg = new HashSet<>();
 		for (Integer v : variables) neg.add(-1*v); 
 		binaryAMK(phi, neg, variables.size()-k);
@@ -197,13 +180,7 @@ public class BasicCardinalityEncoder {
 	 * @param variables
 	 * @param k
 	 */
-	public void sequentialAMK(Formula phi, Set<Integer> variables, int k) {
-		
-		// small instances are better handled by binomial
-		if (variables.size() < 7 || k <= 1) {
-			binomialAMK(phi, variables, k);
-			return;
-		}
+	public static void sequentialAMK(Formula phi, Set<Integer> variables, int k) {
 		
 		List<Integer> X = new ArrayList<>(variables);
 		X.add(0,0);				
@@ -263,88 +240,47 @@ public class BasicCardinalityEncoder {
 	 * @param variables
 	 * @param k
 	 */
-	public void sequentialALK(Formula phi, Set<Integer> variables, int k) {
-		Set<Integer> neg = new HashSet<>();
-		for (Integer v : variables) neg.add(-1*v); 
-		sequentialAMK(phi, neg, variables.size()-k);
-	}
-	
-	//MARK: Commander Encoding
-	
-	/**
-	 * Add an At-Most-k cardinality constraint to the given formula using the commander encoding.
-	 * This encoding introduce O((binom{2k+2}{k+1}+binom{2k+2}{k-1})*n/2) clauses and O(kn/2) new variables.
-	 * @param phi
-	 * @param variables
-	 * @param k
-	 */
-	public void commanderAMK(Formula phi, Set<Integer> variables, int k) {
+	public static void sequentialALK(Formula phi, Set<Integer> variables, int k) {
+		
+		List<Integer> X = new ArrayList<>(variables);
+		X.add(0,0);				
 		int n = variables.size();
-		int s = k + 2; // group size
-		int g = (int) Math.ceil(n/s); // number of groups
 		int currentVar = phi.getHighestVariable() + 1;
 		
-		// for very small instances, binomial is simply the best
-		if (n < 7) {
-			binomialAMK(phi, variables, k);
-			return;
-		}
-		
-		// end of recursion, use other encoding
-		if (n <= k+s) {
-			sequentialAMK(phi, variables, k);
-			return;
-		}
-		
-		// the groups
-		List<List<Integer>> G = new ArrayList<>(g);
-		
-		// the commander variables
-		int[][] C = new int[g][k];
-		Set<Integer> commander = new HashSet<>();
-		for (int i = 0; i < g; i++) {
-			for (int j = 0; j < k; j++) {
-				C[i][j] = currentVar;
-				phi.markAuxiliary(C[i][j]);
-				commander.add(currentVar);
+		// new variables encoding the register (i.e., the counting circuit)
+		int[][] R = new int[n+1][k+1];
+		for (int i = 1; i <= n; i++) {
+			for (int j = 1; j <= k; j++) {
+				R[i][j] = currentVar;
 				currentVar = currentVar + 1;
 			}
 		}
-		phi.setHighestVariable(currentVar-1);
 		
-		// partition variables into the groups
-		int i = 0;
-		for (Integer v : new ArrayList<>(variables)) {			
-			if (G.size() < i+1) G.add(new ArrayList<>(s+k));
-			G.get(i).add(v);
-			if (G.get(i).size() == s) {
-				// group full -> add commander variables
-				for (int j = 0; j < k; j++) {
-					G.get(i).add(-1*C[i][j]);
-				}
-				
-				// AMK and ALK 
-				if ( (s+k) < 7) { // small instances are directly handled by binomial
-					binomialAMK(phi, new HashSet<>(G.get(i)), k);
-					binomialALK(phi, new HashSet<>(G.get(i)), k);
-				} else { // otherwise we need a stronger encoding
-					sequentialAMK(phi, new HashSet<>(G.get(i)), k);
-					sequentialALK(phi, new HashSet<>(G.get(i)), k);
-				}
-				
-				// remove symmetrical solutions when less than k variables are true
-				for (int j = 0; j < k-1; j++) {
-					phi.addClause(-1*C[i][j], C[i][j+1]);
-				}
-				
-				// start new group
-				i = i + 1;
+		// equation 1
+		phi.addClause(-R[1][1], X.get(1));
+		
+		// equation 2
+		for (int j = 2; j <= k; j++) {
+			phi.addClause(-R[1][j]);
+		}
+		
+		// equation 3
+		for (int i = 2; i<= n; i++) {
+			for (int j = 2; j <= k; j++) {
+				phi.addClause(-R[i][j], R[i-1][j-1]);
 			}
 		}
 		
-		// recursive call on commander variables
-		commanderAMK(phi, commander, k);
+		// equation 4
+		for (int i = 2; i<= n; i++) {
+			for (int j = 1; j <= k; j++) {
+				phi.addClause(-R[i][j], R[i-1][j], X.get(i));
+			}
+		}
+		
+		// equation 5
+		phi.addClause(R[n][k]);
+		
 	}
-    
-    
+	
 }

@@ -289,7 +289,6 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 				if (!x.contains(v)) count++;
 			}
 			if (count > 1) continue;
-			
 			Bag<T> y = td.createBag(bag);
 			td.addTreeEdge(y, x);
 			return;

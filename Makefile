@@ -2,7 +2,7 @@ JAVAC = javac
 
 SRC = src/
 BIN = bin/
-LIB = lib/
+UP = upgrades/
 DOC = doc/
 MANUAL = manual/
 
@@ -13,8 +13,8 @@ classes = $(addprefix $(BIN), $(files:.java=.class))
 
 all: $(BIN) $(classes)
 
-$(LIB):
-	mkdir $(LIB)
+$(UP):
+	mkdir $(upgrades)
 
 $(BIN):
 	mkdir $(BIN)
@@ -27,10 +27,10 @@ jdrasil.jar: $(BIN) $(classes)
 
 jar: jdrasil.jar
 
-$(LIB)ipasir/jdrasil_sat_NativeSATSolver.h: $(classes)
-	javah -jni -cp bin -d $(LIB)ipasir jdrasil.sat.NativeSATSolver
+$(UP)ipasir/jdrasil_sat_NativeSATSolver.h: $(classes)
+	javah -jni -cp bin -d $(UP)ipasir jdrasil.sat.NativeSATSolver
 
-cinterface: $(LIB)ipasir/jdrasil_sat_NativeSATSolver.h
+cinterface: $(UP)ipasir/jdrasil_sat_NativeSATSolver.h
 
 $(DOC):
 	mkdir $(DOC)
@@ -52,5 +52,14 @@ clean:
 	rm $(MANUAL)*.aux
 	rm $(MANUAL)*.log
 	rm $(MANUAL)*.pdf
+
+# Upgrades
+
+upgrade-sat4j:
+	wget http://download.forge.ow2.org/sat4j/sat4j-core-v20130525.zip
+	unzip sat4j-core-v20130525.zip
+	mv org.sat4j.core.jar $(UP)
+	rm -rf sat4j-core-v20130525.zip
+	rm org.sat4j.core-src.jar
 
 .PHONY: clean jni jar

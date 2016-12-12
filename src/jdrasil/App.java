@@ -30,7 +30,6 @@ import jdrasil.algorithms.ReductionRuleDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposition;
-import jdrasil.sat.Formula;
 
 
 /**
@@ -57,32 +56,6 @@ public class App {
 	
 	/** Entry point! */
 	public static void main(String[] args) {
-		
-		System.out.println("SAT is avaidable: " + Formula.canRegisterSATSolver());		
-		try {
-			Formula phi = new Formula();
-			Formula phi2 = new Formula();
-			phi.addClause(1, 2, 3);
-			phi.addClause(-1);
-			phi.addClause(-2);
-
-			String sig = phi.registerSATSolver();
-			System.out.println("Registered Solver: " + sig);
-			
-			if (phi.isSatisfiable()) {
-				System.out.println("SATISFIABLE");
-				System.out.println("Model:");
-				System.out.println(phi.getModel());
-			} else {
-				System.out.println("UNSATISFIABLE");
-			}
-			
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-		
-		
-		if (true) System.exit(0);
 		
 		// parsing arguments
 		parseArguments(args);

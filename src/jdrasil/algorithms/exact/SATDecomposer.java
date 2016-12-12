@@ -113,7 +113,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 				return null;
 		}
 		
-		encoder.initCardinality(lb, ub);
+		encoder.initCardinality(0, ub);
 		Formula phi = encoder.getFormula();				
 		try {
 			phi.registerSATSolver();
@@ -128,7 +128,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 				if (k < ub) App.reportNewSolution(k);
 				permutation = encoder.getPermutation(phi.getModel());
 				k = k - 1;
-				encoder.addAtMost(k);			
+				encoder.improveCardinality(0, k);			
 			}
 		} catch (Exception e) {}
 				

@@ -127,7 +127,6 @@ JNIEXPORT jint JNICALL Java_jdrasil_sat_NativeSATSolver_solve(JNIEnv* env, jobje
 
 JNIEXPORT jint JNICALL Java_jdrasil_sat_NativeSATSolver_val(JNIEnv* env, jobject callingObject, jint literal) {
   void* instance = getInstance(env, callingObject);
-  printf("value of %d = %d\n", literal, ipasir_val(instance, literal));
   return ipasir_val(instance, literal);
 }
 

@@ -207,7 +207,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		
 		// glue all the tree-decompositions together
 		TreeDecomposition<T> decomposition = glueDecompositions(decompositions);
-
+		
 		// done
 		App.log("");
 		return decomposition;

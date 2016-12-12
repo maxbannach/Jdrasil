@@ -22,11 +22,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import jdrasil.sat.ISATSolver.SATSolverNotAvailableException;
+import jdrasil.sat.encodings.BasicCardinalityEncoder;
 
 /**
  * This class represents a formula of propositional logic in CNF.
@@ -314,7 +316,26 @@ public class Formula implements Iterable<List<Integer>> {
 	 * @param variables
 	 */
 	public void addAtMost(int k, Set<Integer> variables) {
-		//TODO: implement
+		
+		// small instances are better handled by binomial
+		if (variables.size() < 7 || k <= 1) {
+			BasicCardinalityEncoder.binomialAMK(this, variables, k);
+			return;
+		}
+		
+		// if we are allowed to set all variables, do nothing
+		if (k == variables.size()) return;
+		
+		// if k is large, the inverted encoding is faster
+		if (k > variables.size()/2) {
+			Set<Integer> neg = new HashSet<>();
+			for (Integer v : variables) neg.add(-1*v); 
+			BasicCardinalityEncoder.sequentialALK(this, neg, variables.size()-k);
+			return;
+		}
+		
+		// use sequential counter
+		BasicCardinalityEncoder.sequentialAMK(this, variables, k);
 	}
 	
 	/**
@@ -324,7 +345,32 @@ public class Formula implements Iterable<List<Integer>> {
 	 * @param variables
 	 */
 	public void addAtLeast(int k, Set<Integer> variables) {
-		//TODO: implement
+		
+		// nothing to do
+		if (k == 0) return;
+		
+		// at least one is a simple clause
+		if (k == 1) {
+			this.addClause(new LinkedList<>(variables));
+			return;
+		}
+		
+		// we have to set all variables, simply add unit clauses
+		if (k == variables.size()) {
+			for (Integer v : variables) this.addClause(v);
+			return;
+		}
+		
+		// if k is large, the inverted encoding is faster
+		if (k > variables.size()/2) {
+			Set<Integer> neg = new HashSet<>();
+			for (Integer v : variables) neg.add(-1*v); 
+			BasicCardinalityEncoder.sequentialAMK(this, neg, variables.size()-k);
+			return;
+		}
+		
+		// use sequential counter
+		BasicCardinalityEncoder.sequentialALK(this, variables, k);	
 	}
 	
 	/**
@@ -341,7 +387,9 @@ public class Formula implements Iterable<List<Integer>> {
 	 * @param variables
 	 */
 	public void addCardinalityConstraint(int lb, int ub, Set<Integer> variables) {
-		//TODO: implement
+		//TODO: implement Sortingnetwork
+		addAtMost(ub, variables);
+		addAtLeast(lb, variables);
 	}
 	
 	/**
@@ -465,7 +513,7 @@ public class Formula implements Iterable<List<Integer>> {
 		StringBuilder sb = new StringBuilder();
 		
 		// insert a default header
-		sb.append("c formula created by treewidth\n");
+		sb.append("c formula created by Jdrasil\n");
 		sb.append("p cnf " + this.numberOfAllVariables() + " " + this.numberOfClauses() + "\n");
 		
 		// output the clauses
