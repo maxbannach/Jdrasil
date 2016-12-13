@@ -29,6 +29,7 @@ import java.util.Set;
 
 import jdrasil.sat.ISATSolver.SATSolverNotAvailableException;
 import jdrasil.sat.encodings.BasicCardinalityEncoder;
+import jdrasil.sat.encodings.IncrementalCardinalityEncoder;
 
 /**
  * This class represents a formula of propositional logic in CNF.
@@ -36,8 +37,7 @@ import jdrasil.sat.encodings.BasicCardinalityEncoder;
  * @author Max Bannach
  */
 public class Formula implements Iterable<List<Integer>> {
-	
-	
+		
 	/**
 	 * Checks if Jdrasil can register a SAT-Solver to the formula, that is, checks
 	 * whether or not there is a SAT-Solver in Jdrasils class or library path.
@@ -69,6 +69,18 @@ public class Formula implements Iterable<List<Integer>> {
 	private final Set<Integer> auxiliaryVariables;
 	
 	/**
+	 * A mapping from variable sets to incremental cardinality encoder.
+	 * If an cardinality constrained is added more then once, the exiting encoder will be used.
+	 */
+	private Map<Set<Integer>, IncrementalCardinalityEncoder> incrementalEncoder;
+	
+	/**
+	 * A model of the formula, i.e., a mapping from variables to its boolean values.
+	 * A model will only be available if @see isSatisfiable() was invoked and has returned true.
+	 */
+	private Map<Integer, Boolean> model;
+	
+	/**
 	 * This ISATSolver is used by methods as @see isSatisfiable().
 	 * The solver must be registered by a call to @see registerSATSolver().
 	 * Once a solver is registered, clauses of the formula will be send to the solver on the fly.
@@ -90,6 +102,7 @@ public class Formula implements Iterable<List<Integer>> {
 		data = new ArrayList<>();
 		variables = new HashSet<>();
 		auxiliaryVariables = new HashSet<Integer>();
+		this.incrementalEncoder = new HashMap<>();
 		highestVariable = 0;
 		solver = null;
 	}
@@ -122,20 +135,66 @@ public class Formula implements Iterable<List<Integer>> {
 	}
 	
 	/**
+	 * This method adds a variable the formula and updates the range of available variables.
+	 * 
+	 * The method is automatically called when a clause is added, so it usually does not has to be called
+	 * manually. However, sometimes one wishes to "register" and variable before we use it. In this case
+	 * this method is useful.
+	 * 
+	 * @param var
+	 */
+	public void addVariable(int var) {
+		if (variables.contains(var) || auxiliaryVariables.contains(var)) return;
+		variables.add(var);
+		if (var > highestVariable) highestVariable = var;		
+	}
+	
+	/**
+	 * Works as @see addVariable, but finds a safe variable number by it self and returns the new variable.
+	 * @return
+	 */
+	public int newVariable() {
+		int newVar = this.highestVariable+1;
+		addVariable(newVar);
+		return newVar;
+	}
+	
+	/**
+	 * Works as @see addVariable, but finds a safe variable number by it self and returns the new variable.
+	 * Marks the variable as auxiliary was well.
+	 * @return
+	 */
+	public int newAuxillaryVariable() {
+		int newVar = this.highestVariable+1;
+		addVariable(newVar);
+		markAuxiliary(newVar);
+		return newVar;
+	}
+	
+	/**
 	 * Add a clause to the formula.
-	 * If a SATSolver is registered, this will also transfer the clauce directly to the solver.
+	 * If a SATSolver is registered, this will also transfer the clause directly to the solver.
 	 * @param C
 	 */
 	public void addClause(List<Integer> C) {
 		for (Integer literal : C) {
 			Integer var = Math.abs(literal);
-			variables.add(var);
-			if (var > highestVariable) highestVariable = var;
+			addVariable(var);
 		}
 		data.add(C);
 		if (solver != null) transferClauseToSolver(C);
 	}
 
+	/**
+	 * Add a clause to the formula in form of a set of (non zero) integers.
+	 * @param vars
+	 */
+	public void addClause(Set<Integer> vars) {
+		List<Integer> C = new ArrayList<>(vars.size());
+		for (Integer v : vars) C.add(v);
+		addClause(C);
+	}
+	
 	/**
 	 * Add a clause to the formula in form of (non zero) integers.
 	 * @param vars
@@ -387,9 +446,33 @@ public class Formula implements Iterable<List<Integer>> {
 	 * @param variables
 	 */
 	public void addCardinalityConstraint(int lb, int ub, Set<Integer> variables) {
-		//TODO: implement Sortingnetwork
-		addAtMost(ub, variables);
-		addAtLeast(lb, variables);
+		if (!incrementalEncoder.containsKey(variables)) {
+			incrementalEncoder.put(variables, new IncrementalCardinalityEncoder(this, variables));
+		}
+		incrementalEncoder.get(variables).addAtLeast(lb);
+		incrementalEncoder.get(variables).addAtMost(ub);		
+	}
+	
+	/**
+	 * Works as @see addCardinalityConstraint, but does add the lb and ub only as assumption (auxillary variables and clauses are added normaly,
+	 * so that this method can be used incrementally as well).
+	 * 
+	 * As this method does make an assumption, it only works if a SAT-Solver is registered (other wise a @see NoSATSolverRegisteredException will be thrown).
+	 *  
+	 * @param lb
+	 * @param ub
+	 * @param variables
+	 * @throws NoSATSolverRegisteredException
+	 */
+	public void assumeCardinalityConstraint(int lb, int ub, Set<Integer> variables) throws NoSATSolverRegisteredException {
+		if (this.solver == null) throw new NoSATSolverRegisteredException();
+		if (!incrementalEncoder.containsKey(variables)) {
+			incrementalEncoder.put(variables, new IncrementalCardinalityEncoder(this, variables));
+		}
+		int lbV = incrementalEncoder.get(variables).literalForAtLeast(lb);
+		int ubV = incrementalEncoder.get(variables).literalForAtMost(lb);
+		if (lbV != 0) this.solver.assume(lbV);
+		if (ubV != 0) this.solver.assume(ubV);
 	}
 	
 	/**
@@ -456,30 +539,32 @@ public class Formula implements Iterable<List<Integer>> {
 			solver.assume(assumption[i]);
 		}
 		
-		return solver.solve() == ISATSolver.SATISFIABLE;
-	}
-	
-	/**
-	 * If the formula is satisfiable, this method can be used to obtain a model.
-	 * A model will only be available if @see isSatisfiable() was called and has returned true; and if the formula was not modifed after this.
-	 * The model will correspond to the last call of @see isSatisfiable().
-	 * @return
-	 * @throws NoModelAvailableException
-	 */
-	public Map<Integer, Boolean> getModel() throws NoModelAvailableException {
-		if (!solver.getCurrentState().equals(ISATSolver.State.SAT)) {
-			throw new NoModelAvailableException();
-		}
+		// solve the formula
+		if (solver.solve() != ISATSolver.SATISFIABLE) return false;
 		
 		// extract the model from the solver
-		Map<Integer, Boolean> model = new HashMap<>();
+		model = new HashMap<>();
 		for (Integer var : getVariables()) {
 			model.put(var, solver.val(var) == var);
 		}
 		
-		return model;
+		return true;
 	}
 	
+	/**
+	 * If the formula is satisfiable, this method can be used to obtain a model.
+	 * A model will only be available if @see isSatisfiable() was called and has returned true.
+	 * The model will correspond to the last (successful) call of @see isSatisfiable().
+	 * @return
+	 * @throws NoModelAvailableException
+	 */
+	public Map<Integer, Boolean> getModel() throws NoModelAvailableException {
+		if (this.model == null) {
+			throw new NoModelAvailableException();
+		}
+		return this.model;
+	}
+		
 	@Override
 	public Iterator<List<Integer>> iterator() {
 		return new ClauseIterator(this);
@@ -526,12 +611,12 @@ public class Formula implements Iterable<List<Integer>> {
 		
 		return sb.toString();
 	}
-
+	
 	/**
 	 * This exception indicates that there is no SATSolver registered for this Formula.
 	 * @see registerSATSolver()
 	 */
-	class NoSATSolverRegisteredException extends Exception {
+	public class NoSATSolverRegisteredException extends Exception {
 		private static final long serialVersionUID = 1L;		
 	}
 	
@@ -540,7 +625,7 @@ public class Formula implements Iterable<List<Integer>> {
 	 * modify the formula in an unsupported way, i.e., deleting or modifying a clause.
 	 * @see registerSATSolver()
 	 */
-	class SATSolverRegisteredException extends Exception {
+	public class SATSolverRegisteredException extends Exception {
 		private static final long serialVersionUID = 1L;		
 	}
 	
@@ -548,7 +633,7 @@ public class Formula implements Iterable<List<Integer>> {
 	 * This exception is used when one tries to get a model of the formula, but there is non.
 	 * For instance, because @see isSatisfiable() was not called, or because there is no model at all.
 	 */
-	class NoModelAvailableException extends Exception {
+	public class NoModelAvailableException extends Exception {
 		private static final long serialVersionUID = 1L;		
 	}
 	

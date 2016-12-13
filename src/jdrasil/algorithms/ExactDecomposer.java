@@ -138,7 +138,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 			preprocessor.glueTreeDecomposition(decomposition);
 			return preprocessor.getTreeDecomposition();
 		}
-		
+			
 		/* If everything above does not work, we solve the problem using a SAT-encoding */
 		App.log("Solve with a SAT-Solver");
 		TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub).call();		

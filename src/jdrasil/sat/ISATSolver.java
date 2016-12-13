@@ -27,7 +27,7 @@ package jdrasil.sat;
  * 
  * @author Max Bannach
  */
-interface ISATSolver {
+public interface ISATSolver {
 
 	/** This value is returned by @see solve if the formula is satisfiable */
 	final int SATISFIABLE   = 10;
