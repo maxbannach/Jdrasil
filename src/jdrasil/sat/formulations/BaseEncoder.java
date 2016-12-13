@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jdrasil.graph.Graph;
+import jdrasil.graph.invariants.Clique;
 import jdrasil.sat.Formula;
 
 /**
@@ -182,7 +183,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 	 * This method computes a maximum clique using a SAT-solver and encode it into phi.
 	 */
 	protected void encodeClique() {
-		Set<T> clique = graph.getMaximumClique();
+		Set<T> clique = new Clique<T>(graph).getClique();
 		if (clique == null) return;
 		
 		// All vertices not in the clique are ordered before the clique

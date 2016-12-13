@@ -430,16 +430,6 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 			return itr.next();
 		}		
 	}
-
-	/**
-	 * Compute a maximum clique of the graph using a SAT-oracle.
-	 * If the sat-solver fails, this method returns null.
-	 * @return
-	 */
-	public Set<T> getMaximumClique() {
-		//TODO: implement
-		return null;
-	}
 	
 	/**
 	 * Returns the number of edges the elimination operation on v will introduce to the graph.

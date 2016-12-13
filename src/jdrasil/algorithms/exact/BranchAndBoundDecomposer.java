@@ -35,6 +35,7 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.graph.invariants.Clique;
 
 /**
  * A classical branch and bound algorithm based on QuickBB and its successors.
@@ -377,7 +378,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		permutation = MinFill.getPermutation();
 		
 		// we can safely eliminate a clique at last
-		this.clique = graph.getMaximumClique();
+		this.clique = new Clique<T>(graph).getClique();
 		
 		// call the branch and bound algorithm to find an optimal solution, this is any time so the currently best
 		//  solution is always available
