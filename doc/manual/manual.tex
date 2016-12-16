@@ -72,7 +72,7 @@ distance=0.75cm, anchor at = {(5,0)}] {
 \end{center}
 We could create the graph from above with any other comparable Java
 class; and also run all the algorithms implemented by \Jdrasil\ on
-it. Especially, for class representing subsets of vertices, we can
+it. Especially, for a class representing subsets of vertices, we can
 represent the following graphs:
 \begin{center}
 \begin{tikzpicture}
@@ -308,6 +308,41 @@ additional model (for instance, a model for the vertex-cover model
 is the actual vertex-cover), the class also provides the method
 \JMethod{getModel}, which returns a map from vertices to some values.
 
+The usual usage of an invariant is as follows (here, we use
+vertex-cover):
+\begin{lstlisting}[language=Java]
+  // this will already compute the vertex cover
+  VertexCover vc = new VertexCover<T>(myGraph);
+
+  // the following methods then cost O(1)
+  vc.getValue(); // size of the vertex-cover
+  vc.getModel(); // the vertex-cover
+
+  // since some invariants are hard to compute, we may not 
+  // obtain an optimal solution, we can check as follows
+  vs.isExact()
+\end{lstlisting}
+
+\Jdrasil\ currently implements the following invariants:
+
+\begin{tabular}{p{0.3\textwidth}p{0.65\textwidth}}
+  \toprule
+  Invariant & Description\\\cmidrule(rl){1-2}
+  \JClass{VertexCover} & Computes a set of vertices that covers all
+  edges. If an SAT solver is available, this class will compute a
+  minimal vertex-cover. Otherwise, a 2-approximation is used.\\
+  \JClass{Clique} & Computes a set of vertices that are all pairwise
+  adjacent. If an SAT solver is available, a maximal clique will be
+  computed. Otherwise, a greedy strategy is used.\\
+  \JClass{TwinDecomposition} & Computes a twin decomposition of the
+  graph. Two vertices $u$, $v$ are called twins if we have
+  $N(u)=N(v)$. This relation defines a equivalence relation on the
+  graph, which we call twin decomposition.\\
+  \JClass{MinimalSeperator} & Computes a minimal seperator, i.\,e., a
+  minimal set of vertices such that the removal of the set will
+  increase the number of connected components of the graph.\\
+  \bottomrule
+\end{tabular}
 \chapter{Tree Decompositions}\label{chapter:treedecompositions}
 
 \part{Upgrades}
