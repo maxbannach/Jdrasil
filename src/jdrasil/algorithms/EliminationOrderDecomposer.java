@@ -32,6 +32,7 @@ import java.util.Set;
 
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
+import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
@@ -72,7 +73,7 @@ public class EliminationOrderDecomposer<T extends Comparable<T>> implements Tree
 	 * @param qualityOfPermutation the quality of the given permutation
 	 */
 	public EliminationOrderDecomposer(Graph<T> graph, List<T> permutation, TreeDecompositionQuality qualityOfPermutation) {
-		this.graph = graph.copy();
+		this.graph = GraphFactory.copy(graph);
 		this.permutation = new LinkedList<T>(permutation);		
 		this.qualityOfPermutation = qualityOfPermutation;
 		this.eliminatedVertexToBag = new HashMap<>();

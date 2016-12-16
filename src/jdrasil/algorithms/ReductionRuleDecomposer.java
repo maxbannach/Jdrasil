@@ -30,6 +30,7 @@ import java.util.Stack;
 import jdrasil.App;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
+import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposition;
 
 /**
@@ -65,8 +66,8 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 	 * @param graph
 	 */
 	public ReductionRuleDecomposer(Graph<T> graph) {
-		this.original = graph.copy();
-		this.graph = graph.copy();
+		this.original = GraphFactory.copy(graph);
+		this.graph = GraphFactory.copy(graph);
 		this.td = new TreeDecomposition<T>(graph);
 		this.bags = new Stack<>();
 		this.low = 0;
@@ -82,7 +83,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 			if (graph.getNeighborhood(v).size() == 0) {
 				Set<T> set = new HashSet<>();
 				set.add(v);
-				graph.deleteVertex(v);
+				graph.removeVertex(v);
 				low = Math.max(low, 1);
 				return set;
 			}
@@ -101,7 +102,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 				Set<T> set = new HashSet<>();
 				set.add(v);
 				set.add(graph.getNeighborhood(v).get(0));
-				graph.deleteVertex(v);
+				graph.removeVertex(v);
 				low = Math.max(low, 2);
 				return set;
 			}
@@ -227,7 +228,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 			set.add(b);
 			set.add(c);
 			set.add(v);
-			graph.deleteVertex(z);
+			graph.removeVertex(z);
 			if (!graph.isAdjacent(a, b)) graph.addEdge(a, b);
 			if (!graph.isAdjacent(a, c)) graph.addEdge(a, c);
 			if (!graph.isAdjacent(a, v)) graph.addEdge(a, v);
@@ -256,7 +257,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 		set.add(v);
 		set.addAll(graph.getNeighborhood(v));
 		low = Math.max(low, set.size());
-		graph.deleteVertex(v);
+		graph.removeVertex(v);
 		return set;
 	}
 

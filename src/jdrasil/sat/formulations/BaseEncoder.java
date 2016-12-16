@@ -27,6 +27,7 @@ import java.util.Set;
 
 import jdrasil.graph.Graph;
 import jdrasil.graph.invariants.Clique;
+import jdrasil.graph.invariants.TwinDecomposition;
 import jdrasil.sat.Formula;
 
 /**
@@ -232,7 +233,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 	 * Since a clique is also hard coded, this method has to be called after @see encodeClique() to avoide conflicts.
 	 */
 	protected void encodeTwins() {
-		Map<T, Set<T>> twins = graph.getTwinDecomposition();
+		Map<T, Set<T>> twins = new TwinDecomposition<T>(graph).getModel();
 		for (Set<T> group : twins.values()) {
 			if (group.size() <= 1) continue;
 			

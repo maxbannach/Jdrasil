@@ -9,13 +9,17 @@
 \LoadClass{report}
 \ProvidesClass{jdrasilmanual}
 
+% math libraries
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{euler}
+
 % Standard LuaTeX Packages
 \RequirePackage{luatextra}
 \RequirePackage{luatexbase}
 \RequirePackage{luacode}
 
 % Font Selection
-\RequirePackage{fontspec}
 \setmainfont{Alegreya}
 \newfontfamily{\codefamily}{Source Code Pro}
 
@@ -35,6 +39,11 @@
 \colorlet{jdrasil.fg}{emerald!75!black}
 \colorlet{jdrasil.bg}{emerald!75!black}
 \colorlet{jdrasil.alert}{coralred!85!black}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Tables
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\RequirePackage{booktabs}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Logo and Text
@@ -229,12 +238,8 @@ Compiled: \today{}
 [] % after
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Math and Code
+% Code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% math libraries
-\RequirePackage{amsmath}
-\RequirePackage{amssymb}
 
 % display code fragments
 \RequirePackage{listings}

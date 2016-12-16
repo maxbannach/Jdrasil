@@ -32,8 +32,12 @@ import java.util.Stack;
 import jdrasil.utilities.PartitionRefinement;
 
 /**
- * This class represents a simple undirected graph and provides basic methods to modify it.
+ * This class represents a generic directed graph and provides basic methods to modify it.
+ * As Jdrasil mainly deals with undirected graphs, this class provides method to perform all operations symmetrically,
+ * and, thus, can be used as representation for undirected graphs.
+ * 
  * The graph is stored as adjacency list, making edge iterations effective but adjacency tests expensive.
+ * In addition, a hashmap provides fast access to adjacency tests.
  *
  * This class should be constructed with the graph factory.
  * @see GraphFactory 
@@ -137,24 +141,35 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 	
 	/**
+	 * Adds an directed edge (u,v) to the graph by adding the vertices to the neighborhood of the corresponding other vertex.
+	 * If u or v is not in the graph they will automatically be added.
+	 * 
+	 * @param u - the startpoint of the edge
+	 * @param v - the endpoint of the edge
+	 */
+	public void addDirectedEdge(T u, T v) {
+		addVertex(u);
+		addVertex(v);
+		if (adjacencyList.get(u).contains(v)) return;
+		m++;
+		adjacencyList.get(u).add(v);
+		adjacencies.get(u).add(v);		
+	}
+	
+	/**
 	 * Adds an undirected edge {u,v} to the graph by adding the vertices to the neighborhood of the corresponding other vertex.
 	 * If u or v is not in the graph they will automatically be added.
 	 * 
-	 * This method costs O(delta(u)), as it updates the simplicial properties
+	 * This method costs \(O(\delta(u))\), as it updates the simplicial properties
 	 * 
 	 * @param u - an endpoint of the edge
 	 * @param v - an endpoint of the edge
 	 */
 	public void addEdge(T u, T v) {
-		addVertex(u);
-		addVertex(v);
-		if (adjacencyList.get(u).contains(v)) return;
-		if (adjacencyList.get(v).contains(u)) return;
-		m++;
-		adjacencyList.get(u).add(v);
-		adjacencyList.get(v).add(u);
-		adjacencies.get(u).add(v);
-		adjacencies.get(v).add(u);
+		
+		// add symetric edge
+		addDirectedEdge(u, v);
+		addDirectedEdge(v, u);
 		
 		// update number of neighbor edges value
 		for (T x : getNeighborhood(u)) {
@@ -167,16 +182,27 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 	
 	/**
+	 * Remove a given directed edge from the graph.
+	 * This method costs O(1), as operations are performed with hashing.
+	 * @param u
+	 * @param v
+	 */
+	public void removeDirectedEdge(T u, T v) {
+		m--;
+		adjacencyList.get(u).remove(v);
+		adjacencies.get(u).remove(v);
+	}
+	
+	/**
 	 * Remove a given edge from the graph.
 	 * @param u
 	 * @param v
 	 */
 	public void removeEdge(T u, T v) {
-		m--;
-		adjacencyList.get(u).remove(v);
-		adjacencyList.get(v).remove(u);
-		adjacencies.get(u).remove(v);
-		adjacencies.get(v).remove(u);
+		
+		// remove symmetric edge
+		removeDirectedEdge(u, v);
+		removeDirectedEdge(v, u);
 		
 		// update number of neighbor edges value
 		for (T x : getNeighborhood(u)) {
@@ -189,18 +215,27 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 	
 	/**
-	 * Returns the number of edges present in the graph.
+	 * Returns the number of directed edges present in the graph.
 	 * @return
 	 */
-	public int getNumberOfEdges() {
+	public int getNumberOfDirectedEdges() {
 		return m;
 	}
 	
 	/**
-	 * Delete a given vertex from the graph.
+	 * Returns the number of (undirected) edges present in the graph.
+	 * Assuming the edge relation is symmetric.
+	 * @return
+	 */
+	public int getNumberOfEdges() {
+		return m/2;
+	}
+	
+	/**
+	 * Remove a given vertex from the graph.
 	 * @param v
 	 */
-	public void deleteVertex(T v) {
+	public void removeVertex(T v) {
 		
 		// remove the edges from other vertices
 		for (T u : new ArrayList<>(getNeighborhood(v))) {
@@ -214,25 +249,64 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 	
 	/**
-	 * This method performs an edge contraction on the graph contracting the edge {v, w}.
+	 * This method performs an undirected edge contraction on the graph contracting the undirected edge {v, w}.
 	 * This will identify w as v and map all edges of w to v, afterwards w is removed.
 	 * If v and w have a common neighbor, resulting multi edges are removed, i.e., the result
 	 * is a simple graph again.
+	 * 
+	 * This returns an information object that can be used to decontract the edge later.
+	 * 
 	 * @param v
 	 * @param w
 	 */
-	public void contract(T v, T w) {
+	public ContractionInformation contract(T v, T w) {
+		
+		ContractionInformation info = new ContractionInformation(v, w);
 		
 		// add the neighbors of w to N(v)
 		for (T u : getNeighborhood(w)) {
+			info.addEdges.add(u);
 			if (!u.equals(v) && !isAdjacent(u, v)) {
 				addEdge(u, v);
+				info.removeEdges.add(u);
 			}
 		}
 		
 		// delete w
-		deleteVertex(w);
+		removeVertex(w);
+		
+		// done
+		return info;
 	}
+	
+	/**
+	 * Revert an edge contraction.
+	 * @param info
+	 */
+	public void deContract(ContractionInformation info) {
+		addVertex(info.w);
+		for (T u : info.addEdges) addEdge(u, info.w);
+		for (T u : info.removeEdges) removeEdge(u, info.v);
+	}
+	
+	/**
+	 * Container class to store informations about an edge contraction.
+	 */
+	public class ContractionInformation {
+		
+		T v; // vertex to which we contracted
+		T w; // vertex removed during contraction
+		Set<T> removeEdges; // edges that have to be removed from v
+		Set<T> addEdges; // edges that have to be added to w
+		
+		public ContractionInformation(T v, T w) {
+			this.v = v;
+			this.w = w;
+			this.removeEdges = new HashSet<>();
+			this.addEdges = new HashSet<>();
+		}
+		
+	} 
 	
 	/**
 	 * This methods performs the vertex elimination operation on a given vertex v.
@@ -255,7 +329,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		}
 
 		// delete the vertex
-		deleteVertex(v);
+		removeVertex(v);
 		
 		return info;
 	}
@@ -310,92 +384,12 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 	
 	/**
-	 * Construct a copy of this graph.
-	 * @return
-	 */
-	public Graph<T> copy() {
-		Graph<T> copy = GraphFactory.emptyGraph();
-		
-		// copy vertices
-		for (T v : this) copy.addVertex(v);
-		
-		// copy edges
-		for (T v : this) {
-			for (T w : getNeighborhood(v)) {
-				if (v.compareTo(w) < 0) {
-					copy.addEdge(v, w);
-				}
-			}
-		} 
-		
-		return copy;
-	}
-	
-	/**
 	 * Simple way to print the graph as string.
 	 * @return
 	 */
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("p tw " + this.getVertices().size() + " " + this.getNumberOfEdges() + "\n");
-		for (T v : this.getVertices()) {
-			for (T w : this.getNeighborhood(v)) {
-				if (v.compareTo(w) > 0) continue;
-				sb.append(v + " " + w + "\n");				
-			}
-		}
-		return sb.toString();
-	}
-
-	/**
-	 * Represents the graph as string the the .gr file format of PACE.
-	 * In order to do so, a bijection from V to {1,...,|V|} will be computed and vertices
-	 * will be represented as integers in the output.
-	 * @return
-	 */
-	public String toValidGraphString() {
-		// compute the bijection
-		int index = 1;
-		Map<T, Integer> phi = new HashMap<T, Integer>();
-		for (T v : this.getVertices()) {
-			phi.put(v, index);
-			index = index + 1;
-		}
-		
-		// compute the string using a string builder
-		StringBuilder sb = new StringBuilder();
-		sb.append("p tw " + this.getVertices().size() + " " + this.getNumberOfEdges() + "\n");
-		for (T v : this.getVertices()) {
-			for (T w : this.getNeighborhood(v)) {
-				if (v.compareTo(w) > 0) continue;
-				sb.append(phi.get(v) + " " + phi.get(w) + "\n");				
-			}
-		}
-		
-		// done
-		return sb.toString();
-	}
-	
-	/**
-	 * Output the graph in TikZ syntax to embed it into LaTeX documents.
-	 * Compiling this code needs an actual TikZ version, LuaLaTeX, and the TikZ graphdrawing force library.
-	 * @return
-	 */
-	public String toTikZ() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("\\tikz\\graph[spring electrical layout] {\n");
-		for (T v : this.getVertices()) sb.append(v+";");
-		sb.append("\n");
-		for (T v : this.getVertices()) {
-			for (T w : this.getNeighborhood(v)) {
-				if (v.compareTo(w) < 0) {
-					sb.append(v + " -- " + w + ";\n");
-				}
-			}
-		}
-		sb.append("};\n");
-		return sb.toString();
+		return GraphWriter.graphToString(this);
 	}
 	
 	/**
@@ -491,114 +485,6 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 	
 	/**
-	 * Compute all twins of the graph in time O(n+m) using the partition refinement paradigm.
-	 * Two vertices v, w are true twins if N[v]=N[w], and they are false twins if N(v)=N(w).
-	 * 
-	 * This method can be used to compute both kinds of twins, regulated with the given boolean parameter.
-	 * 
-	 */
-	public Map<T, Set<T>> getTwinDecomposition(boolean trueTwins) {
-		PartitionRefinement<T> P = new PartitionRefinement<>(getVertices());
-		for (T v : this) {
-			Set<T> Nv = new HashSet<T>(getNeighborhood(v)); 
-			if (trueTwins) Nv.add(v);
-			P.refine(Nv);
-		}
-		return P.getPartition();
-	}
-	
-	/**
-	 * Compute a twin decomposition of the graph, that is it assigns each vertex to a group
-	 * of vertices with the same opened or closed neighborhood (what ever is bigger).
-	 * 
-	 * This method invokes two times @see getTwinDecomposition(boolean trueTwins) and uses for
-	 * each vertex the bigger set.
-	 * 
-	 * @return
-	 */
-	public Map<T, Set<T>> getTwinDecomposition() {
-		Map<T, Set<T>> trueTwins = getTwinDecomposition(true);
-		Map<T, Set<T>> falseTwins = getTwinDecomposition(false);
-		Map<T, Set<T>> twins = new HashMap<T, Set<T>>();
-		for (T v : this) {
-			if (trueTwins.get(v).size() > falseTwins.get(v).size()) {
-				twins.put(v, trueTwins.get(v));
-			} else {
-				twins.put(v, falseTwins.get(v));
-			}
-		}
-		return twins;
-	}
-	
-	/**
-	 * Computes a minimum separating vertex set, i.e. a vertex set of minimal size such 
-	 * that its removal splits the graph into at least two connected components.
-	 * 
-	 * This method uses the @see Dinic algorithm and should only be called upon small graphs, 
-	 * as its running time is roughly n^3 * m.
-	 * 
-	 * 
-	 * @return a minimal separating vertex set
-	 */
-	public Set<T> getMinimalSeparator(){
-		int n = getVertices().size();
-		// we need a mapping between the nodes of the graph and their indices
-		HashMap<T, Integer> mapTI = new HashMap<>();
-		HashMap<Integer,T> mapIT = new HashMap<>();
-		
-		int c = 0;
-		for(T v: getVertices()){
-			mapTI.put(v, c);
-			mapIT.put(c, v);
-			c++;
-		}
-		
-		// create the temporary graph. For every original node i, 
-		// it contains and input node i and an output node n+i
-		int[][] g = new int[2*n][2*n];
-		for(T u: getVertices()){
-			int mu = mapTI.get(u);
-			// the capacities between and input node and its corresponding output node is 1
-			g[mu][mu+n] = 1;
-			for(T v: getVertices()){
-				if(isAdjacent(u,v)){
-					//two adjacent vertices have unbounded edge capacity
-					int mv = mapTI.get(v);
-					g[mu+n][mv] = Integer.MAX_VALUE;
-					g[mv+n][mu] = Integer.MAX_VALUE;
-				}
-			}
-		}
-		
-		// the first separator consists of all nodes
-		HashSet<T> sep = new HashSet<>();
-		for(T u: getVertices()){
-			sep.add(u);
-		}
-		// for every node i, compute a maximum flow that separates i from any other node j
-		int i = 0;
-			for(int j = i+1; j < n; j++){
-				if(!isAdjacent(mapIT.get(i),mapIT.get(j))){
-				boolean[][] res = new Dinic(g, i, j+n).start();
-				
-				// construct the minimimal i-j-separator
-				HashSet<T> cand = new HashSet<>();
-				for(int l = 0; l < n; l++){
-					if(l != i && l != j){
-					if(res[l][l+n] ){
-						cand.add(mapIT.get(l));
-					}
-					}
-				}
-				if(cand.size() < sep.size()){
-					sep = cand;
-				}	
-				}
-			}
-		return sep;	
-	}
-
-	/**
 	 * Compute the connected components of the graph using a DFS.
 	 * The components are represented as (Hash)-Sets of vertices, which are stored in a list.
 	 * @return
@@ -651,7 +537,6 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 			}
 		}
 		return res;
-		
 	}
 	
 	

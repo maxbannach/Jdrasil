@@ -32,10 +32,12 @@ import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.upperbounds.MinFillInDecomposer;
 import jdrasil.graph.Graph;
+import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.graph.invariants.Clique;
+import jdrasil.graph.invariants.TwinDecomposition;
 
 /**
  * A classical branch and bound algorithm based on QuickBB and its successors.
@@ -81,8 +83,8 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 	 * @param graph
 	 */
 	public BranchAndBoundDecomposer(Graph<T> graph, Random dice) {
-		this.graph = graph.copy();
-		this.original = graph.copy();
+		this.graph = GraphFactory.copy(graph);
+		this.original = GraphFactory.copy(graph);
 		this.n = graph.getVertices().size();
 		this.vertexToID = new HashMap<>();
 		this.vertexToEliminate = new HashMap<>();
@@ -219,7 +221,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		}
 		
 		// compute a twin decomposition of the graph, since we have to branch to only one vertex of each twin group
-		Map<T, Set<T>> twins = graph.getTwinDecomposition();
+		Map<T, Set<T>> twins = new TwinDecomposition<T>(graph).getModel();
 		for (Set<T> S : twins.values()) {
 			
 			// we only have to consider one vertex in each set

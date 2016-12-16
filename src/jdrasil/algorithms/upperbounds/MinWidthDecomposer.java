@@ -25,6 +25,7 @@ import java.util.Random;
 import jdrasil.App;
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.graph.Graph;
+import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
@@ -56,7 +57,7 @@ public class MinWidthDecomposer<T extends Comparable<T>> implements TreeDecompos
 	 */
 	public MinWidthDecomposer(Graph<T> graph) {
 		this.graph = graph;
-		this.workingCopy = graph.copy();
+		this.workingCopy = GraphFactory.copy(graph);
 		this.dice = App.getSourceOfRandomness();
 	}
 	
@@ -89,7 +90,7 @@ public class MinWidthDecomposer<T extends Comparable<T>> implements TreeDecompos
 						
 			// found the vertex -> delete it and add it to the permutation
 			T v = nextV.get(dice.nextInt(nextV.size()));
-			workingCopy.deleteVertex(v);
+			workingCopy.removeVertex(v);
 			permutation.add(v);
 		}
 		

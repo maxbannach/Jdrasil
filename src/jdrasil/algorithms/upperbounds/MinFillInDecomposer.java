@@ -26,6 +26,7 @@ import java.util.Random;
 import jdrasil.App;
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.graph.Graph;
+import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
@@ -126,7 +127,7 @@ public class MinFillInDecomposer<T extends Comparable<T>> implements TreeDecompo
 		if (graph.getVertices().size() == 0) return new TreeDecomposition<T>(graph);
 
 		List<T> permutation = new LinkedList<T>();
-		Graph<T> workingCopy = graph.copy();
+		Graph<T> workingCopy = GraphFactory.copy(graph);
 		// compute the permutation
 		for (int i = 0; i < graph.getVertices().size(); i++) {
 			if (Thread.currentThread().isInterrupted()) throw new Exception();

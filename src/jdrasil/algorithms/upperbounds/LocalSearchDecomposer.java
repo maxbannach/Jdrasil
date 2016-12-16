@@ -32,6 +32,7 @@ import jdrasil.App;
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
+import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
@@ -78,7 +79,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 	 * @param s the number of steps per restarts
 	 */
 	public LocalSearchDecomposer(Graph<T> graph, int r, int s, List<T> perm) {
-		this.graph = graph.copy();
+		this.graph = GraphFactory.copy(graph);
 		this.r = r;
 		this.s = s;
 		this.dice = App.getSourceOfRandomness();
@@ -282,7 +283,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 	 */
 	public int evalPerm(List<T> perm) throws Exception{
 		Map<T, Integer> pos = toMap(perm);
-		Graph<T> g = graph.copy();
+		Graph<T> g = GraphFactory.copy(graph);
 		int maxBag = 0;
 		int res = 0;
 		int posOfV = 0;

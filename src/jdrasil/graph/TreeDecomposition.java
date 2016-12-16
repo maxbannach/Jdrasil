@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import jdrasil.App;
+import jdrasil.graph.invariants.MinimalSeperator;
 
 /**
  * This class models a tree-decomposition of an undirected graph G.
@@ -64,16 +65,16 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	}
 	
 	/** The number of bags of the tree-decomposition. */
-	private int numberOfBags;
+	protected int numberOfBags;
 	
 	/** The width of the decomposition, i.e., the size of the largest bag minus 1. */
-	private int width;
+	protected int width;
 	
 	/** The size of the original graph. */
-	private int n;
+	protected int n;
 	
 	/** The tree of the tree-decomposition. */
-	private Graph<Bag<T>> tree;
+	protected Graph<Bag<T>> tree;
 	
 	/** The original graph that is decomposed within this tree-decomposition. */
 	private Graph<T> graph;
@@ -188,61 +189,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	 * The String is already in the .td format specified by pace.
 	 */
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		
-		// print solution line
-		sb.append("s td ");
-		sb.append(numberOfBags + " ");
-		sb.append((width+1) + " ");
-		sb.append(n);
-		
-		// print the bags
-		for (Bag<?> bag : tree) {
-			sb.append("\nb " + bag);
-		}
-		
-		// print the edges
-		for (Bag<T> v : tree) {
-			for (Bag<T> w : tree.getNeighborhood(v)) {
-				if (v.id < w.id-1) {
-					sb.append("\n" + v.id + " " + w.id);
-				} else if (v.id == w.id-1) {
-					sb.append("\n" + v.id + " " + w.id);
-				}
-			}	
-		}
-		
-		// done
-		return sb.toString();
-	}
-	
-	/**
-	 * Output the tree-decomposition in TikZ syntax to embed it into LaTeX documents.
-	 * Compiling this code needs an actual TikZ version, LuaLaTeX, and the TikZ graphdrawing binary tree library.
-	 * @return
-	 */
-	public String toTikZ() {
-		StringBuilder sb = new StringBuilder();		
-		sb.append("\\tikz\\graph[binary tree layout] {\n");
-		
-		// print the bags
-		for (Bag<T> bag : tree) {
-			sb.append(bag.id + "/ $\\{~");
-			for (T v : bag.vertices) sb.append(v + "~");
-			sb.append("\\}$;\n");
-		}
-		
-		// print the edges
-		for (Bag<T> v : tree) {
-			for (Bag<T> w : tree.getNeighborhood(v)) {
-				if (v.id < w.id) {
-					sb.append(v.id + " -- " + w.id + ";\n");
-				}
-			}	
-		}
-		
-		sb.append("};\n");
-		return sb.toString();
+		return GraphWriter.treedecompositionToString(this);
 	}
 	
 	/**
@@ -374,18 +321,18 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		Graph<T> g = toGraph(b);
 		
 		// compute a minimal separator
-		Set<T> sep = g.getMinimalSeparator();
+		Set<T> sep = new MinimalSeperator<T>(g).getSeperator();
 
 		// remove the separator from the graph
 		for(T v: sep){
-			g.deleteVertex(v);
+			g.removeVertex(v);
 		}
 		
 		// compute the remaining connected components
 		List<Set<T>> cs = g.getConnectedComponents();
 		
 		// remove the bag b from the decomposition
-		tree.deleteVertex(b);
+		tree.removeVertex(b);
 		
 		// replace b by a new bag containing the separator
 		Bag<T> bsep = createBag(sep);
@@ -456,8 +403,8 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	}
 
 	public TreeDecomposition<T> copy() {
-		TreeDecomposition<T> res = new TreeDecomposition<T>(graph.copy());
-		res.tree = tree.copy();
+		TreeDecomposition<T> res = new TreeDecomposition<T>(GraphFactory.copy(graph));
+		res.tree = GraphFactory.copy(tree);
 		res.n = n;
 		res.numberOfBags = numberOfBags;
 		res.width = width;

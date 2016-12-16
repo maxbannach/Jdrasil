@@ -29,6 +29,7 @@ import jdrasil.algorithms.HeuristicDecomposer;
 import jdrasil.algorithms.ReductionRuleDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
+import jdrasil.graph.GraphWriter;
 import jdrasil.graph.TreeDecomposition;
 
 
@@ -59,7 +60,7 @@ public class App {
 	 * @param args program arguments
 	 */
 	public static void main(String[] args) {
-
+		
 		// parsing arguments
 		parseArguments(args);
 		
@@ -74,8 +75,8 @@ public class App {
 			Graph<Integer> input = GraphFactory.graphFromStdin();
 			
 			/* JDrasil can be used to just translate a graph to the .gr file */
-			if (parameters.containsKey("translate")) {
-				System.out.print(input.toValidGraphString());
+			if (parameters.containsKey("translate")) {	
+				GraphWriter.writeValidGraph(input);
 				System.exit(1);
 			}
 			
@@ -83,7 +84,7 @@ public class App {
 			if (parameters.containsKey("reduce")) {
 				ReductionRuleDecomposer<Integer> preprocessor = new ReductionRuleDecomposer<Integer>(input);
 				preprocessor.reduce();
-				System.out.print(preprocessor.getReducedGraph().toValidGraphString());
+				GraphWriter.writeValidGraph(preprocessor.getReducedGraph());
 				System.exit(1);
 			}
 			
@@ -108,9 +109,9 @@ public class App {
 					
 			/* present the result */
 			if (parameters.containsKey("tikz")) {
-				System.out.println(input.toTikZ());
+				GraphWriter.writeTikZ(input);
 				System.out.println();
-				System.out.println(decomposition.toTikZ());
+				GraphWriter.writeTreeDecompositionTikZ(decomposition);
 			} else {
 				if(shouldIWrite()) {
 					System.out.print(decomposition);

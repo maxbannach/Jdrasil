@@ -25,6 +25,7 @@ import java.util.Random;
 
 import jdrasil.App;
 import jdrasil.graph.Graph;
+import jdrasil.graph.GraphFactory;
 
 /**
  * It is a well known fact that for every minor H of G the following holds: \(tw(H) \le tw(G)\). To obtain
@@ -52,7 +53,7 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 	 * @param graph
 	 */
 	public MinorMinWidthLowerbound(Graph<T> graph) {
-		this.graph = graph.copy();
+		this.graph = GraphFactory.copy(graph);
 		this.dice = App.getSourceOfRandomness();
 	}
 	
@@ -62,7 +63,7 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 	 * @param dice
 	 */
 	public MinorMinWidthLowerbound(Graph<T> graph, Random dice) {
-		this.graph = graph.copy();
+		this.graph = GraphFactory.copy(graph);
 		this.dice = dice;
 	}
 	

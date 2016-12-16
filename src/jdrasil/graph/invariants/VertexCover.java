@@ -32,7 +32,7 @@ import jdrasil.sat.Formula;
  * 
  * @author Max Bannach
  */
-public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, Boolean>{
+public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, Boolean> {
 
 	/** Is true when it is guaranteed that the vertex-cover is minimal. */
 	private boolean minimal;

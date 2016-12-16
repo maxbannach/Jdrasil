@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jdrasil.graph.Graph;
+import jdrasil.graph.GraphFactory;
 
 /**
  * We call a Graph G=(V,E) d-degenerated if each subgraph H of G contains a vertex of maximal degree d.
@@ -45,7 +46,7 @@ public class DegeneracyLowerbound<T extends Comparable<T>> implements Lowerbound
 	 * @param graph
 	 */
 	public DegeneracyLowerbound(Graph<T> graph) {
-		this.graph = graph.copy();
+		this.graph = GraphFactory.copy(graph);
 	}
 	
 	@Override
@@ -77,7 +78,7 @@ public class DegeneracyLowerbound<T extends Comparable<T>> implements Lowerbound
 			}
 			
 			// delete vertex
-			graph.deleteVertex(v);
+			graph.removeVertex(v);
 		}
 		
 		// done
