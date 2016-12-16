@@ -54,9 +54,12 @@ public class App {
 	 */
 	private static boolean resultWritten;
 	
-	/** Entry point! */
+	/**
+	 * Entry point!
+	 * @param args program arguments
+	 */
 	public static void main(String[] args) {
-		
+
 		// parsing arguments
 		parseArguments(args);
 		
@@ -133,8 +136,7 @@ public class App {
 
 	/**
 	 * Parsing the programs argument and store them in parameter map.
-	 * @ see parameters
-	 * @param args
+	 * @param args the arguments of the program
 	 */
 	public static void parseArguments(String[] args) {
 		for (int i = 0; i < args.length; i++) {
@@ -174,7 +176,7 @@ public class App {
 	/**
 	 * This method should be used by any-time-algorithms to report whenever they found a new solution.
 	 * This is a requirement by the PACE challenge.
-	 * @param tw
+	 * @param tw new upper bound on the tree width found
 	 */
 	public static void reportNewSolution(int tw) {
 		if (!parameters.containsKey("heuristic")) return; // only for heuristic
@@ -204,7 +206,7 @@ public class App {
 	 * Returns the source of randomness of this program.
 	 * This should be the only randomness used in order to
 	 * make the program depend on a single seed.
-	 * @return
+	 * @return the Random object that is used in Jdrasil
 	 */
 	public static Random getSourceOfRandomness() {
 		return dice;
@@ -212,6 +214,7 @@ public class App {
 	
 	/**
 	 * 	Get the random seed
+	 * @return the random seed of Jdrasil
 	 */
 	public static long getSeed(){
 		if (parameters.containsKey("s")) {
@@ -224,7 +227,7 @@ public class App {
 	/**
 	 * Log a message as comment (with a leading 'c') to the output. 
 	 * Does only work if logging is enabled.
-	 * @param message
+	 * @param message to be logged
 	 */
 	public static void log(String message) {
 		if (parameters.containsKey("log")) {
@@ -234,7 +237,7 @@ public class App {
 		
 	/**
 	 * Set a new seed for the random source.
-	 * @param seed
+	 * @param seed the random seed used for all randomness of Jdrasil
 	 */
 	public static void seedRandomSource(Long seed) {
 		dice = new Random(seed);
@@ -242,9 +245,9 @@ public class App {
 	
 	/**
 	 * Auxiliary method to compute n choose k with BigIntegers.
-	 * @param n
-	 * @param k
-	 * @return
+	 * @param n of n over k
+	 * @param k of n over k
+	 * @return an BigInteger representing \(\binom{n}{k}\)
 	 */
 	public static BigInteger binom(BigInteger n, BigInteger k) {
 		if (k.compareTo(n) > 0) return BigInteger.ZERO;

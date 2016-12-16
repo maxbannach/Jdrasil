@@ -27,7 +27,7 @@ import jdrasil.App;
 import jdrasil.graph.Graph;
 
 /**
- * It is a well known fact that for every minor H of G the following holds: tw(H) <= tw(G). To obtain
+ * It is a well known fact that for every minor H of G the following holds: \(tw(H) \le tw(G)\). To obtain
  * a lowerbound on the tree-width of G it is thus sufficient to find good lowerbounds for minors of G.
  * The minor-min-width heuristic devoloped by Gogate and Dechter for the QuickBB algorithm 
  * (see "A complete Anytime Algorithm for Treewidth") does exactly this. It computes a lowerbound for 

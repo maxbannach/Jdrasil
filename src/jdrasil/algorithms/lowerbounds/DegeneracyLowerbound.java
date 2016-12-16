@@ -26,7 +26,7 @@ import jdrasil.graph.Graph;
 
 /**
  * We call a Graph G=(V,E) d-degenerated if each subgraph H of G contains a vertex of maximal degree d.
- * It is a well known fact that we have d <= tw(G) and, thus, we can use the degeneracy of a graph as lowerbound for the tree-width.
+ * It is a well known fact that we have \(d \le tw(G)\) and, thus, we can use the degeneracy of a graph as lowerbound for the tree-width.
  * 
  * This class implements the linear time algorithm from Matula and Beck to compute the degeneracy of a graph.
  * 

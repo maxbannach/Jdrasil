@@ -73,7 +73,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 
 	/**
 	 * Initialize the algorithm to decompose the given graph.
-	 * @param graph
+	 * @param graph to be decomposed
 	 * @param r the number of restarts
 	 * @param s the number of steps per restarts
 	 */
@@ -278,7 +278,6 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 	/**
 	 * Calculates the cost of a permutation by computing its treewidth and preferring tree decompositions with more smaller bags.
 	 * @param perm The permutation
-	 * @param the best known upper bound
 	 * @return the cost of perm
 	 */
 	public int evalPerm(List<T> perm) throws Exception{

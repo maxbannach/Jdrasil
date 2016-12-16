@@ -38,7 +38,7 @@ import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
  * Therefore, multiple runs of the algorithm produce different results and, hence, we can perform a stochastic search
  * by using the heuristic multiple times and reporting the best result.
  * 
- * @param <T>
+ * @param <T> the vertex type
  * @author Max Bannach
  */
 public class StochasticMinFillDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
@@ -59,8 +59,7 @@ public class StochasticMinFillDecomposer<T extends Comparable<T>> implements Tre
 	
 	/**
 	 * The algorithm is initialized with a graph that should be decomposed and a seed for randomness.
-	 * @param graph
-	 * @param seed
+	 * @param graph to be decomposed
 	 */
 	public StochasticMinFillDecomposer(Graph<T> graph) {
 		this.graph = graph;
@@ -104,7 +103,7 @@ public class StochasticMinFillDecomposer<T extends Comparable<T>> implements Tre
 
 	/**
 	 * Returns the elimination order computed by call().
-	 * @return
+	 * @return permutation as List
 	 */
 	public List<T> getPermutation() {
 		return permutation;

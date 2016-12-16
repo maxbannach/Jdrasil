@@ -57,7 +57,7 @@ import jdrasil.sat.Formula;
  *   g) otherwise the optimal solution will be computed by a SAT-Encoding, either serial or parallel
  *   h) finally, all computed decompositions are merged
  *   
- * @param <T>
+ * @param <T> vertex type
  * @author Max Bannach
  */
 public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<T> {
@@ -76,9 +76,8 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 	
 	/**
 	 * Default constructor to initialize data structures. 
-	 * @param graph
+	 * @param graph – the graph that should be decomposed
 	 * @param parallel – should the graph be decomposed in parallel?
-	 * @param timeout – timeout for the sat-solver
 	 */
 	public ExactDecomposer(Graph<T> graph, boolean parallel) {
 		this.graph = graph;
@@ -118,6 +117,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		App.log("Computed upper bound: " + ub);
 		
 		// if they match, we are done as well
+		
 		if (lb == ub) {
 			App.log("The bounds match, extract decomposition");
 			preprocessor.glueTreeDecomposition(ubDecomposition);
@@ -131,18 +131,16 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		
 		// otherwise check if the instance is small enough for the dynamic cops-and-robber game
 		// the algorithm has running time O(n choose k), so we check the size of n choose k
-		// This is also used if no SAT-Solver is available
-		/*
+		// This is also used if no SAT solver is available
 		if (!Formula.canRegisterSATSolver() || (n <= COPS_VERTICES_THRESHOLD && ub <= COPS_TW_THRESHOLD && expectedMemory.compareTo(freeMemory) < 0)) {	
 			App.log("Solve with a game of Cops and Robbers");
 			TreeDecomposition<T> decomposition = new CopsAndRobber<>(reduced).call();
 			preprocessor.glueTreeDecomposition(decomposition);
 			return preprocessor.getTreeDecomposition();
 		}
-		*/
-			
+					
 		/* If everything above does not work, we solve the problem using a SAT-encoding */
-		App.log("Solve with a SAT-Solver");
+		App.log("Solve with a SAT solver");
 		TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub).call();		
 		preprocessor.glueTreeDecomposition(decomposition);
 		return preprocessor.getTreeDecomposition();

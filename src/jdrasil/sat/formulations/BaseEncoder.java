@@ -65,6 +65,12 @@ public class BaseEncoder<T extends Comparable<T>> {
 	protected Map<T, Set<Integer>> cardinalitySets;
 	
 	/**
+	 * The encoder can either use sorting networks or sequential counter to bound the tree width.
+	 * If we have a good (i.e., small) upper bound, the sequential counter is smaller and faster then the network. 
+	 **/
+	private boolean sortingNetworks;
+	
+	/**
 	 * Default constructor that initializes all the variables.
 	 * @param graph
 	 */
@@ -81,7 +87,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 			varCount++;
 			vertexToInt.put(v, varCount);
 			intToVertex.put(varCount, v);
-		}
+		}		
 		varCount = 0;
 				
 		// variables to encode order of vertices
@@ -91,7 +97,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 				ord[i][j] = varCount;
 			}
 		}
-		
+				
 		// variables to encode arcs (consider graph directed with respect to order)
 		for (int i = 1; i <= n; i++) {
 			for (int j = 1; j <= n; j++) {
@@ -100,9 +106,9 @@ public class BaseEncoder<T extends Comparable<T>> {
 			}
 		}
 		
-		// actually compute the encoding
+		// actually compute the encoding		
 		this.phi = computeBaseEncoding();	
-		
+				
 		// add an clique
 		encodeClique();
 		
@@ -114,9 +120,9 @@ public class BaseEncoder<T extends Comparable<T>> {
 	 * Compute the base encoding as defined in "Encoding Treewidth into SAT" by Marko Samer and Helmit Veith.
 	 * @return phi
 	 */
-	Formula computeBaseEncoding() {
-		
+	Formula computeBaseEncoding() {		
 		Formula phi = new Formula();
+		
 		// the order has to be transitive
 		for (int i = 1; i <= n; i++) {
 			for (int j = 1; j <= n; j++) {
@@ -180,7 +186,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 	 * Given a fixed clique C of the graph, there is an optimal elimination order that deletes the vertices of C at last.
 	 * Hence, we can hard-code the order of a (maximal) clique into the formula in order to break symmetries and to reduce the search space.
 	 * 
-	 * This method computes a maximum clique using a SAT-solver and encode it into phi.
+	 * This method computes a maximum clique using a SAT solver and encode it into phi.
 	 */
 	protected void encodeClique() {
 		Set<T> clique = new Clique<T>(graph).getClique();
@@ -252,10 +258,19 @@ public class BaseEncoder<T extends Comparable<T>> {
 	
 	/**
 	 * Initialize the cardinality constraint
-	 * @param lb
-	 * @param ub
+	 * @param ub on the tree width
 	 */
-	public void initCardinality(int lb, int ub) {
+	public void initCardinality(int ub) {
+		
+		// decide if we should use a sorting network or a sequential counter
+		int counter_factor = ub;
+		int network_factor = (int) Math.ceil(2*Math.pow(Math.log(graph.getVertices().size())/Math.log(2),2));
+		if ( counter_factor <= network_factor ) {
+			sortingNetworks = false;
+		} else {
+			sortingNetworks = true;
+		}
+		
 		// outgoing edges during elimination define tree-width, thus, all vertices can have at most k outgoing edges
 		for (T u : graph) {
 			int i = vertexToInt.get(u);
@@ -264,18 +279,26 @@ public class BaseEncoder<T extends Comparable<T>> {
 				C.add(arc[i][j]);
 			}
 			this.cardinalitySets.put(u, C);
-			phi.addCardinalityConstraint(lb, ub, C);
 		}
+		
+		// add first cardinality constraint
+		improveCardinality(ub);
 	}
 	
 	/**
 	 * Add constraints to phi, such that phi is satisfiable if, and only if, the initial graph has tree-width at most k.
-	 * @param k
+	 * @param ub on the tree width
 	 */
-	public void improveCardinality(int lb, int ub) {		
+	public void improveCardinality(int ub) {		
 		// just update constraint using existent encoder
 		for (T u : graph) {
-			phi.addCardinalityConstraint(lb, ub, this.cardinalitySets.get(u));
+
+			if (sortingNetworks) {
+				phi.addCardinalityConstraint(0, ub, cardinalitySets.get(u));
+			} else {
+				phi.addDecreasingAtMost(ub, cardinalitySets.get(u));
+			}
+			
 		}
 	}
 	

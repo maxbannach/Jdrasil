@@ -61,7 +61,6 @@ public class MaximumCardinalitySearchDecomposer<T extends Comparable<T>> impleme
 	/**
 	 * The algorithm is initialized with a graph that should be decomposed and a seed for randomness.
 	 * @param graph
-	 * @param seed
 	 */
 	public MaximumCardinalitySearchDecomposer(Graph<T> graph) {
 		this.graph = graph;

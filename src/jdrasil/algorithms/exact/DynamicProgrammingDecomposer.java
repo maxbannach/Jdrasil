@@ -121,7 +121,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 	
 	/**
 	 * Initialize with just the graph, the upper bound will be set to n-1 and there will be no clique.
-	 * @see DynamicProgrammingDecomposer(Graph<T> graph, int ub, Set<T> clique, Mode mode)
+	 * @see DynamicProgrammingDecomposer(Graph graph, int ub, Set clique, Mode mode)
 	 * @param graph
 	 */
 	public DynamicProgrammingDecomposer(Graph<T> graph) {
@@ -130,7 +130,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 	
 	/**
 	 * Initialize with the graph and an upper bound, there will be no clique.
-	 * @see DynamicProgrammingDecomposer(Graph<T> graph, int ub, Set<T> clique, Mode mode)
+	 * @see DynamicProgrammingDecomposer(Graph graph, int ub, Set clique, Mode mode)
 	 * @param graph
 	 */
 	public DynamicProgrammingDecomposer(Graph<T> graph, int ub) {
@@ -139,7 +139,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 	
 	/**
 	 * Initialize with the graph and a clique, the upper bound will be set to n-1.
-	 * @see DynamicProgrammingDecomposer(Graph<T> graph, int ub, Set<T> clique, Mode mode)
+	 * @see DynamicProgrammingDecomposer(Graph graph, int ub, Set clique, Mode mode)
 	 * @param graph
 	 */
 	public DynamicProgrammingDecomposer(Graph<T> graph, Set<T> clique) {
@@ -149,7 +149,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 	/**
 	 * Initialize with the graph and a mode. Notice that the default mode is TWDP, so this constructor does only make sense if you
 	 * use simpleDP or recursiveDP, hence, an upper bound or clique has not to be set, as it is not used.
-	 * @see DynamicProgrammingDecomposer(Graph<T> graph, int ub, Set<T> clique, Mode mode)
+	 * @see DynamicProgrammingDecomposer(Graph graph, int ub, Set clique, Mode mode)
 	 * @param graph
 	 */
 	public DynamicProgrammingDecomposer(Graph<T> graph, Mode mode) {

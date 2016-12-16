@@ -29,7 +29,7 @@ import jdrasil.sat.Formula;
 
 /**
  * A clique in a graph is a subset of its vertices such that all vertices within the clique are pairwise adjacent.
- * If a SAT-Solver is available, this class computes the maximum clique in the graph.
+ * If a SAT solver is available, this class computes the maximum clique in the graph.
  * Otherwise, a heuristic is used to compute some clique.
  * 
  * @author Max Bannach
@@ -47,8 +47,8 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 	}
 
 	/**
-	 * Compute the maximum clique of the graph using the SAT-Solver.
-	 * This method can return null if no SAT-Solver is available or the SAT-Solver fails.
+	 * Compute the maximum clique of the graph using the SAT solver.
+	 * This method can return null if no SAT solver is available or the SAT solver fails.
 	 * @return
 	 */
 	private Map<T, Boolean> computeModelWithSAT() {
@@ -101,7 +101,7 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 	protected Map<T, Boolean> computeModel() {
 		Map<T, Boolean> clique = null;
 		
-		// if we have a SAT-Solver -> use it
+		// if we have a SAT solver -> use it
 		if (Formula.canRegisterSATSolver()) {
 			this.maximum = true;
 			clique = computeModelWithSAT();

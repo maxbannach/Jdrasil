@@ -29,6 +29,7 @@ import java.util.Set;
 
 import jdrasil.sat.ISATSolver.SATSolverNotAvailableException;
 import jdrasil.sat.encodings.BasicCardinalityEncoder;
+import jdrasil.sat.encodings.DecreasingCardinalityEncoder;
 import jdrasil.sat.encodings.IncrementalCardinalityEncoder;
 
 /**
@@ -39,8 +40,8 @@ import jdrasil.sat.encodings.IncrementalCardinalityEncoder;
 public class Formula implements Iterable<List<Integer>> {
 		
 	/**
-	 * Checks if Jdrasil can register a SAT-Solver to the formula, that is, checks
-	 * whether or not there is a SAT-Solver in Jdrasils class or library path.
+	 * Checks if Jdrasil can register a SAT solver to the formula, that is, checks
+	 * whether or not there is a SAT solver in Jdrasils class or library path.
 	 * @return
 	 */
 	public static boolean canRegisterSATSolver() {
@@ -75,6 +76,13 @@ public class Formula implements Iterable<List<Integer>> {
 	private Map<Set<Integer>, IncrementalCardinalityEncoder> incrementalEncoder;
 	
 	/**
+	 * A mapping from variable set to decreasing cardinality encoder.
+	 * This works similar as @see IncrementalCardinalityEncoder, but does only support decreasing atMostK
+	 * constraints.
+	 */
+	private Map<Set<Integer>, DecreasingCardinalityEncoder> decreasingEncoder;
+	
+	/**
 	 * A model of the formula, i.e., a mapping from variables to its boolean values.
 	 * A model will only be available if @see isSatisfiable() was invoked and has returned true.
 	 */
@@ -103,6 +111,7 @@ public class Formula implements Iterable<List<Integer>> {
 		variables = new HashSet<>();
 		auxiliaryVariables = new HashSet<Integer>();
 		this.incrementalEncoder = new HashMap<>();
+		this.decreasingEncoder = new HashMap<>();
 		highestVariable = 0;
 		solver = null;
 	}
@@ -146,7 +155,7 @@ public class Formula implements Iterable<List<Integer>> {
 	public void addVariable(int var) {
 		if (variables.contains(var) || auxiliaryVariables.contains(var)) return;
 		variables.add(var);
-		if (var > highestVariable) highestVariable = var;		
+		if (var > highestVariable) highestVariable = var;
 	}
 	
 	/**
@@ -165,7 +174,7 @@ public class Formula implements Iterable<List<Integer>> {
 	 * @return
 	 */
 	public int newAuxillaryVariable() {
-		int newVar = this.highestVariable+1;
+		int newVar = this.highestVariable + 1;
 		addVariable(newVar);
 		markAuxiliary(newVar);
 		return newVar;
@@ -209,8 +218,8 @@ public class Formula implements Iterable<List<Integer>> {
 	 * Removes the given clause from the formula. If this will remove all occurrences of a variable in the clause,
 	 * the variable will be removed from the formula as well.
 	 * 
-	 * This method may increase the solution space of the formula and can only be called if no SAT-Solver is registered
-	 * already. If there is SAT-Solver registered an exception will be thrown.
+	 * This method may increase the solution space of the formula and can only be called if no SAT solver is registered
+	 * already. If there is SAT solver registered an exception will be thrown.
 	 * 
 	 * @param C
 	 * @throws SATSolverRegisteredException
@@ -246,7 +255,7 @@ public class Formula implements Iterable<List<Integer>> {
 	}
 	
 	/**
-	 * Abbreviation for @see removeClause(List<Integer> C)
+	 * Abbreviation for @see removeClause(List C)
 	 * @param vars
 	 * @throws SATSolverRegisteredException
 	 */
@@ -377,7 +386,7 @@ public class Formula implements Iterable<List<Integer>> {
 	public void addAtMost(int k, Set<Integer> variables) {
 		
 		// small instances are better handled by binomial
-		if (variables.size() < 7 || k <= 1) {
+		if (variables.size() < 7 || k <= 1) {			
 			BasicCardinalityEncoder.binomialAMK(this, variables, k);
 			return;
 		}
@@ -441,6 +450,8 @@ public class Formula implements Iterable<List<Integer>> {
 	 * 
 	 * In contrast @see addAtMost() and @see addAtLeast() are better for single calls.
 	 *  
+	 * This methods adds O(n*log^2 n) variables to the formula, so it is also worth for big k.
+	 *  
 	 * @param lb
 	 * @param ub
 	 * @param variables
@@ -450,14 +461,31 @@ public class Formula implements Iterable<List<Integer>> {
 			incrementalEncoder.put(variables, new IncrementalCardinalityEncoder(this, variables));
 		}
 		incrementalEncoder.get(variables).addAtLeast(lb);
-		incrementalEncoder.get(variables).addAtMost(ub);		
+		incrementalEncoder.get(variables).addAtMost(ub);
+	}
+	
+	/**
+	 * At an atMostK constraint that can be decreased between calls to the SAT solver.
+	 * This method works similar as @see addCardinalityConstraint(), but does only support atMostK-constraints.
+	 * 
+	 * It adds O(k*n) variables to the formula, so it is only valuable for small k.
+	 * 
+	 * @param k
+	 * @param variables
+	 */
+	public void addDecreasingAtMost(int k, Set<Integer> variables) {
+		if (!decreasingEncoder.containsKey(variables)) {
+			decreasingEncoder.put(variables, new DecreasingCardinalityEncoder(this, k, variables));			 
+		} else {
+			decreasingEncoder.get(variables).addAtMost(k);
+		}
 	}
 	
 	/**
 	 * Works as @see addCardinalityConstraint, but does add the lb and ub only as assumption (auxillary variables and clauses are added normaly,
 	 * so that this method can be used incrementally as well).
 	 * 
-	 * As this method does make an assumption, it only works if a SAT-Solver is registered (other wise a @see NoSATSolverRegisteredException will be thrown).
+	 * As this method does make an assumption, it only works if a SAT solver is registered (other wise a @see NoSATSolverRegisteredException will be thrown).
 	 *  
 	 * @param lb
 	 * @param ub
@@ -476,7 +504,7 @@ public class Formula implements Iterable<List<Integer>> {
 	}
 	
 	/**
-	 * Register a SAT-solver to the formula. Registering a solver means the following:
+	 * Register a SAT solver to the formula. Registering a solver means the following:
 	 * 
 	 * 1) the formula will be send to the solver
 	 * 2) any newly added clause will be send to the solver (i.e., they will be in sync)
@@ -493,7 +521,7 @@ public class Formula implements Iterable<List<Integer>> {
 	 */
 	public String registerSATSolver() throws ISATSolver.SATSolverNotAvailableException {
 		
-		// try to load a solver
+		// try to load a solver	
 		if (NativeSATSolver.isAvailable()) {
 			this.solver = new NativeSATSolver();
 		} else if (SAT4JSolver.isAvailable()) {
@@ -512,7 +540,7 @@ public class Formula implements Iterable<List<Integer>> {
 	}
 	
 	/**
-	 * Unregisters the SAT-Solver, if set. This means:
+	 * Unregisters the SAT solver, if set. This means:
 	 * 
 	 *  1) The Formula and the solver will not be in sync anymore
 	 *  2) Clauses can be modified again
@@ -524,12 +552,12 @@ public class Formula implements Iterable<List<Integer>> {
 	}
 	
 	/**
-	 * Use a SAT-Solver to check if there is a satisfying model for the formula.
+	 * Use a SAT solver to check if there is a satisfying model for the formula.
 	 * If this method returns true, i.e., if the formula is satisfiable, a satisfying model will be stored, 
 	 * i.e., @see getModel() can be called afterwards.
 	 * 
 	 * @return true if the formula is satisfiable 
-	 * @throws NoSATSolverRegisteredException if no SAT-Solver was registered for this formula
+	 * @throws NoSATSolverRegisteredException if no SAT solver was registered for this formula
 	 */
 	public boolean isSatisfiable(Integer... assumption) throws NoSATSolverRegisteredException {
 		if (this.solver == null) throw new NoSATSolverRegisteredException();

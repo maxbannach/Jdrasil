@@ -53,7 +53,6 @@ public class MinWidthDecomposer<T extends Comparable<T>> implements TreeDecompos
 	/**
 	 * The algorithm is initialized with a graph that should be decomposed and a seed for randomness.
 	 * @param graph
-	 * @param seed
 	 */
 	public MinWidthDecomposer(Graph<T> graph) {
 		this.graph = graph;

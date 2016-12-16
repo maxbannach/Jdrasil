@@ -48,8 +48,8 @@ public class Bag<T extends Comparable<T>> implements Comparable<Bag<T>>, Seriali
 	
 	/**
 	 * Checks if a given vertex is part of this bag.
-	 * @param v
-	 * @return
+	 * @param v the vertex to be checked
+	 * @return true if the vertex is in the bag
 	 */
 	public boolean contains(T v) {
 		return this.vertices.contains(v);
@@ -57,8 +57,8 @@ public class Bag<T extends Comparable<T>> implements Comparable<Bag<T>>, Seriali
 	
 	/**
 	 * Check if the given vertices are all in this bag.
-	 * @param vertices
-	 * @return
+	 * @param vertices that may be in the bag
+	 * @return true if all vertices are in the bag
 	 */
 	public boolean containsAll(Collection<T> vertices) {
 		return this.vertices.containsAll(vertices);

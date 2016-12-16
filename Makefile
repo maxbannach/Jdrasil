@@ -38,7 +38,7 @@ $(DOC):
 	mkdir $(DOC)manual
 
 documentation: $(DOC)
-	javadoc -d $(DOC)html -sourcepath $(SRC) -subpackages jdrasil
+	javadoc -header "<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>" -d $(DOC)html -sourcepath $(SRC) -subpackages jdrasil
 
 $(MANUAL)manual.pdf: $(DOC) $(tex)
 	(cd $(MANUAL) && lualatex manual.tex)

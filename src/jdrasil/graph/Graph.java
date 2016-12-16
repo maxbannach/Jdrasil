@@ -76,11 +76,10 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		edgesInNeighborhood = new HashMap<>();
 	}
 	
-	
 	/**
 	 * Returns the vertices set of this graph. This is actually a Java set of
 	 * the generic vertex type.
-	 * @return Set<T> the vertices of the represented graph
+	 * @return Set the vertices of the represented graph
 	 */
 	public Set<T> getVertices() {
 		return new HashSet<T>(adjacencyList.keySet());
@@ -107,7 +106,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * This will return an empty list if the vertex is isolated and null if the vertex is not part
 	 * of the represented graph.
 	 * @param v the requested vertex  
-	 * @return List<T> the neighborhood of v
+	 * @return List the neighborhood of v
 	 */
 	public List<T> getNeighborhood(T v) {
 		return adjacencyList.get(v);
@@ -115,8 +114,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	
 	/**
 	 * Check if two vertices are adjacent
-	 * @param u
-	 * @param v
+	 * @param u first vertex
+	 * @param v second vertex
 	 * @return
 	 */
 	public boolean isAdjacent(T u, T v) {
@@ -401,7 +400,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	
 	/**
 	 * Returns an iterator over the vertices of this graph.
-	 * @return vertex Iterator<T>
+	 * @return vertex Iterator
 	 */
 	@Override
 	public Iterator<T> iterator() {

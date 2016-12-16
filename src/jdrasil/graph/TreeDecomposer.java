@@ -35,20 +35,20 @@ public interface TreeDecomposer<T extends Comparable<T>> extends Callable<TreeDe
 	 * The function is allowed to throw exceptions (as defined in the Callable interface), however, this should be specified
 	 * more precisely.
 	 * 
-	 * @return a <T,G> tree-decomposition of the graph
+	 * @return a tree-decomposition of the graph
 	 */
 	public TreeDecomposition<T> call() throws Exception;
 	
 	/**
 	 * This method returns the best solution found so far. This method should return null if @see call() was not called,
 	 * or the algorithm does not found a solution yet, or if the algorithm is not anytime.
-	 * @return
+	 * @return the current best solution
 	 */
 	public TreeDecomposition<T> getCurrentSolution();
 	
 	/**
 	 * Specify the quality of the tree-decomposition provided by this algorithm
-	 * @return
+	 * @return the quality of the decomposition
 	 */
 	public TreeDecomposition.TreeDecompositionQuality decompositionQuality();
 	

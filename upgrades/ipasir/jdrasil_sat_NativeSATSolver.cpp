@@ -38,9 +38,8 @@ const char *jStates[] = { "SAT", "UNSAT", "INPUT" };
 static void setInstance(JNIEnv* env, jobject callingObject, void* instance) {
   jclass clazz = env->GetObjectClass(callingObject);
   jmethodID method = env->GetMethodID(clazz, "setPointer", "(J)V");
-  env->CallVoidMethod(callingObject, method, instance);
+  env->CallVoidMethod(callingObject, method, (jlong) (intptr_t) instance);
 }
-
 
 /**
  * The calling object will hold a pointer to an "instance" of the solver,
@@ -68,11 +67,11 @@ static int terminationCallback(void* instance) {
 static void setSolverState(JNIEnv* env, jobject callingObject, State state) {
   jclass clazz = env->GetObjectClass(callingObject);
   jmethodID method = env->GetMethodID(clazz, "setCurrentState", "(Ljdrasil/sat/ISATSolver$State;)V");
-
+  
   jclass jstate = env->FindClass("jdrasil/sat/ISATSolver$State");
   jfieldID satField  = env->GetStaticFieldID(jstate, jStates[state], "Ljdrasil/sat/ISATSolver$State;");
   jobject value = env->GetStaticObjectField(jstate, satField);
-
+  
   env->CallVoidMethod(callingObject, method, value);  
 }
 

@@ -21,9 +21,9 @@ package jdrasil.sat;
 
 
 /**
- * The interface to a SAT-Solver used by Jdrasil. 
+ * The interface to a SAT solver used by Jdrasil. 
  * It is based on the IPASIR interface used by the incremental SAT challenge in 2015 and 2016.
- * Using this interface, Jdrasil is able to use any C/C++ Sat-Solver that uses the IPASIR interface.
+ * Using this interface, Jdrasil is able to use any C/C++ SAT solver that uses the IPASIR interface.
  * 
  * @author Max Bannach
  */
@@ -69,35 +69,35 @@ public interface ISATSolver {
 	String signature();
 	
 	/**
-	 * Initialize the SAT-Solver. 
+	 * Initialize the SAT solver. 
 	 * If this is called for a native solver, @see pointer can be set. The calling object in following
 	 * calls will provide this pointer.
 	 * 
-	 * State: undefined -> INPUT
+	 * State: undefined to INPUT
 	 */
 	void init();
 	
 	/**
-	 * Releases everything the SAT-Solver may have allocated.
+	 * Releases everything the SAT solver may have allocated.
 	 * If called for a native solver, use the pointer stored in the callingObject to identify the solver.
 	 * 
 	 * For Solver written in Java this may not be needed, but when the interface is implemented on native side
 	 * this method should be called (especially by an deconstructor on Java side).
 	 * 
-	 * State: {INPUT, SAT, UNSAT} -> undefined
+	 * State: {INPUT, SAT, UNSAT} to undefined
 	 */
 	void release();
 	
 	/**
 	 * Adds an literal to the currently constructed clause (by definition, there is always a clause at construction).
-	 * The literal is represented in the DIMACS format (a non-zero integer where x > 0 is a positive literal and -x its negation).
+	 * The literal is represented in the DIMACS format (a non-zero integer where \(x \gt 0\) is a positive literal and -x its negation).
 	 * To close a clause and to add it to the solver, call this method with 0.
 	 * 
 	 * If called for a native solver, use the pointer stored in the callingObject to identify the solver.
 	 * 
 	 * @param literal
 	 * 
-	 * State: {INPUT, SAT, UNSAT} -> INPUT
+	 * State: {INPUT, SAT, UNSAT} to INPUT
 	 */
 	void add(int literal);
 	
@@ -109,7 +109,7 @@ public interface ISATSolver {
 	 * 
 	 * @param literal
 	 * 
-	 * State: {INPUT, SAT, UNSAT} -> INPUT
+	 * State: {INPUT, SAT, UNSAT} to INPUT
 	 */
 	void assume(int literal);
 	
@@ -123,7 +123,7 @@ public interface ISATSolver {
 	 * 
 	 * @return
 	 * 
-	 * State: {INPUT, SAT, UNSAT} -> {INPUT, SAT, UNSAT}
+	 * State: {INPUT, SAT, UNSAT} to {INPUT, SAT, UNSAT}
 	 */
 	int solve();
 	
@@ -135,7 +135,7 @@ public interface ISATSolver {
 	 * 
 	 * @return
 	 * 
-	 * State: SAT -> SAT
+	 * State: SAT to SAT
 	 */
 	int val(int literal);
 	
@@ -149,14 +149,14 @@ public interface ISATSolver {
 	 * @param literal
 	 * @return
 	 * 
-	 * State: UNSAT -> UNSAT
+	 * State: UNSAT to UNSAT
 	 */
 	boolean failed(int literal);
 	
 	/**
 	 * Terminate a run of @see solve() of the sat solver. The @see solve() method will then return 0.
 	 * 
-	 * State: {INPUT, SAT, UNSAT} -> {INPUT, SAT, UNSAT}
+	 * State: {INPUT, SAT, UNSAT} to {INPUT, SAT, UNSAT}
 	 */
 	void terminate();
 	

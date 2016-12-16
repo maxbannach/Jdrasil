@@ -36,7 +36,6 @@ import java.util.Set;
  *  
  *  All methods of this class that produce graphs from .gr files are compatible to .dgf files as well.
  *  
- *  @param <T> The type of vertices of graphs is generic.
  *  @author Max Bannach
  */
 public class GraphFactory {

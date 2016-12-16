@@ -114,7 +114,7 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 	 * Remove v, add edge {u,w}, and create bag {v,w,u}.
 	 * 
 	 * This is a special case of the almost simplical rule, but can be computed quicker and guarantees that
-	 * we can use the buddy rule (has graphs with tw < 3 will be eliminated by the rule).
+	 * we can use the buddy rule (has graphs with \(tw \lt 3\) will be eliminated by the rule).
 	 * 
 	 * Returns the bag {v,w,u} if the rule applies, otherwise it returns null.
 	 * 
@@ -458,7 +458,6 @@ public class ReductionRuleDecomposer<T extends Comparable<T>> {
 	 * Here, called with maxDegree <= 2 - so this implements the rules "Twig rule", "Series rule" and easy cases of the "Simplicial" rule
 	 */
 	private void eliminateLowDegreeNodes(int maxDegree) {
-		// TODO Auto-generated method stub
 		Set<T> seen = new HashSet<>();
 		Queue<T> q = new LinkedList<>();
 		for(T v : graph){

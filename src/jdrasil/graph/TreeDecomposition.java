@@ -320,9 +320,9 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	
 	/**
 	 * This method returns an invalid vertex, or null if there is no invalid vertex.
-	 * A vertex v is invalid, if there is a path B_1,B_2,...,B_k with v in B_1, v in B_2, but
-	 * v !in B_i for 1 < i < k.
-	 * The method computes such a path, and it can be stored in a given List<> object. 
+	 * A vertex v is invalid, if there is a path \(B_1,B_2,...,B_k\) with \(v \in B_1\), \(v \in B_2\), but
+	 * \(v \not\in B_i\) for \(1 \lt i \lt k\).
+	 * The method computes such a path, and it can be stored in a given List object. 
 	 * @return
 	 */
 	public T getInvalidVertex(List<Bag<T>> path) {
@@ -456,7 +456,6 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	}
 
 	public TreeDecomposition<T> copy() {
-		// TODO Auto-generated method stub
 		TreeDecomposition<T> res = new TreeDecomposition<T>(graph.copy());
 		res.tree = tree.copy();
 		res.n = n;

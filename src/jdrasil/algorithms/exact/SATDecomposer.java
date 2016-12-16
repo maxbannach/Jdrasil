@@ -69,8 +69,8 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	/**
 	 * Initialize the algorithm. The problem will be solved by sending multiple formulas
 	 * of the base encoding the given SATSolver. The optimal tree-width is searched in the interval [0,n].
-	 * @param graph
-	 * @param solver
+	 * @param graph to be decomposed
+	 * @param encoding that should be used
 	 */
 	public SATDecomposer(Graph<T> graph, Encoding encoding) {
 		this.graph = graph;
@@ -83,7 +83,6 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	 * Initialize the algorithm. The problem will be solved by sending multiple formulas
 	 * of the base encoding the given SATSolver. The optimal tree-width is searched in the interval [lb,ub].
 	 * @param graph
-	 * @param solver
 	 */
 	public SATDecomposer(Graph<T> graph, Encoding encoding, int lb, int ub) {
 		this.graph = graph;
@@ -94,8 +93,8 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 
 	/**
 	 * Compute a optimal elimination order for the graph based on SAT-techniques.
-	 * @see BaseEncoder.java
-	 * @see ImprovedEncoder.java
+	 * @see BaseEncoder
+	 * @see ImprovedEncoder
 	 * @return
 	 */
 	protected List<T> computePermutation() {
@@ -113,8 +112,8 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 				return null;
 		}
 		
-		encoder.initCardinality(0, ub);
-		Formula phi = encoder.getFormula();				
+		encoder.initCardinality(ub);
+		Formula phi = encoder.getFormula();
 		try {
 			phi.registerSATSolver();
 		} catch(Exception e) {}
@@ -127,8 +126,8 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 			while (phi.isSatisfiable() && k >= lb) {
 				if (k < ub) App.reportNewSolution(k);
 				permutation = encoder.getPermutation(phi.getModel());
-				k = k - 1;
-				encoder.improveCardinality(0, k);			
+				k = k - 1;							
+				encoder.improveCardinality(k);
 			}
 		} catch (Exception e) {}
 				

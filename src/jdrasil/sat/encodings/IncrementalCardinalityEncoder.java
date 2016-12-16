@@ -36,11 +36,11 @@ import jdrasil.sat.Formula;
  * (the model of these variables will be sorted, not the number of variables of course; many other variables and clauses will be added as well). * 
  * A model could now look like:
  * 
- * 1 2 3 4 -> 8 10 11 9
- * + - + - -> -  -  + +
- * or
- * 1 2 3 4 -> 8 10 11 9
- * + + + - -> -  +  + +
+ * <p>1 2 3 4 \(\rightarrow\) 8 10 11 9</p>
+ * <p>+ - + - \(\rightarrow\) -  -  + +</p>
+ * <p>or</p>
+ * <p>1 2 3 4 \(\rightarrow\) 8 10 11 9</p>
+ * <p>+ + + - \(\rightarrow\) -  +  + +</p>
  * 
  * During initialization, the network will be computed and added to the formula. After this happened (once), one can add cardinality constraints
  * by adding unit clauses for the output gates, either over this class or directly. Note that, since these are unit clauses, cardinality constraints
@@ -190,8 +190,8 @@ public class IncrementalCardinalityEncoder {
 	 * Returns an literal, which, when added to the formula, will force that at least k variables are set to true.
 	 * This literal can also be used for assumptions.
 	 * 
-	 * This method assumes k > 0 and k <= n, since at least 0 does would have no effect; and at least most then n has no meaning.
-	 * In case of k <= 0 or k > n, this method will return 0;
+	 * This method assumes \(k \gt 0\) and \(k \leq n\), since at least 0 does would have no effect; and at least most then n has no meaning.
+	 * In case of \(k \le 0\) or \(k \gt n\), this method will return 0;
 	 * 
 	 * @param k
 	 * @return
@@ -205,8 +205,8 @@ public class IncrementalCardinalityEncoder {
 	 * Returns an literal, which, when added to the formula, will force that at most k variables are set to true.
 	 * This literal can also be used for assumptions.
 	 * 
-	 * This method assumes k < n, since at most everything would not have an effect.
-	 * For k >= n, this method returns 0;
+	 * This method assumes \(k \lt n\), since at most everything would not have an effect.
+	 * For \(k \ge n\), this method returns 0;
 	 * On the other hand, k is not allowed to be negative, since this makes no sense. In this case the method also returns 0.
 	 * 
 	 * @param k

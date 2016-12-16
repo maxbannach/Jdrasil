@@ -28,7 +28,7 @@ import jdrasil.sat.Formula;
 
 /**
  * A vertex-cover of a graph is a subset of its vertices such that every edge is incident to at least one of these vertices.
- * If a SAT-Solver is available, this class will compute the minimal vertex-cover. Otherwise, a simple 2-approximation is computed.
+ * If a SAT solver is available, this class will compute the minimal vertex-cover. Otherwise, a simple 2-approximation is computed.
  * 
  * @author Max Bannach
  */
@@ -39,15 +39,15 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 	
 	/**
 	 * Calls the constructor of @see Invariant() and invokes the computation of the vertex-cover
-	 * @param G
+	 * @param graph that should be decomposed
 	 */
 	public VertexCover(Graph<T> graph) {
 		super(graph);
 	}
 	
 	/**
-	 * Formulate the vertex-cover problem as SAT instance and solve it with a SAT-Solver (if possible).
-	 * Can return null, if there is no SAT-Solver or the SAT-Solver fails.
+	 * Formulate the vertex-cover problem as SAT instance and solve it with a SAT solver (if possible).
+	 * Can return null, if there is no SAT solver or the SAT solver fails.
 	 * @return
 	 */
 	private Map<T, Boolean> computeWithSAT() {
@@ -100,13 +100,13 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 	protected Map<T, Boolean> computeModel() {
 		Map<T, Boolean> vertexCover = null;
 		
-		// if we have a SAT-Solver, solve the problem exactly
+		// if we have a SAT solver, solve the problem exactly
 		if (Formula.canRegisterSATSolver()) {
 			vertexCover = computeWithSAT();
 			this.minimal = true;
 		}
 		
-		// if we do not, or if the SAT-Solver failed, compute a simple approximation
+		// if we do not, or if the SAT solver failed, compute a simple approximation
 		if (vertexCover == null) {
 			this.minimal = false;
 			// compute simple 2-approximation

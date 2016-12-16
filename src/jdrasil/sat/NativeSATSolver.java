@@ -20,7 +20,7 @@ package jdrasil.sat;
 
 
 /**
- * This class builds the interface to an native SAT-Solver that implements the IPASIR SAT-Solver interface.
+ * This class builds the interface to an native SAT solver that implements the IPASIR SAT solver interface.
  * Instances of this class can only be generated if a corresponding native library was found in the class path of Jdrasil.
  * 
  * @author Max Bannach
@@ -47,7 +47,7 @@ class NativeSATSolver implements ISATSolver {
 	 private final static boolean libraryLoaded;
 	 
 	 /**
-	  * Checks whether or not a native SAT-solver is available.
+	  * Checks whether or not a native SAT solver is available.
 	  * @return true if the static constructor managed to load a native sat solver.
 	  */
 	 protected static boolean isAvailable() {
@@ -65,7 +65,7 @@ class NativeSATSolver implements ISATSolver {
 	 private State currentState;
 	 
 	 /**
-	  * Creates a new native SAT-Solver. This constructor only works if a native solver is available in the library.path of Jdrasil,
+	  * Creates a new native SAT solver. This constructor only works if a native solver is available in the library.path of Jdrasil,
 	  * otherwise this method will generate an exception.
 	  * You can check whether or not a native solver is available by calling @see isAvailable()
 	  * 

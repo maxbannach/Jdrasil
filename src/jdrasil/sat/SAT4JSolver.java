@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 
 /**
  * This class implements the IPASIR interface defined in ISATSolver for SAT4J.
- * Since Jdrasil does not get shipped with SAT4J (and may not need it, for instance if no SAT-Solver or a native solver is used),
+ * Since Jdrasil does not get shipped with SAT4J (and may not need it, for instance if no SAT solver or a native solver is used),
  * this class is complete build on reflections. Hence, it can be compiled and used even if SAT4J is not available in the current classpath
  * of Jdrasil. 
  * 
@@ -101,7 +101,7 @@ class SAT4JSolver implements ISATSolver {
 	private State currentState;
 	
 	/**
-	 * The actually SAT-Solver from SAT4J.
+	 * The actually SAT solver from SAT4J.
 	 */
 	private Object solver;
 	

@@ -100,8 +100,11 @@ public class ImprovedEncoder<T extends Comparable<T>> extends BaseEncoder<T> {
 		// domain specific redundant clauses (7)
 		for (int i = 1; i <= n; i++) {
 			for (int j = 1; j <= n; j++) {
-				if (i == j) continue;
-				phi.addClause(-1*arc[j][i], -1*arc[i][j]);
+				if (i == j) {
+					phi.addClause(-1*arc[i][i]); // no self loops
+				} else {
+					phi.addClause(-1*arc[j][i], -1*arc[i][j]); // no double edge
+				}
 			}
 		}
 		

@@ -42,23 +42,23 @@ $\Class{NP}$-complete problem, and ``simply'' asks if a boolean
 formula in CNF has a satisfying model. Many $\Class{NP}$-complete
 problems can naturally be stated as a \Lang{SAT}-problem, and hence, can
 be naturally solved by finding a model for a CNF formula. This is the
-reason why \emph{SAT-Solvers}, i.\,e., tools that solve the boolean
+reason why \emph{SAT solvers}, i.\,e., tools that solve the boolean
 satisfiablity problem, have received a lot of research afford. In
 particular, there are annual challenges\footnote{\url{http://baldur.iti.kit.edu/sat-competition-2016/}} that try to
 find the fastest solver. The result of this afford is that modern
-SAT-Solver can solve hard problems on many instances very quickly.
+SAT solver can solve hard problems on many instances very quickly.
 
-The power of SAT-Solver makes it interesting to use them while
-computing a tree decomposition. Equipped with a SAT-Solver, \Jdrasil\
+The power of SAT solver makes it interesting to use them while
+computing a tree decomposition. Equipped with a SAT solver, \Jdrasil\
 can directly encode the problem of finding a tree decomposition (or
 more precisely, an elimination order) into a $\Lang{SAT}$-formula. See
 section~\ref{???} for more details. On the other hand, \Jdrasil\ can
-also use the SAT-Solver to solve different subproblems while computing
+also use the SAT solver to solve different subproblems while computing
 the tree decomposition. For instance, if \Jdrasil\ computes an
 elimination order, it can always put a clique of the graph at the
 end of the permutation. If the clique is big, this can reduce the
 search space dramatically. However, finding big cliques in graph is
-$\Class{NP}$-hard as well. \Jdrasil\ can use a SAT-Solver to find the
+$\Class{NP}$-hard as well. \Jdrasil\ can use a SAT solver to find the
 largest clique in the graph.
 
 \section{The Formula Class}\label{section:satFormula}
@@ -102,24 +102,24 @@ wish to remove an clause, which can be done by:
 But this operation should be used with caution: first of all it is
 much more expensive to remove a clause then adding one; and,
 furthermore, we are not always allowed to remove a clause (the method
-can throw an exception). The reason for this is that SAT-Solvers that
+can throw an exception). The reason for this is that SAT solvers that
 solve a formula incrementally often only allow to restrict the formula
 further. This means, once we started to ``solve'' the formula, we
 can not remove clauses anymore.
 
 \subsection{Solving a Formula}
-So, \note{We can only solve formulas if a SAT-Solver is installed as upgrade.}
+So, \note{We can only solve formulas if a SAT solver is installed as upgrade.}
 how to actually find a model for the formula, i.\,e., how to
 ``sovle'' it. In order to check if a formula has a satisfying
-assignment, \Jdrasil\ uses external SAT-Solvers which have to be
+assignment, \Jdrasil\ uses external SAT solvers which have to be
 installed as upgrade (see the following sections for possible
-solvers). If a SAT-Solver is installed, we can register it to the
+solvers). If a SAT solver is installed, we can register it to the
 formula:
 \begin{lstlisting}[language=Java]
   String sig = phi.registerSATSolver();
 \end{lstlisting}
-This method will register an arbitrary SAT-Solver that \Jdrasil\ has
-found as upgrade. If no SAT-Solver is installed, this method will
+This method will register an arbitrary SAT solver that \Jdrasil\ has
+found as upgrade. If no SAT solver is installed, this method will
 throw an exception; otherwise the signature of the solver is
 returned. Once a solver is registered, the following will happen:
 \begin{enumerate}
@@ -137,7 +137,7 @@ a satisfying assignment:
 \begin{lstlisting}[language=Java]
   phi.isSatisfiable();
 \end{lstlisting}
-This method will use the SAT-Solver to solve the formula. The whole
+This method will use the SAT solver to solve the formula. The whole
 API is incremental, so we can modify the formula between calls of
 this method (which will be faster then recreating new formulas). A
 typical scenario would look like:
@@ -149,7 +149,7 @@ typical scenario would look like:
 \end{lstlisting}
 Sometimes, we actually would like to remove clauses between calls
 (which we are not allowed to do, as mentioned earlier). To overcome
-this issue, most incremental SAT-Solvers support the concept of
+this issue, most incremental SAT solvers support the concept of
 \emph{assumptions}. An assumption is an unit clause that is added to
 the solver for a single run. We can for instances say
 $x_1=\mathrm{true}$ and check if the formula is satisfiable
@@ -198,7 +198,7 @@ happen:
   \item The variable list of the formula will not contain $x$.
   \item A model will not contain an entry for $x$.
   \item The auxiliary variable list will contain $x$.
-  \item The behavior of the formula, a registered SAT-Solver, and the
+  \item The behavior of the formula, a registered SAT solver, and the
     satisfiability of the formula will \emph{not} change. The variable
     is still part of the formula.
 \end{enumerate}
@@ -258,7 +258,8 @@ variables \emph{must be set}, but for our formula this has no effect:
 \begin{lstlisting}[language=Java]
   phi.addAtLeast(2, vars);
 \end{lstlisting}
-Both methods, \detail{These methods use sequential counters.}
+Both methods, \detail{These methods use sequential counters and
+  introduced \textcolor{jdrasil.fg}{$O(kn)$} auxiliary variables \emph{per call}.}
 \JMethod{addAtMost} and \JMethod{addAtLeast}, add
 clauses and auxiliary variables to the formula. This should be used
 for cardinality constraints that are used only once, since these
@@ -293,13 +294,33 @@ set to true:
 \begin{lstlisting}[language=Java]
   phi.addCardinalityConstraint(3,6,vars);
 \end{lstlisting}
-This \detail{This method uses sorting networks.}
+This \detail{This method uses sorting networks and introduced
+  \textcolor{jdrasil.fg}{$O(n\log^2 n)$} auxiliary variables overall.}
 method will add a lot of auxiliary variables and clauses (most of
 the time more then a single call for of \JMethod{addAtMost}), however,
 it will reuse this. More precisely, while the first call adds a lot of
 structure to the formula, incremental calls will only add single
 clauses. So for the algorithm from above, this method is way more
 efficient. 
+
+Finally, \Jdrasil\ provides a third possibility to use cardinality
+constraints. While computing tree decomposition's, we often deal with
+instances of small tree width (as the usual use case is
+parameterized complexity). If $k$ is much smaller then $n$, a sorting
+network is asymptotically not optimal in sense of introduced auxiliary
+variables. For such scenarios, the \JClass{Formula} class provides the
+method \JMethod{addDecreasingAtMost}.\detail{This method uses a
+  variant sequential counter as well. It introduces \textcolor{jdrasil.fg}{$O(kn)$} auxiliary
+  variables overall.}This method can be seen as a compromise between
+\JMethod{addAtMost} (which is simple, but static), and
+\JMethod{addCardinalityConstraint} (which is complex, but can be
+decreased and increased between solver calls). In contrast, the method
+\JMethod{addDecreasingAtMost} is as simple as the first method, but
+allows to be decreased between calls to the solver. It is, however,
+only efficient for small values of $k$; and only works for decreasing
+upper bounds (and not increasing lower bounds). Note that we can
+interstate this as a parameterized SAT encoding, where $k$ is the
+parameter.
 
 \section{SAT4J}
 The Java Library SAT4J\footnote{\url{http://www.sat4j.org}} is the
@@ -321,7 +342,7 @@ If SAT4J is available in the classpath,
 \JMethod(canRegisterSATSolver()) of \JClass{jdrasil.sat.Formula} will
 return true, if SAT4J is also used (this depend on \Jdrasil\ and other
 loaded upgrades), the method \JMethod{init()} will return the String
-``SAT4J''.
+``SAT4J''. 
 
 \subsection{Installation}
 To use SAT4J in \Jdrasil, it is sufficient to download the core
@@ -339,10 +360,10 @@ as we would otherwise.
 
 \section{Native IPASIR Solver}
 
-Today's most advanced SAT-Solvers are mostly implemented in
+Today's most advanced SAT solvers are mostly implemented in
 C/C++. \Jdrasil\ can use such ``native'' solver with the help of Javas
 JNI-API\footnote{\url{https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/jniTOC.html}}. 
-To be as general as possible and, thus, to support as many SAT-Solvers
+To be as general as possible and, thus, to support as many SAT solvers
 as possible, \Jdrasil\ implements the
 IPASIR\footnote{\url{http://baldur.iti.kit.edu/sat-race-2015/downloads/ipasir.h}}
 interface, which is the reversed acronym for ``Re-entrant Incremental
@@ -407,7 +428,7 @@ is an library \file{libipasirsolver.dylib}.
 Once we have compiled \Jdrasil's IPASIR-JNI interface against an
 IPASIR solver, i.\,e., once we have an library called
 \file{libjdrasil_sat_NativeSATSolver.dylib}, we can \emph{upgrade}
-\Jdrasil\ ``on the fly''. \Jdrasil\ will look for the SAT-Solver in
+\Jdrasil\ ``on the fly''. \Jdrasil\ will look for the SAT solver in
 its library path (not to be confused with its class path), so the
 following call will allows \Jdrasil\ to use the solver:
 \begin{lstlisting}[language=bash]

@@ -67,8 +67,9 @@ public class EliminationOrderDecomposer<T extends Comparable<T>> implements Tree
 	/**
 	 * Default constructor. The algorithms is initialized with an undirected graph and with
 	 * and permutation of the vertices of this graph.
-	 * @param graph
-	 * @param permutation
+	 * @param graph for which a decomposition should be computed
+	 * @param permutation that should be used
+	 * @param qualityOfPermutation the quality of the given permutation
 	 */
 	public EliminationOrderDecomposer(Graph<T> graph, List<T> permutation, TreeDecompositionQuality qualityOfPermutation) {
 		this.graph = graph.copy();
