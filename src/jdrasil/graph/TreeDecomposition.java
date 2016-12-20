@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import jdrasil.App;
-import jdrasil.graph.invariants.MinimalSeperator;
+import jdrasil.graph.invariants.MinimalSeparator;
 
 /**
  * This class models a tree-decomposition of an undirected graph G.
@@ -321,7 +321,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		Graph<T> g = toGraph(b);
 		
 		// compute a minimal separator
-		Set<T> sep = new MinimalSeperator<T>(g).getSeperator();
+		Set<T> sep = new MinimalSeparator<T>(g).getSeperator();
 
 		// remove the separator from the graph
 		for(T v: sep){

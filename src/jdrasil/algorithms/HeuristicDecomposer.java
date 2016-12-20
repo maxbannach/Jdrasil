@@ -23,7 +23,7 @@ package jdrasil.algorithms;
  * @author Max Bannach
  */
 
-import jdrasil.App;
+import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.algorithms.upperbounds.StochasticMinFillDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
@@ -41,9 +41,6 @@ import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
  * @author Thorsten Ehlers
  */
 public class HeuristicDecomposer<T extends Comparable<T>> implements TreeDecomposer<T> {
-
-	/** Preprocessor to reduce the graph size. */
-	private final ReductionRuleDecomposer<T> preprocessor;
 	
 	/** the graph we wish to decompose */
 	private final Graph<T> graph;
@@ -59,38 +56,24 @@ public class HeuristicDecomposer<T extends Comparable<T>> implements TreeDecompo
 	 * @param graph
 	 */
 	public HeuristicDecomposer(Graph<T> graph) {
-		this.graph = graph;
-		this.preprocessor = new ReductionRuleDecomposer<T>(graph);		
+		this.graph = graph;	
 	}
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
 		
-		/* start preprocessing phase */
-		App.log("starting preprocessing");
-		if (this.preprocessor.reduce()) return preprocessor.getTreeDecomposition();
-		App.log("reduced to from " + graph.getVertices().size() + " to " + this.preprocessor.getReducedGraph().getVertices().size() + " vertices");
-		
-		/* start the first phase */
-		App.log("starting minFill phase");
-		minFillDecomposer = new StochasticMinFillDecomposer<T>(preprocessor.getReducedGraph());
-		currentDecomposition = minFillDecomposer.call();
-		
-		// done
-		preprocessor.glueTreeDecomposition(currentDecomposition);
-		return currentDecomposition;
+		GraphReducer<T> reducer = new GraphReducer<>(graph);
+		for (Graph<T> reduced : reducer) {
+			minFillDecomposer = new StochasticMinFillDecomposer<T>(reduced);
+			currentDecomposition = minFillDecomposer.call();
+			reducer.addbackTreeDecomposition(currentDecomposition);
+		}
+		return reducer.getTreeDecomposition();
 	}
 
 	@Override
 	public TreeDecomposition<T> getCurrentSolution() {
-		TreeDecomposition<T> newDecomposition = null;
-		newDecomposition = minFillDecomposer.getCurrentSolution();
-
-		// update current solution only, if the current phase has found a new one
-		if (newDecomposition != null && newDecomposition.getWidth() < currentDecomposition.getWidth()){
-		    currentDecomposition = newDecomposition;
-		}
-		return currentDecomposition;
+		return null;
 	}
 
 	@Override

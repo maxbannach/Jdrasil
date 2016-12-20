@@ -323,26 +323,33 @@ vertex-cover):
   vs.isExact()
 \end{lstlisting}
 
-\Jdrasil\ currently implements the following invariants:
+\section{Connected Components}
+The class \JClass{ConnectedComponents} can be used to compute the
+connected components of the graph. The model maps vertices to
+integers, which represent the id of the connected component the vertex
+is. In addition, the class provides methods to obtain the connected
+components as sets of vertices and as subgraphs.
 
-\begin{tabular}{p{0.3\textwidth}p{0.65\textwidth}}
-  \toprule
-  Invariant & Description\\\cmidrule(rl){1-2}
-  \JClass{VertexCover} & Computes a set of vertices that covers all
-  edges. If an SAT solver is available, this class will compute a
-  minimal vertex-cover. Otherwise, a 2-approximation is used.\\
-  \JClass{Clique} & Computes a set of vertices that are all pairwise
-  adjacent. If an SAT solver is available, a maximal clique will be
-  computed. Otherwise, a greedy strategy is used.\\
-  \JClass{TwinDecomposition} & Computes a twin decomposition of the
-  graph. Two vertices $u$, $v$ are called twins if we have
-  $N(u)=N(v)$. This relation defines a equivalence relation on the
-  graph, which we call twin decomposition.\\
-  \JClass{MinimalSeperator} & Computes a minimal seperator, i.\,e., a
-  minimal set of vertices such that the removal of the set will
-  increase the number of connected components of the graph.\\
-  \bottomrule
-\end{tabular}
+\section{Vertex Cover}
+The class \JClass{VertexCover} computes a set of vertices that covers all edges. If an SAT solver is
+available, this class will compute a minimal vertex-cover. Otherwise,
+a 2-approximation is used.
+
+\section{Clique}
+The class \JClass{Clique} computes a set of vertices that are all pairwise adjacent. If an SAT
+solver is available, a maximal clique will be computed. Otherwise, a
+greedy strategy is used.
+
+\section{Twin Decomposition}
+The class \JClass{TwinDecomposition} computes a twin decomposition of the graph. Two vertices $u$, $v$ are
+called twins if we have $N(u)=N(v)$. This relation defines a
+equivalence relation on the graph, which we call twin decomposition.
+
+\section{Minimal Seperator}
+The class \JClass{MinimalSeperator} computes a minimal seperator, i.\,e., a minimal set of vertices such
+that the removal of the set will increase the number of connected
+components of the graph.
+
 \chapter{Tree Decompositions}\label{chapter:treedecompositions}
 
 \part{Algorithms}
@@ -372,7 +379,45 @@ decomposition.
 
 % add the usual way
 
-% add list or sections for preprocessing algorithms
+\section{Reduction Rules}
+There are many reduction rules for tree width known in the
+literature, see for instance~\cite{DowneyF2013}. A reduction rule thereby is a function that removes (in
+polynomial time) a vertex from the graph and creates a bag of the
+tree decomposition such that this bag glued to an optimal
+tree decomposition of the remaining graph yields to an optimal
+tree decomposition. For graphs of tree with at most 3, these rules
+produce an optimal decomposition in polynomial time.  For graphs with
+higher tree width, the rules can only be applied up to a certain
+point. From this point on, an other algorithm has to be used.
+
+In \Jdrasil, the class \JClass{GraphReducer} implements several
+reduction rules and can be used as preprocessing for any other
+algorithm. As mentioned before, this class will (automatically)
+compute optimal tree decompositions of graphs of tree width at most
+$3$. 
+
+\section{Separating the Graph}
+A separator $S\subseteq V$ of a graph $G=(V,E)$ is a subset of the
+vertices such that $G\setminus S$ has more connected components
+then $G$. In particular, the connected components of $G$ are separated
+by the separator $\emptyset$, while bi-connected components have a
+separator $S$ with $|S|=1$.
+
+Bodlaender and Koster have presented a list of \emph{safe} separators
+for tree width~\cite{BodlaenderK2006}. A safe separator is one that
+does not effect the tree width, i.\,e., one that allows to reproduce
+an optimal tree decomposition for $G$ from optimal tree decompositions
+of the connected components of $G\setminus S$ (in polynomial
+time). Having such safe separators allows us to compute tree
+decomposition in an divide-and-conquer manner: Split the graph using
+safe separators until the graph is small enough to solve it, or until
+there are no separators left.
+
+In \Jdrasil, the class \JClass{GraphSeperator} implements some safe
+separators. The class will split the graph using such separators, and
+will keep track of potential glue points. Once the class is provided
+with tree decompositions for all components produced, it will generate
+a tree decomposition for the original graph.
 
 \chapter{Lowerbounds}
 
@@ -818,4 +863,6 @@ is stored. Note that this only sets the path to location at which
 against other dynamic libraries, these libraries are searched in the
 default system depend way (and not in the above specified path).
 
+
+\bibliography{manual}
 \end{document}

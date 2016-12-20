@@ -43,13 +43,13 @@ public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<
 	protected Graph<T> graph;
 	
 	/** The graphs computed by the algorithm. */
-	private Set<Graph<T>> processedGraphs;
+	protected Set<Graph<T>> processedGraphs;
 	
 	/** TreeDecompositions of the small Graphs. */
-	private Set<TreeDecomposition<T>> treeDecompositions;
+	protected Set<TreeDecomposition<T>> treeDecompositions;
 	
 	/** The tree decomposition of the input graph, computed by the preprocessor. */
-	private TreeDecomposition<T> treeDecomposition;
+	protected TreeDecomposition<T> treeDecomposition;
 	
 	/**
 	 * The constructor of an Preprocessor will invoke the computation of the preprocessing (i.e., it may be time expensive).
@@ -59,8 +59,7 @@ public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<
 	public Preprocessor(Graph<T> graph) {
 		this.graph = graph;
 		this.processedGraphs = computeGraphs();
-		this.treeDecompositions = new HashSet<>();
-		this.treeDecomposition = null;
+		this.treeDecompositions = new HashSet<>();		
 	}
 	
 	/**
@@ -86,8 +85,8 @@ public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<
 	 * This method will call @see glueDecompositions() ones enough tree decompositions where added.
 	 * @param decompositions
 	 */
-	public void addbackTreeDecomposition(TreeDecomposition<T> decompositions) {
-		this.treeDecompositions.add(treeDecomposition);
+	public void addbackTreeDecomposition(TreeDecomposition<T> decomposition) {
+		this.treeDecompositions.add(decomposition);
 		if (this.treeDecompositions.size() == this.processedGraphs.size()) {
 			this.treeDecomposition = glueDecompositions();
 		}

@@ -26,11 +26,11 @@ import java.util.Random;
 
 import jdrasil.algorithms.ExactDecomposer;
 import jdrasil.algorithms.HeuristicDecomposer;
-import jdrasil.algorithms.ReductionRuleDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.GraphWriter;
 import jdrasil.graph.TreeDecomposition;
+import jdrasil.graph.invariants.ConnectedComponents;
 
 
 /**
@@ -60,7 +60,22 @@ public class App {
 	 * @param args program arguments
 	 */
 	public static void main(String[] args) {
-				
+
+		try {
+			Graph<Integer> G = GraphFactory.graphFromStdin();
+			System.out.println(G.getConnectedComponents().size());
+			ConnectedComponents<Integer> cc = new ConnectedComponents<>(G);
+			System.out.println(cc.getValue());
+
+			
+			for (Graph<Integer> sub : cc.getAsSubgraphs()) {
+				System.out.println(sub);
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		System.exit(1);
+		
 		// parsing arguments
 		parseArguments(args);
 		
@@ -73,20 +88,6 @@ public class App {
 		
 		try{
 			Graph<Integer> input = GraphFactory.graphFromStdin();
-			
-			/* JDrasil can be used to just translate a graph to the .gr file */
-			if (parameters.containsKey("translate")) {	
-				GraphWriter.writeValidGraph(input);
-				System.exit(1);
-			}
-			
-			/* JDrasil can be used produce a .gr file with a reduced graph */
-			if (parameters.containsKey("reduce")) {
-				ReductionRuleDecomposer<Integer> preprocessor = new ReductionRuleDecomposer<Integer>(input);
-				preprocessor.reduce();
-				GraphWriter.writeValidGraph(preprocessor.getReducedGraph());
-				System.exit(1);
-			}
 			
 			/* Compute a explicit decomposition */
 			long tstart = System.nanoTime();
@@ -198,8 +199,6 @@ public class App {
 		System.out.println("  -parallel : enable parallel processing");
 		System.out.println("  -heuristic : compute a heuristic solution");
 		System.out.println("  -log : enable log output");
-		System.out.println("  -translate : just outputs the graph in the .gr format");
-		System.out.println("  -reduce : just outputs a reduced graph of the same tree width (preprocessing)");
 		System.out.println("  -tikz : enable tikz output");
 	}
 	
