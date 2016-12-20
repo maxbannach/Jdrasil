@@ -345,6 +345,43 @@ vertex-cover):
 \end{tabular}
 \chapter{Tree Decompositions}\label{chapter:treedecompositions}
 
+\part{Algorithms}
+At its core engine, \Jdrasil\ implements a bunch of algorithms to
+compute tree decompositions. These algorithms either directly compute
+such decompositions, or assist other algorithms in doing so. In
+particular, the implemented algorithms (that are related to the
+computation of tree decompositions) are partitioned into five types:
+\emph{Preprocessing} algorithms, algorithms that compute
+\emph{lowerbounds}, \emph{heuristics}, \emph{approximation}
+algorithms, and \emph{exact} algorithms.
+
+\chapter{Preprocessing}
+A Preprocessor is a function that maps an arbitrary input graph to a collection of ``easier'' graphs. 
+Easier here is meant with respect to computing a tree decomposition and often just means ``smaller'', but 
+could also reefer to adding structures to the graph that improve pruning potential.
+ 
+The class \JClass{Preprocessor} models a preprocessor by providing the
+methods \JMethod{computeGraphs}, \JMethod{addbackTreeDecomposition},
+\JMethod{glueDecompositions}, and \JMethod{getTreeDecomposition}. The
+first method represents the actual preprocessing and computes a
+collection of graphs from the input graph.  The following two methods
+can be used to add a tree decomposition of one of the graphs produced
+by the first method back, and to combine these tree decompositions to
+one for the input graph. The last method is a getter for this
+decomposition.
+
+% add the usual way
+
+% add list or sections for preprocessing algorithms
+
+\chapter{Lowerbounds}
+
+\chapter{Heuristics}
+
+\chapter{Approximation}
+
+\chapter{Exact}
+
 \part{Upgrades}
 
 \Jdrasil\ is designed as a modular and platform independent library,

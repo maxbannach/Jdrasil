@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import jdrasil.utilities.PartitionRefinement;
-
 /**
  * This class represents a generic directed graph and provides basic methods to modify it.
  * As Jdrasil mainly deals with undirected graphs, this class provides method to perform all operations symmetrically,
