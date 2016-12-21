@@ -350,6 +350,20 @@ The class \JClass{MinimalSeperator} computes a minimal seperator, i.\,e., a mini
 that the removal of the set will increase the number of connected
 components of the graph.
 
+\section{Maximal Matching}
+A matching in a graph \(G=(V,E)\) is a subset of the edges
+\(M\subseteq E\) such that for every vertex \(v\in V\) we have
+\(|\{\,e\mid e\in M\wedge v\in e\,\}|\leq 1\). A matching is \emph{maximal} if
+we can not increase it by adding any edge. It is a \emph{maximum} matching,
+if there is no bigger matching in the graph, and it is \emph{perfect} if
+every vertex is matched.
+  
+In \Jdrasil, the class \JClass{Matching} greedily computes a maximal matching, i.\,e., it is not
+guaranteed that it is a maximum matching. The matching is represented
+as map from vertices to vertices, i.\,e., a vertex is mapped to the
+vertex it is matched with.
+  
+
 \chapter{Tree Decompositions}\label{chapter:treedecompositions}
 
 \part{Algorithms}
