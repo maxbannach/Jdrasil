@@ -292,16 +292,23 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 */
 	public class ContractionInformation {
 		
-		T v; // vertex to which we contracted
-		T w; // vertex removed during contraction
+		public T v; // vertex to which we contracted
+		public T w; // vertex removed during contraction
 		Set<T> removeEdges; // edges that have to be removed from v
 		Set<T> addEdges; // edges that have to be added to w
 		
 		public ContractionInformation(T v, T w) {
-			this.v = v;
+			this.setV(v);
 			this.w = w;
 			this.removeEdges = new HashSet<>();
 			this.addEdges = new HashSet<>();
+		}
+
+		/**
+		 * @param v the v to set
+		 */
+		public void setV(T v) {
+			this.v = v;
 		}
 		
 	} 

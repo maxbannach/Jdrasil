@@ -26,6 +26,8 @@ import java.util.Random;
 
 import jdrasil.algorithms.ExactDecomposer;
 import jdrasil.algorithms.HeuristicDecomposer;
+import jdrasil.algorithms.exact.CopsAndRobber;
+import jdrasil.algorithms.preprocessing.GraphContractor;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.GraphWriter;
@@ -59,7 +61,7 @@ public class App {
 	 * @param args program arguments
 	 */
 	public static void main(String[] args) {
-		
+
 		// parsing arguments
 		parseArguments(args);
 		

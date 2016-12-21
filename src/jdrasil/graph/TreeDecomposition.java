@@ -96,11 +96,19 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	}
 	
 	/**
-	 * Getter for width of the tree-decomposition.
+	 * Getter for width of the tree decomposition.
 	 * @return
 	 */
 	public int getWidth() {
 		return width;
+	}
+	
+	/**
+	 * Setter for width of the tree decomposition.
+	 * @param width to be set to
+	 */
+	public void setWidth(int width) {
+		this.width = width;
 	}
 	
 	/**
