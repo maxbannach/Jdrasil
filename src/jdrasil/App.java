@@ -30,7 +30,6 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.GraphWriter;
 import jdrasil.graph.TreeDecomposition;
-import jdrasil.graph.invariants.ConnectedComponents;
 
 
 /**
@@ -60,21 +59,6 @@ public class App {
 	 * @param args program arguments
 	 */
 	public static void main(String[] args) {
-
-		try {
-			Graph<Integer> G = GraphFactory.graphFromStdin();
-			System.out.println(G.getConnectedComponents().size());
-			ConnectedComponents<Integer> cc = new ConnectedComponents<>(G);
-			System.out.println(cc.getValue());
-
-			
-			for (Graph<Integer> sub : cc.getAsSubgraphs()) {
-				System.out.println(sub);
-			}
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-		System.exit(1);
 		
 		// parsing arguments
 		parseArguments(args);
@@ -102,7 +86,7 @@ public class App {
 			} else {
 				
 				/* Default case: compute an exact tree-decomposition */	
-				ExactDecomposer<Integer> exact = new ExactDecomposer<Integer>(input, parameters.containsKey("parallel"));				
+				ExactDecomposer<Integer> exact = new ExactDecomposer<Integer>(input);				
 				decomposition = exact.call();
 			}
 			long tend = System.nanoTime();

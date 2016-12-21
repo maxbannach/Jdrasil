@@ -377,7 +377,27 @@ by the first method back, and to combine these tree decompositions to
 one for the input graph. The last method is a getter for this
 decomposition.
 
-% add the usual way
+The usual way to use a preprocessing algorithm is by a) initializing an
+instance of it, b) loop over the generated graphs, and c) add back a
+tree decomposition for every graph. For instance, if we wish to
+iterate over safe components (connected components, bi-connected
+components, etc.) we can do the following:
+\begin{lstlisting}[language=Java]
+  
+  // a) generate instance of preprocessing algorithm
+  GraphSeparator<T> separator = new GraphSeparator<>(graph);
+
+  // b) iterate over all generated graphs
+  for (Graph<T> component : separator) {
+    // c) compute decomposition of the component
+    TreeDecomposition<T> decomposition = ... 
+    // and add it to the preprocessor object
+    separator.addbackTreeDecomposition(decomposition);
+  }
+
+  // we can now access the final decomposition of the original graph
+  separator.getTreeDecomposition();
+\end{lstlisting}
 
 \section{Reduction Rules}
 There are many reduction rules for tree width known in the
@@ -394,7 +414,9 @@ In \Jdrasil, the class \JClass{GraphReducer} implements several
 reduction rules and can be used as preprocessing for any other
 algorithm. As mentioned before, this class will (automatically)
 compute optimal tree decompositions of graphs of tree width at most
-$3$. 
+$3$. If this class fully reduces the input graph, it will generate an
+empty set of graphs. So it is always save to simply loop over the
+generated graphs, without caring about this special case.
 
 \section{Separating the Graph}
 A separator $S\subseteq V$ of a graph $G=(V,E)$ is a subset of the

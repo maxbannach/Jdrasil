@@ -22,12 +22,6 @@ package jdrasil.algorithms;
  */
 
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import jdrasil.App;
 import jdrasil.algorithms.exact.CopsAndRobber;
@@ -35,10 +29,9 @@ import jdrasil.algorithms.exact.SATDecomposer;
 import jdrasil.algorithms.exact.SATDecomposer.Encoding;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
+import jdrasil.algorithms.preprocessing.GraphSeparator;
 import jdrasil.algorithms.upperbounds.StochasticMinFillDecomposer;
-import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
-import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
@@ -65,10 +58,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 
 	/** The graph that we wish to decompose. */
 	private final Graph<T> graph;
-	
-	/** This flag is set to true, if the algorithm runs in parallel mode. */
-	private final boolean parallel;
-	
+		
 	/** If the graph has less then <value> vertices, then the instance may be solved by a game of Cops and Robber. */
 	private final int COPS_VERTICES_THRESHOLD = 25;
 	
@@ -80,9 +70,8 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 	 * @param graph – the graph that should be decomposed
 	 * @param parallel – should the graph be decomposed in parallel?
 	 */
-	public ExactDecomposer(Graph<T> graph, boolean parallel) {
+	public ExactDecomposer(Graph<T> graph) {
 		this.graph = graph;
-		this.parallel = parallel;
 	}
 	
 	/**
@@ -141,71 +130,16 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		return reducer.getTreeDecomposition();	
 	}
 	
-	/**
-	 * Computes a single, connected tree-decomposition from a set of decompositions.
-	 * This is archived by merging the decompositions, adding an empty bag, and by adding a edge from the empty bag
-	 * to one bag of each decomposition.
-	 * @param decompositions
-	 * @return
-	 */
-	private TreeDecomposition<T> glueDecompositions(Set<TreeDecomposition<T>> decompositions) {
-		TreeDecomposition<T> finalDecomposition = new TreeDecomposition<T>(this.graph);
-		Bag<T> empty = finalDecomposition.createBag(new HashSet<>()); // add an empty bag
-		
-		// handle each decomposition
-		for (TreeDecomposition<T> decomposition : decompositions) {
-			
-			// compute mapping from the bags of the T to bags of the new decomposition
-			Map<Bag<T>, Bag<T>> oldToNew = new HashMap<>();
-			for (Bag<T> oldBag : decomposition.getBags()) {
-				Bag<T> newBag = finalDecomposition.createBag(oldBag.vertices);
-				oldToNew.put(oldBag, newBag);
-			}
-			
-			// map edges
-			for (Bag<T> s : decomposition.getBags()) {
-				for (Bag<T> t : decomposition.getNeighborhood(s)) {
-					if (s.compareTo(t) < 0) {
-						finalDecomposition.addTreeEdge(oldToNew.get(s), oldToNew.get(t));
-					}
-				}
-			}
-			
-			// add edge to the new empty bag
-			if (oldToNew.size() > 0) {
-				Bag<T> someBag = oldToNew.values().iterator().next();
-				if (someBag != null) finalDecomposition.addTreeEdge(someBag, empty);
-			}
-		}
-		
-		// done
-		return finalDecomposition;
-	}
-	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
 		App.log("");
 		
-		// get the connected components
-		List<Set<T>> connectedComponents = graph.getConnectedComponents();
-		App.log("Found " + connectedComponents.size() + " connected components");
-		
-		// we will compute a decomposition for every component, in parallel mode this has to be synchronized
-		Set<TreeDecomposition<T>> decompositions = parallel ? Collections.synchronizedSet(new HashSet<>()) : new HashSet<>();
-		
-		// we will handle each component separately
-		for (Set<T> component : connectedComponents) {
-			Graph<T> G = GraphFactory.graphFromSubgraph(graph, component);
-			TreeDecomposition<T> T = computeTreeDecompositionOfComponent(G);
-			decompositions.add(T);
+		GraphSeparator<T> separator = new GraphSeparator<>(this.graph);
+		for (Graph<T> component : separator) {
+			TreeDecomposition<T> decomposition = computeTreeDecompositionOfComponent(component);
+			separator.addbackTreeDecomposition(decomposition);
 		}
-		
-		// glue all the tree-decompositions together
-		TreeDecomposition<T> decomposition = glueDecompositions(decompositions);
-		
-		// done
-		App.log("");
-		return decomposition;
+		return separator.getTreeDecomposition();
 	}
 
 	@Override
