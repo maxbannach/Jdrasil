@@ -92,18 +92,18 @@ task distributeManual {
 }
 
 /** Completly set the manual: lualatex - bibtex - lualatex - lualatex */
-task typesetManual {
+task manual {
   dependsOn distributeManual
 }
 
 /** Single run of lualatex, will not set bibliography or references (unless typesetManual was used before) */
-task updateManual {
+task typesetManual {
   dependsOn distributeManual
 }
 
 // if we udpate the Manual, a single run of lualatex is enough
 gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(updateManual)) {
+    if (taskGraph.hasTask(typesetManual)) {
       singleRun = true
     }
 }

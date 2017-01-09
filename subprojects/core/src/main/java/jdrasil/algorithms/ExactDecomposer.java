@@ -17,11 +17,9 @@
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package jdrasil.algorithms;
-/**
- * @author Max Bannach
- */
 
 import java.math.BigInteger;
+import java.util.logging.Logger;
 
 import jdrasil.App;
 import jdrasil.algorithms.exact.CopsAndRobber;
@@ -36,6 +34,7 @@ import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.sat.Formula;
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * This class implements a hand-crafted algorithm that uses various of the other algorithms to compute an optimal
@@ -56,6 +55,9 @@ import jdrasil.sat.Formula;
  */
 public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<T> {
 
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
+
 	/** The graph that we wish to decompose. */
 	private final Graph<T> graph;
 		
@@ -68,7 +70,6 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 	/**
 	 * Default constructor to initialize data structures. 
 	 * @param graph – the graph that should be decomposed
-	 * @param parallel – should the graph be decomposed in parallel?
 	 */
 	public ExactDecomposer(Graph<T> graph) {
 		this.graph = graph;
@@ -90,40 +91,39 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		GraphReducer<T> reducer = new GraphReducer<>(component);
 		for (Graph<T> reduced : reducer) {
 			int n = reduced.getVertices().size();
-			App.log("Reduced the graph from " + component.getVertices().size() + " to " + n + " vertices");
+			LOG.info("Reduced the graph from " + component.getVertices().size() + " to " + n + " vertices");
 			
 			// first compute lower and upper bounds on the tree-width
 			int lb = new MinorMinWidthLowerbound<>(reduced).call();
-			App.log("Computed lower bound: " + lb);
+			LOG.info("Computed lower bound: " + lb);
 			TreeDecomposition<T> ubDecomposition = new StochasticMinFillDecomposer<T>(reduced).call();
 			int ub = ubDecomposition.getWidth();		
-			App.log("Computed upper bound: " + ub);
+			LOG.info("Computed upper bound: " + ub);
 			
 			// if they match, we are done as well
-			
 			if (lb == ub) {
-				App.log("The bounds match, extract decomposition");
+				LOG.info("The bounds match, extract decomposition");
 				reducer.addbackTreeDecomposition(ubDecomposition);
 				continue;
 			}
 
 			BigInteger freeMemory = new BigInteger(""+ Runtime.getRuntime().freeMemory());
-			BigInteger expectedMemory = App.binom(new BigInteger(""+n), new BigInteger(""+ub)).multiply(new BigInteger(""+(n+32)/8));
-			App.log("Free Memory: " + freeMemory);		
-			App.log("Expected Memory: " + expectedMemory);
+			BigInteger expectedMemory = binom(new BigInteger(""+n), new BigInteger(""+ub)).multiply(new BigInteger(""+(n+32)/8));
+			LOG.info("Free Memory: " + freeMemory);
+			LOG.info("Expected Memory: " + expectedMemory);
 			
 			// otherwise check if the instance is small enough for the dynamic cops-and-robber game
 			// the algorithm has running time O(n choose k), so we check the size of n choose k
 			// This is also used if no SAT solver is available
 			if (!Formula.canRegisterSATSolver() || (n <= COPS_VERTICES_THRESHOLD && ub <= COPS_TW_THRESHOLD && expectedMemory.compareTo(freeMemory) < 0)) {	
-				App.log("Solve with a game of Cops and Robbers");
+				LOG.info("Solve with a game of Cops and Robbers");
 				TreeDecomposition<T> decomposition = new CopsAndRobber<>(reduced).call();
 				reducer.addbackTreeDecomposition(decomposition);
 				continue;
 			}
 						
 			/* If everything above does not work, we solve the problem using a SAT-encoding */
-			App.log("Solve with a SAT solver");
+			LOG.info("Solve with a SAT solver");
 			TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub).call();
 			reducer.addbackTreeDecomposition(decomposition);
 		}
@@ -132,7 +132,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		App.log("");
+		LOG.info("");
 		
 		GraphSeparator<T> separator = new GraphSeparator<>(this.graph);
 		for (Graph<T> component : separator) {
@@ -150,6 +150,28 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 	@Override
 	public TreeDecompositionQuality decompositionQuality() {
 		return TreeDecompositionQuality.Exact;
+	}
+
+	/**
+	 * Auxiliary method to compute n choose k with BigIntegers.
+	 * @param n of n over k
+	 * @param k of n over k
+	 * @return an BigInteger representing \(\binom{n}{k}\)
+	 */
+	private BigInteger binom(BigInteger n, BigInteger k) {
+		if (k.compareTo(n) > 0) return BigInteger.ZERO;
+		if (k.compareTo(BigInteger.ZERO) == 0) {
+			return BigInteger.ONE;
+		} else if (k.multiply(new BigInteger(""+2)).compareTo(n) > 0) {
+			return binom(n, n.subtract(k));
+		}
+
+		BigInteger result = n.subtract(k).add(BigInteger.ONE);
+		for (BigInteger i = new BigInteger(""+2); i.compareTo(k) <= 0.; i = i.add(BigInteger.ONE)) {
+			result = result.multiply(n.subtract(k).add(i));
+			result = result.divide(i);
+		}
+		return result;
 	}
 
 }

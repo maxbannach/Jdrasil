@@ -24,6 +24,14 @@ ext {
   jarDir = new File("${buildDir}/jars")
 }
 
+/* addapt jar configuration */
+jar {
+  manifest {
+    // make it executable
+    attributes 'Main-Class': 'jdrasil.App'
+  }
+}
+
 /* Change name and place of the compiled jar. */
 jar.doFirst {
   archiveName = "Jdrasil.jar"

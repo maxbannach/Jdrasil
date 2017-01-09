@@ -111,7 +111,7 @@ public class GraphWriter {
 	
 	/**
 	 * Write the string of @see treedecompositionToString to System.out.
-	 * @param graph
+	 * @param td the tree decomposition to be written
 	 * @throws IOException
 	 */
 	public static <T extends Comparable<T>> void writeTreeDecomposition(TreeDecomposition<T> td) throws IOException {
@@ -120,7 +120,8 @@ public class GraphWriter {
 	
 	/**
 	 * Write the string of @see treedecompositionToString to the given output stream.
-	 * @param graph
+	 * @param td the tree decomposition to be written
+	 * @param stream to which the graph should be written
 	 * @throws IOException
 	 */
 	public static <T extends Comparable<T>> void writeTreeDecomposition(TreeDecomposition<T> td, OutputStream stream) throws IOException {
@@ -257,7 +258,7 @@ public class GraphWriter {
 	
 	/**
 	 * Write the string of @see treedecompositionToTikZ to System.out.
-	 * @param graph
+	 * @param td the tree decomposition to be written
 	 * @throws IOException
 	 */
 	public static <T extends Comparable<T>> void writeTreeDecompositionTikZ(TreeDecomposition<T> td) throws IOException {
@@ -266,7 +267,8 @@ public class GraphWriter {
 	
 	/**
 	 * Write the string of @see treedecompositionToTikZ to the given output stream.
-	 * @param graph
+	 * @param td the tree decomposition to be written
+	 * @param stream the stream to which should be written
 	 * @throws IOException
 	 */
 	public static <T extends Comparable<T>> void writeTreeDecompositionTikZ(TreeDecomposition<T> td, OutputStream stream) throws IOException {

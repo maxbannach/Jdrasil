@@ -88,7 +88,7 @@ public class ConnectedComponents<T extends Comparable<T>> extends Invariant<T, I
 	
 	/**
 	 * Returns the model, i.e., the connected components, as sets of vertices (mapping the id of the component to an set of vertices).
-	 * @return Map<Integer, Set<T>> the connected components
+	 * @return the connected components as map
 	 */
 	public Map<Integer, Set<T>> getComponents() {
 		return getModel().entrySet().stream().collect(
@@ -101,7 +101,7 @@ public class ConnectedComponents<T extends Comparable<T>> extends Invariant<T, I
 	
 	/**
 	 * Returns the model, i.e., the connected components, as sets of sets of vertices.
-	 * @return Set<Set<T>> the connected components
+	 * @return the connected components as set
 	 */
 	public Set<Set<T>> getAsSets() {
 		return getComponents().values().stream().collect(Collectors.toSet());
@@ -109,7 +109,7 @@ public class ConnectedComponents<T extends Comparable<T>> extends Invariant<T, I
 	
 	/**
 	 * Returns the model, i.e., the connected components, as sets of graphs.
-	 * @return Set<Graph<T>> the connected components
+	 * @return the connected components as set of graphs
 	 */
 	public Set<Graph<T>> getAsSubgraphs() {
 		return getComponents().values().stream().map( x -> GraphFactory.graphFromSubgraph(graph, x)).collect(Collectors.toSet());

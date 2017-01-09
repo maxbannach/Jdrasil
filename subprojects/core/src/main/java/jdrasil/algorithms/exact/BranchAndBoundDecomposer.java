@@ -75,14 +75,11 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 	/** The elimination order we try to compute. */
 	private List<T> permutation;
 
-	/** Source of randomness. */
-	private final Random dice;
-		
 	/**
 	 * The default constructor that initializes all the variables and data structures.
 	 * @param graph
 	 */
-	public BranchAndBoundDecomposer(Graph<T> graph, Random dice) {
+	public BranchAndBoundDecomposer(Graph<T> graph) {
 		this.graph = GraphFactory.copy(graph);
 		this.original = GraphFactory.copy(graph);
 		this.n = graph.getVertices().size();
@@ -95,7 +92,6 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		}
 		this.memorization = new HashMap<>();
 		this.ub = n;
-		this.dice = dice;
 	}
 	
 	/**
@@ -186,7 +182,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		// prune with lower bound
 		int lb = 0;
 		try {
-			lb = new MinorMinWidthLowerbound<T>(graph, dice).call();			
+			lb = new MinorMinWidthLowerbound<T>(graph).call();
 		} catch (Exception e) {}
 
 		if (lb >= ub) {
@@ -374,9 +370,9 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		if (graph.getVertices().size() == 0) return new TreeDecomposition<T>(graph);
 				
 		// compute upper and lower bounds
-		MinFillInDecomposer<T> MinFill = new MinFillInDecomposer<T>(graph, dice);
+		MinFillInDecomposer<T> MinFill = new MinFillInDecomposer<T>(graph);
 		ub = MinFill.call().getWidth();
-		int lb = new MinorMinWidthLowerbound<T>(graph, dice).call();
+		int lb = new MinorMinWidthLowerbound<T>(graph).call();
 		permutation = MinFill.getPermutation();
 		
 		// we can safely eliminate a clique at last

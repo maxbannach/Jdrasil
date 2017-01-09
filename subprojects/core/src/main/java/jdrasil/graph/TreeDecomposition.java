@@ -25,9 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.logging.Logger;
 
 import jdrasil.App;
 import jdrasil.graph.invariants.MinimalSeparator;
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * This class models a tree-decomposition of an undirected graph G.
@@ -47,6 +49,9 @@ import jdrasil.graph.invariants.MinimalSeparator;
  * @author Max Bannach
  */
 public class TreeDecomposition<T extends Comparable<T>> implements java.io.Serializable {
+
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
 	private static final long serialVersionUID = -3485395969061663790L;
 
@@ -423,7 +428,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	public void connectComponents(){
 		List<Set<Bag<T>>> comps = tree.getConnectedComponents();
 		ArrayList<Bag<T>> heads = new ArrayList<>();
-		App.log("got " + comps.size() + " components...");
+		LOG.info("got " + comps.size() + " components...");
 		for(Set<Bag<T>> s : comps){
 			for(Bag<T> b : s){
 				heads.add(b);

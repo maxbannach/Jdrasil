@@ -44,7 +44,7 @@ public class BasicCardinalityEncoder {
 			
 	//MARK: Binomial Encoding
 	
-	/** @see binomialAMK(Formula phi, List<Integer> variables, int k) */
+	/** @see BasicCardinalityEncoder#binomialAMK(jdrasil.sat.Formula, java.util.Set, int) */
 	private static void binomialAMK(Formula phi, List<Integer> variables, List<Integer> C, int k, int pos) {
 		
 		// construction of subset complete

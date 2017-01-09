@@ -18,11 +18,6 @@
  */
 package jdrasil.algorithms;
 
-/**
- * EliminationOrderDecomposer.java
- * @author bannach
- */
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;

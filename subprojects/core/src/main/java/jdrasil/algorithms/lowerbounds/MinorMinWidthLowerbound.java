@@ -26,6 +26,7 @@ import java.util.Random;
 import jdrasil.App;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
+import jdrasil.utilities.RandomNumberGenerator;
 
 /**
  * It is a well known fact that for every minor H of G the following holds: \(tw(H) \le tw(G)\). To obtain
@@ -44,29 +45,15 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 
 	/** The graph for which we wish to find a lowerbound. */
 	private final Graph<T> graph;
-	
-	/** Source of randomness. */
-	private final Random dice;
-	
+
 	/**
 	 * The algorithm is initialized with a graph that should be decomposed and a seed for randomness.
 	 * @param graph
 	 */
 	public MinorMinWidthLowerbound(Graph<T> graph) {
 		this.graph = GraphFactory.copy(graph);
-		this.dice = App.getSourceOfRandomness();
 	}
-	
-	/**
-	 * The algorithm is initialized with a graph that should be decomposed and a seed for randomness.
-	 * @param graph
-	 * @param dice
-	 */
-	public MinorMinWidthLowerbound(Graph<T> graph, Random dice) {
-		this.graph = GraphFactory.copy(graph);
-		this.dice = dice;
-	}
-	
+
 	@Override
 	public Integer call() throws Exception {	 
 		int lb = 0;
@@ -87,7 +74,7 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 					nextV.add(v);
 				}
 			}
-			T v = nextV.size() > 0 ? nextV.get(dice.nextInt(nextV.size())) : null;
+			T v = nextV.size() > 0 ? nextV.get(RandomNumberGenerator.nextInt(nextV.size())) : null;
 			
 			// search min degree neighbor of nextV
 			min = Integer.MAX_VALUE;
@@ -102,7 +89,7 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 					nextU.add(u);
 				}
 			}
-			T u = nextU.size() > 0 ? nextU.get(dice.nextInt(nextU.size())) : null;
+			T u = nextU.size() > 0 ? nextU.get(RandomNumberGenerator.nextInt(nextU.size())) : null;
 			
 			// update lowerbound			
 			lb = Math.max(lb, graph.getNeighborhood(v).size());

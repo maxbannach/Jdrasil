@@ -113,7 +113,7 @@ class SAT4JSolver implements ISATSolver {
 	
 	/**
 	 * Each assumption will be added to this IVecInt, the assumption will be passed to the solver when
-	 * @see solve() is called. After this, this object will be rested.
+	 * @see SAT4JSolver#solve() is called. After this, this object will be rested.
 	 */
 	private Object assumption;
 	

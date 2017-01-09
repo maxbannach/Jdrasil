@@ -29,6 +29,7 @@ import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.utilities.RandomNumberGenerator;
 
 /**
  * This class implements the mind-width heuristic. In this heuristic, the vertices of the graph are ordered from 1 to n
@@ -47,10 +48,7 @@ public class MinWidthDecomposer<T extends Comparable<T>> implements TreeDecompos
 	
 	/** A copy to be modified by the algorithm. */
 	private final Graph<T> workingCopy;
-	
-	/** Source of randomness. */
-	private final Random dice;
-	
+
 	/**
 	 * The algorithm is initialized with a graph that should be decomposed and a seed for randomness.
 	 * @param graph
@@ -58,7 +56,6 @@ public class MinWidthDecomposer<T extends Comparable<T>> implements TreeDecompos
 	public MinWidthDecomposer(Graph<T> graph) {
 		this.graph = graph;
 		this.workingCopy = GraphFactory.copy(graph);
-		this.dice = App.getSourceOfRandomness();
 	}
 	
 	@Override
@@ -89,7 +86,7 @@ public class MinWidthDecomposer<T extends Comparable<T>> implements TreeDecompos
 			}
 						
 			// found the vertex -> delete it and add it to the permutation
-			T v = nextV.get(dice.nextInt(nextV.size()));
+			T v = nextV.get(RandomNumberGenerator.nextInt(nextV.size()));
 			workingCopy.removeVertex(v);
 			permutation.add(v);
 		}

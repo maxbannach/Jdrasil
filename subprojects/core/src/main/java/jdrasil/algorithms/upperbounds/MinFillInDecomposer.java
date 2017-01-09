@@ -30,6 +30,7 @@ import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.utilities.RandomNumberGenerator;
 
 /**
  * This class implements the min fill-in heuristic to compute a tree-decomposition. The heuristic eliminates the vertex that adds
@@ -44,10 +45,7 @@ public class MinFillInDecomposer<T extends Comparable<T>> implements TreeDecompo
 
 	/** The graph to be decomposed. */
 	private final Graph<T> graph;
-	
-	/** Source of randomness. */
-	private final Random dice;
-	
+
 	/** The permutation that is computed. */
 	private List<T> permutation;
 	
@@ -64,21 +62,9 @@ public class MinFillInDecomposer<T extends Comparable<T>> implements TreeDecompo
 	 */
 	public MinFillInDecomposer(Graph<T> graph) {
 		this.graph = graph;
-		this.dice = App.getSourceOfRandomness();
 		setToRun(Algo.GreedyFillIn);
 	}
-	
-	/**
-	 * The algorithm is initialized with a graph that should be decomposed and a seed for randomness.
-	 * @param graph
-	 * @param dice
-	 */
-	public MinFillInDecomposer(Graph<T> graph, Random dice) {
-		this.graph = graph;
-		this.dice = dice;
-		setToRun(Algo.GreedyFillIn);
-	}
-	
+
 	/**
 	 * Computes the next vertex to be eliminated with respect to the min fill-in heuristic.
 	 * The vertex that adds the least amount of vertices when eliminates is choose, ties are broken randomly.
@@ -105,7 +91,7 @@ public class MinFillInDecomposer<T extends Comparable<T>> implements TreeDecompo
 		}
 		
 		// done
-		return best.get(dice.nextInt(best.size()));
+		return best.get(RandomNumberGenerator.nextInt(best.size()));
 	}
 	
 	/**

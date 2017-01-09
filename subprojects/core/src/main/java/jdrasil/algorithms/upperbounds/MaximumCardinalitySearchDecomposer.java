@@ -30,6 +30,7 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.utilities.RandomNumberGenerator;
 
 /**
  * This class implements the Maximum-Cardinality Search heuristic. The heuristic order the vertices of G
@@ -48,10 +49,7 @@ public class MaximumCardinalitySearchDecomposer<T extends Comparable<T>> impleme
 	
 	/** Size of the graph that should be decomposed. */
 	private final int n;
-	
-	/** Source of randomness. */
-	private final Random dice;
-	
+
 	/** A list of vertices that still have to be added to permutation. */
 	private final List<T> unlabeledVertices;
 	
@@ -65,7 +63,6 @@ public class MaximumCardinalitySearchDecomposer<T extends Comparable<T>> impleme
 	public MaximumCardinalitySearchDecomposer(Graph<T> graph) {
 		this.graph = graph;
 		this.n = graph.getVertices().size();
-		this.dice = App.getSourceOfRandomness();
 		this.unlabeledVertices = new LinkedList<>(graph.getVertices());
 		this.labeldNeighbors = new HashMap<>();
 	}
@@ -100,7 +97,7 @@ public class MaximumCardinalitySearchDecomposer<T extends Comparable<T>> impleme
 		}
 		
 		// a random start vertex
-		T s = unlabeledVertices.remove(dice.nextInt(n));
+		T s = unlabeledVertices.remove(RandomNumberGenerator.nextInt(n));
 		addVertexToPermutation(s, permutation);
 		
 		// place the other vertices
@@ -118,7 +115,7 @@ public class MaximumCardinalitySearchDecomposer<T extends Comparable<T>> impleme
 					nextV.add(v);
 				}
 			}
-			addVertexToPermutation(nextV.get(dice.nextInt(nextV.size())), permutation);
+			addVertexToPermutation(nextV.get(RandomNumberGenerator.nextInt(nextV.size())), permutation);
 		}
 		
 		// done

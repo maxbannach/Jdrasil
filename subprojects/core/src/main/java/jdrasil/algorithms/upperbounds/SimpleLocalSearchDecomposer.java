@@ -29,6 +29,7 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.utilities.RandomNumberGenerator;
 
 /**
  * This class implements a simple local search on the space of elimination orders.
@@ -53,10 +54,7 @@ public class SimpleLocalSearchDecomposer<T extends Comparable<T>> implements Tre
 	
 	/** The number of steps per restarts. */
 	private final int s;
-	
-	/** A random generator for the algorithm. */
-	private final Random dice;
-	
+
 	/**
 	 * Initialize the algorithm to decompose the given graph.
 	 * @param graph
@@ -67,7 +65,6 @@ public class SimpleLocalSearchDecomposer<T extends Comparable<T>> implements Tre
 		this.graph = graph;
 		this.r = r;
 		this.s = s;
-		this.dice = App.getSourceOfRandomness();
 	}
 	
 	/**
@@ -78,7 +75,7 @@ public class SimpleLocalSearchDecomposer<T extends Comparable<T>> implements Tre
 	private List<T> randomPerm() {
 		List<T> P = new ArrayList<>(graph.getVertices());
 		for (int i = P.size()-1; i >= 0; i--) {
-			int z = dice.nextInt(i+1);
+			int z = RandomNumberGenerator.nextInt(i+1);
 			T tmp = P.get(i);
 			P.set(i, P.get(z));
 			P.set(z, tmp);
@@ -109,8 +106,8 @@ public class SimpleLocalSearchDecomposer<T extends Comparable<T>> implements Tre
 				if (Thread.currentThread().isInterrupted()) throw new Exception();
 				
 				// make a random swap
-				int a = dice.nextInt(n);
-				int b = dice.nextInt(n);
+				int a = RandomNumberGenerator.nextInt(n);
+				int b = RandomNumberGenerator.nextInt(n);
 				T tmp = P.get(a);
 				P.set(a, P.get(b));
 				P.set(b, tmp);

@@ -54,14 +54,14 @@ public interface ISATSolver {
 	 * @param state
 	 */
 	void setCurrentState(State state);
-	
+
 	/**
 	 * Gets the current state of the solver.
-	 * @see setCurrentState and @see State
+	 * @see ISATSolver#setCurrentState(jdrasil.sat.ISATSolver.State) and @see State
 	 * @return
 	 */
 	State getCurrentState();
-	
+
 	/**
 	 * Gets a string representing the solver / the used library, i.e., its name.
 	 * @return

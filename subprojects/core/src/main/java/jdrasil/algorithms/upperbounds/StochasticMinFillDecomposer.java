@@ -32,6 +32,7 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.utilities.RandomNumberGenerator;
 
 /**
  * The Min-Fill heuristic performs very well and can be seen as randomized algorithm as it breaks ties randomly.
@@ -50,10 +51,7 @@ public class StochasticMinFillDecomposer<T extends Comparable<T>> implements Tre
 	
 	/** The decomposition we try to compute */
 	private TreeDecomposition<T> decomposition;
-	
-	/** Source of randomness. */
-	private final Random dice;
-	
+
 	/** The best permutation that is computed. */
 	public List<T> permutation;
 	
@@ -65,7 +63,6 @@ public class StochasticMinFillDecomposer<T extends Comparable<T>> implements Tre
 		this.graph = graph;
 		this.decomposition = new TreeDecomposition<T>(graph);
 		this.decomposition.createBag(graph.getVertices());
-		this.dice = App.getSourceOfRandomness();
 	}
 	
 
@@ -77,7 +74,7 @@ public class StochasticMinFillDecomposer<T extends Comparable<T>> implements Tre
 		int itr = Math.min(lb,100);
 //		App.log("LB: "+lb);
 		while (itr --> 0) {
-			MinFillInDecomposer<T> mfid = new MinFillInDecomposer<T>(graph, dice);
+			MinFillInDecomposer<T> mfid = new MinFillInDecomposer<T>(graph);
 			// Switch between minFill and sparsestSubgraph
 			if((itr % 2) == 0)
 				mfid.setToRun(Algo.SparsestSubgraph);

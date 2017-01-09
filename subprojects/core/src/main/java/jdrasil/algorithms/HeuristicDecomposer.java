@@ -18,11 +18,6 @@
  */
 package jdrasil.algorithms;
 
-/**
- * HeuristicDecomposer.java
- * @author Max Bannach
- */
-
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.algorithms.upperbounds.StochasticMinFillDecomposer;
 import jdrasil.graph.Graph;

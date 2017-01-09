@@ -26,12 +26,14 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+import java.util.logging.Logger;
 
 import jdrasil.App;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposition;
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * There are many reduction rules for tree width known in the
@@ -52,6 +54,9 @@ import jdrasil.graph.TreeDecomposition;
  * @author Thorsten Ehlers
  */
 public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
+
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
 	/** Bags that are created during the reduction (and which have to be glued to a later decomposition).*/
 	private Stack<Set<T>> bags;
@@ -414,7 +419,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		if(treeDecomposition.isCreatedFromPermutation())
 			glueBags_test();
 		// 
-		App.log("Calling old glueBags, bags to glue: " + bags.size());
+		LOG.info("Calling old glueBags, bags to glue: " + bags.size());
 		while (!bags.isEmpty()) {
 			glue(bags.pop());
 		}
@@ -440,7 +445,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		///////////////////////////////////////////////////////////////////////
 		// Remember of each node when it was eliminated
 		HashMap<T, Integer> posInElimOrder = new HashMap<>();
-		App.log("running test on arraylist of size " + allBags.size());
+		LOG.info("running test on arraylist of size " + allBags.size());
 		int edgesAdded = 0;
 		int components_created = 0;
 		for(int i = 0 ; i < allBags.size();i++){
@@ -463,11 +468,11 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 					}
 				}
 				if(eliminated == null){
-					App.log("eliminated = null?");
+					LOG.info("eliminated = null?");
 					System.exit(-666);
 				}
 				if(count < nextBag.vertices.size() - 1){
-					App.log("count is quatsch?");
+					LOG.info("count is quatsch?");
 					System.exit(-666);
 				}
 				posInElimOrder.put(eliminated, i);
@@ -483,8 +488,8 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 				}
 			}
 		}
-		App.log("restored elimination order in time " + (System.currentTimeMillis() - tStart) + " , added edges: " + edgesAdded);
-		App.log("Created " + components_created + " components! ");
+		LOG.info("restored elimination order in time " + (System.currentTimeMillis() - tStart) + " , added edges: " + edgesAdded);
+		LOG.info("Created " + components_created + " components! ");
 		treeDecomposition.connectComponents();
 	}
 

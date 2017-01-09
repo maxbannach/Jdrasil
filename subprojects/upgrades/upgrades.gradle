@@ -31,7 +31,7 @@ ext {
 
   /* ipasir */
   ipasirDir = "${projectDir}/ipasir/"
-  classesDir = new File(rootProject.projectDir, "classes/main")
+  classesDir = new File(rootProject.projectDir, "build/classes/main")
 }
 
 /** Obtain the SAT4J library and place it into the upgrades folder. */
@@ -62,6 +62,29 @@ task cinterface(type: Exec, description: "Building Jdrasil's C-interface (needed
   commandLine "javah", "-jni",
   "-cp", classesDir,
   "-d", ipasirDir,
-  "jdrasil.Sat.NativeSATSolver"
+  "jdrasil.sat.NativeSATSolver"
 }
 
+/** 
+ * Build the native ipasir solver interface.
+ * TODO: replace the static make by a dynamic (platform independent) gradle build
+ */
+task upgrade_ipasir {
+  doLast {
+    // compile the library
+    exec {
+      workingDir ipasirDir
+      commandLine "make"
+    }
+    // copy to upgrades folder
+    copy {
+      from ipasirDir
+      into buildDir
+      include "libjdrasil_sat_NativeSATSolver.dylib"
+    }
+    // clean up
+    delete {
+      delete "${ipasirDir}/libjdrasil_sat_NativeSATSolver.dylib"
+    }
+  }
+}

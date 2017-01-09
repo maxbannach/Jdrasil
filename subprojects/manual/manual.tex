@@ -5,6 +5,151 @@
 
 \begin{document}
 
+\part{Getting Started}
+\chapter{About \Jdrasil}
+\section{Technical Overview and Design Principles}
+\section{Contributors}
+\section{How to Cite \Jdrasil}
+\chapter{Build and Run \Jdrasil}
+\section{Obtain and Use the Latest Version}
+\todo{actually from the github.io page~–~tba}
+The latest version of \Jdrasil{} can be obtained from
+GitHub at~\url{https://github.com/maxbannach/Jdrasil}. The obtained
+\texttt{.jar} file is executable, i.\,e., if \Jdrasil\ should be used
+as standalone solver, we can simple use:
+\begin{lstlisting}[language=bash]
+  java -jar Jdrasil.jar
+\end{lstlisting}
+or alternatively
+\begin{lstlisting}[language=bash]
+  java -cp Jdrasil.jar jdrasil.App
+\end{lstlisting}
+With the same \texttt{.jar} file, \Jdrasil\ can also be used as
+library: simply add the \texttt{.jar} to the classpath of the desired project.
+\section{Build \Jdrasil\ from Source}
+\Jdrasil\ uses Gradle\footnote{\url{www.gradle.org}} as build
+tool. Thereby it takes advantage of the Gradle wrapper: 
+in order to build \Jdrasil\ the only requirements are an up to date
+\texttt{JDK} and an active internet connection. The Gradle wrapper
+will download everything needed by it self.
+
+To get started, we need the latest version of \Jdrasil\ and switch to
+its root directory:
+\begin{lstlisting}[language=bash]
+  git clone https://github.com/maxbannach/Jdrasil.git
+  cd Jdrasil
+\end{lstlisting}
+The folder contains a directory \texttt{subprojects}, which contains
+the source code of \Jdrasil. Beside this, there are a couple of Gradle
+files, most of which do not require our attention. The only important
+file is \lstinline{gradlew} (or \lstinline{gradlew.bat} on
+Windows). This is the Gradle wrapper that we will use to build \Jdrasil.
+In order to use it, we have to execute on of the following commands
+(depending on our operating system):
+\begin{lstlisting}[language=bash]
+  # on Unix
+  ./gradlew <task>
+  # or, if gradlew is not executable
+  sh gradlew <task>
+  # on Windows
+  gradlew <task>
+\end{lstlisting}
+In the rest of the manual, we will use the syntax for an Unix
+system. But everything can be done in the same way on a Windows machine.
+
+\subsection{Build the Executable and Library}
+To compile the core source code of \Jdrasil\ we use the following
+command:
+\begin{lstlisting}[language=bash]
+  ./gradlew build
+\end{lstlisting}
+This will create a directory \texttt{build}, containing the
+directories \texttt{classes/main} and \texttt{jars}. The first
+directory will contain the compiled class files, the second will
+contain \texttt{Jdrasil.jar}.
+
+In order to run the freshly build \Jdrasil, we can do one of the
+following:
+\begin{lstlisting}[language=bash]
+  java -jar build/jars/Jdrasil.jar
+  java -cp build/jars/Jdrasil.jar jdrasil.App
+  java -cp build/classes/main jdrasil.App
+\end{lstlisting}
+To use the present build of \Jdrasil\ as library, we can simply add
+the created \texttt{.jar} file to the classpath of our desired
+project.
+\section{Build the Documentation}
+The documentation of \Jdrasil\ consists of two parts: the classic
+JavaDocs, which provide detailed information about the individual
+classes, and this manual, which provides an high level view on some
+design principles used by \Jdrasil. The JavaDocs can, without further
+requirements, be build by the following command:
+\begin{lstlisting}[language=bash]
+  ./gradlew javadoc
+\end{lstlisting}
+This will create the folder \texttt{builds/docs/javadoc} containing
+the documentation.
+
+This manual is written in \LaTeX\ and in order to compiled it, an
+up-to-date \LuaLaTeX\ installation must be available. If this is the
+case, the manual can be typeset by
+\begin{lstlisting}[language=bash]
+  ./gradlew manual
+\end{lstlisting}
+This command will place this manual as \texttt{.pdf} file in
+\texttt{builds/docs/manual}.
+\section{Installing Upgrades}
+As mentioned earlier, \Jdrasil\ can be build and used without any
+dependencies. This makes it easy to update, distribute, and use
+\Jdrasil. However, sometimes third-party software may provide an
+significant speed up in the process of solving some subproblems. In
+such scenarios, the speed of \Jdrasil\ can be improved by
+\emph{upgrades}. This topic will be discussed in detail in
+section~\ref{part:upgrades}.
+
+All upgrades have in common, that \Jdrasil\ uses the following
+convention to build and use them. To $\{\text{download}, \text{build},
+\text{install}\}$ (depending on the upgrade) upgrade $x$, we can
+execute the following command:
+\begin{lstlisting}[language=bash]
+  ./gradlew upgrade_x
+\end{lstlisting}
+Which will $\{\text{download}, \text{build},
+\text{install}\}$ the required files and place them in
+\texttt{build/upgrades}.
+To run \Jdrasil\ with the installed upgrade, either do (if the upgrade is
+an Java library):
+\begin{lstlisting}[language=bash]
+  java -cp build/jars/Jdrasil.jar:build/upgrades/x.jar  jdrasil.App
+\end{lstlisting}
+or (if the upgrade is a native library):
+\begin{lstlisting}[language=bash]
+  java -Djava.library.path=build/upgrades -jar build/jars/Jdrasil.jar
+\end{lstlisting}
+
+\section{Building for PACE}
+As \Jdrasil\ was developed for the \emph{Parameterized Algorithms and
+  Computational Experiments Challenge} (PACE) in the first point, it
+naturally provides the by PACE required interfaces. To build them, we
+can simple use:
+\begin{lstlisting}[language=bash]
+  ./gradlew pace
+\end{lstlisting}
+This will, if not already done, build the Java files and will place
+two shell scripts in the root directory: \texttt{tw-exact} and
+\texttt{tw-heuristic}. The first script will execute \Jdrasil\ in
+exact mode (meaning it reads an graph from stdin , computes an optimal
+decomposition, and prints it on stdout); while the second script runs
+\Jdrasil\ in heuristic mode, meaning it will run in an infinity loop
+trying to heuristically find a good decomposition~–~the decomposition
+will be printed if a SIGTERM is received. Example usage is:
+\begin{lstlisting}[language=bash]
+  ./tw-exact -s 42 < myGraph.gr > myGraph.td
+  ./tw-heuristic -s 42 < myHugeGraph.gr > myHugeGraph.gr.td
+\end{lstlisting}
+For more details about the usage of this scripts, take a look at the
+PACE website: \url{https://pacechallenge.wordpress.com/pace-2017/track-a-treewidth/}.
+
 \part{Graphs}
 Since \Jdrasil\ is a tool for computing tree decomposition's, it
 implements a variety of graph algorithms. Hence, many graphs and
@@ -478,7 +623,7 @@ decomposition is at most \(2k+1\).
 
 \chapter{Exact}
 
-\part{Upgrades}
+\part{Upgrades}\label{part:upgrades}
 
 \Jdrasil\ is designed as a modular and platform independent library,
 which provides all the advantages discussed earlier, but also comes

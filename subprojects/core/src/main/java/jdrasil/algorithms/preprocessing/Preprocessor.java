@@ -31,7 +31,7 @@ import jdrasil.graph.TreeDecomposition;
  * could also reefer to adding structures to the graph that improve pruning potential.
  * 
  * This class models a preprocessor by providing the methods @see computeGraphs(), @see addbackTreeDecomposition(), @see glueDecompositions(), and
- * @see getTreeDecomposition(). The first method represents the actual preprocessing and computes a collection of graphs from the input graph.
+ * @see Preprocessor#getTreeDecomposition() . The first method represents the actual preprocessing and computes a collection of graphs from the input graph.
  * The following two methods can be used to add a tree decomposition of one of the graphs produced by the first method back, and to combine these
  * tree decompositions to one for the input graph. The last method is a getter for this decomposition.
  * 
@@ -83,7 +83,7 @@ public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<
 	/**
 	 * Add a tree decomposition of a graph produced by this class back.
 	 * This method will call @see glueDecompositions() ones enough tree decompositions where added.
-	 * @param decompositions
+	 * @param decomposition the decomposition to be added back
 	 */
 	public void addbackTreeDecomposition(TreeDecomposition<T> decomposition) {
 		this.treeDecompositions.add(decomposition);
@@ -96,7 +96,7 @@ public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<
 	 * Get a tree decomposition of the input graph, if available, otherwise null will be returned.
 	 * The decomposition is available, if @see addbackTreeDecomposition() was called for every graph produced 
 	 * by the preprocessor, i.e., after @see glueDecompositions() was called.
-	 * @return
+	 * @return the tree decomposition
 	 */
 	public TreeDecomposition<T> getTreeDecomposition() {
 		return this.treeDecomposition;

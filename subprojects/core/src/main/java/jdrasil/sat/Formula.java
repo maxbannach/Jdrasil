@@ -642,7 +642,7 @@ public class Formula implements Iterable<List<Integer>> {
 	
 	/**
 	 * This exception indicates that there is no SATSolver registered for this Formula.
-	 * @see registerSATSolver()
+	 * @see Formula#registerSATSolver()
 	 */
 	public class NoSATSolverRegisteredException extends Exception {
 		private static final long serialVersionUID = 1L;		
@@ -651,7 +651,7 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * This exception that there is a SATSolver registered for this Formula, and it was tried to
 	 * modify the formula in an unsupported way, i.e., deleting or modifying a clause.
-	 * @see registerSATSolver()
+	 * @see Formula#registerSATSolver()
 	 */
 	public class SATSolverRegisteredException extends Exception {
 		private static final long serialVersionUID = 1L;		

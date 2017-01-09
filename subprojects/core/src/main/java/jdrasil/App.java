@@ -18,39 +18,36 @@
  */
 package jdrasil;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-
 import jdrasil.algorithms.ExactDecomposer;
 import jdrasil.algorithms.HeuristicDecomposer;
-import jdrasil.algorithms.exact.CopsAndRobber;
-import jdrasil.algorithms.preprocessing.GraphContractor;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.GraphWriter;
 import jdrasil.graph.TreeDecomposition;
+import jdrasil.sat.Formula;
+import jdrasil.utilities.JdrasilProperties;
+import jdrasil.utilities.RandomNumberGenerator;
+import jdrasil.utilities.logging.JdrasilLogger;
 
+import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Jdrasil is a program to compute a small tree-decomposition of a given graph.
  * It is developed at the Universitaet zu Luebeck in context of the PACE challenge (www.pacechallenge.wordpress.com).
  * 
  * @author Max Bannach
+ * @author Sebastian Berndt
+ * @author Thorsten Ehlers
  */
 public class App {
-	
+
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
+
 	/** Version of the program. */
 	private static final float VERSION = 1f;
-	
-	/** The random source of the whole program. */
-	private static Random dice;
-	
-	/** The programs parameter, can accessed from everywhere. */
-	public static final Map<String, String> parameters = new HashMap<>();
-	
+
 	/**
 	 * Remember if the result has been written already
 	 */
@@ -64,12 +61,13 @@ public class App {
 
 		// parsing arguments
 		parseArguments(args);
+
+		// if Jdrasil is used as standalone, use dimacs logging
+		JdrasilLogger.setToDimacsLogging();
 		
-		// initialize the source of randomness
-		if (parameters.containsKey("s")) {
-			dice = new Random(Long.parseLong(parameters.get("s")));
-		} else {
-			dice = new Random(System.currentTimeMillis());
+		// initialize the random number generator
+		if (JdrasilProperties.containsKey("s")) {
+			RandomNumberGenerator.seed(Long.parseLong(JdrasilProperties.getProperty("s")));
 		}
 		
 		try{
@@ -79,7 +77,7 @@ public class App {
 			long tstart = System.nanoTime();
 			TreeDecomposition<Integer> decomposition = null;	
 
-			if (parameters.containsKey("heuristic")) {
+			if (JdrasilProperties.containsKey("heuristic")) {
 				
 				/* compute a tree-decomposition heuristically */				
 				HeuristicDecomposer<Integer> heuristic = new HeuristicDecomposer<Integer>(input);
@@ -95,7 +93,7 @@ public class App {
 			
 					
 			/* present the result */
-			if (parameters.containsKey("tikz")) {
+			if (JdrasilProperties.containsKey("tikz")) {
 				GraphWriter.writeTikZ(input);
 				System.out.println();
 				GraphWriter.writeTreeDecompositionTikZ(decomposition);
@@ -105,10 +103,10 @@ public class App {
 					System.out.println();
 				}
 			}
-			App.log("");
-			App.log("Tree-Width: " + decomposition.getWidth());
-			App.log("Used " + (tend-tstart)/1000000000 + " seconds");
-			App.log("");
+			LOG.info("");
+			LOG.info("Tree-Width: " + decomposition.getWidth());
+			LOG.info("Used " + (tend-tstart)/1000000000 + " seconds");
+			LOG.info("");
 			
 		} 
 		catch (IOException e) {
@@ -143,10 +141,10 @@ public class App {
 					System.exit(-1);
 				}
 				
-				if (a.length() == 2) { // arguments of length one are followed by a value					
-					parameters.put(a.substring(1, a.length()), args[i+1]);
+				if (a.length() == 2) { // arguments of length one are followed by a value
+					JdrasilProperties.setProperty(a.substring(1, a.length()), args[i+1]);
 				} else { // others are just flags
-					parameters.put(a.substring(1, a.length()), "");
+					JdrasilProperties.setProperty(a.substring(1, a.length()), "");
 				}
 			}
 		}
@@ -167,7 +165,7 @@ public class App {
 	 * @param tw new upper bound on the tree width found
 	 */
 	public static void reportNewSolution(int tw) {
-		if (!parameters.containsKey("heuristic")) return; // only for heuristic
+		if (!JdrasilProperties.containsKey("heuristic")) return; // only for heuristic
 		System.out.println("c status " + (tw+1) + " " + System.currentTimeMillis());
 	}
 	
@@ -187,68 +185,5 @@ public class App {
 		System.out.println("  -log : enable log output");
 		System.out.println("  -tikz : enable tikz output");
 	}
-	
-	/**
-	 * Returns the source of randomness of this program.
-	 * This should be the only randomness used in order to
-	 * make the program depend on a single seed.
-	 * @return the Random object that is used in Jdrasil
-	 */
-	public static Random getSourceOfRandomness() {
-		return dice;
-	}
-	
-	/**
-	 * 	Get the random seed
-	 * @return the random seed of Jdrasil
-	 */
-	public static long getSeed(){
-		if (parameters.containsKey("s")) {
-			return Long.parseLong(parameters.get("s"));
-		} else {
-			return System.currentTimeMillis();
-		}
-	}
-	
-	/**
-	 * Log a message as comment (with a leading 'c') to the output. 
-	 * Does only work if logging is enabled.
-	 * @param message to be logged
-	 */
-	public static void log(String message) {
-		if (parameters.containsKey("log")) {
-			System.out.println("c " + message);
-		}
-	}
-		
-	/**
-	 * Set a new seed for the random source.
-	 * @param seed the random seed used for all randomness of Jdrasil
-	 */
-	public static void seedRandomSource(Long seed) {
-		dice = new Random(seed);
-	}
-	
-	/**
-	 * Auxiliary method to compute n choose k with BigIntegers.
-	 * @param n of n over k
-	 * @param k of n over k
-	 * @return an BigInteger representing \(\binom{n}{k}\)
-	 */
-	public static BigInteger binom(BigInteger n, BigInteger k) {
-		if (k.compareTo(n) > 0) return BigInteger.ZERO;
-		if (k.compareTo(BigInteger.ZERO) == 0) {
-			return BigInteger.ONE;
-		} else if (k.multiply(new BigInteger(""+2)).compareTo(n) > 0) { 
-			return binom(n, n.subtract(k));
-		}
-		
-		BigInteger result = n.subtract(k).add(BigInteger.ONE);		
-		for (BigInteger i = new BigInteger(""+2); i.compareTo(k) <= 0.; i = i.add(BigInteger.ONE)) {
-			result = result.multiply(n.subtract(k).add(i));
-			result = result.divide(i);
-		}
-		return result;
-	}
-	
+
 }

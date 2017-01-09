@@ -36,6 +36,7 @@ import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.utilities.RandomNumberGenerator;
 
 /**
  * This class implements a tabu search on the space of elimination orders developed by Clautiax, Moukrim, Negre and Carlier
@@ -64,9 +65,6 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 	/** The number of steps per restarts. */
 	private final int s;
 
-	/** A random generator for the algorithm. */
-	private final Random dice;
-
 	/** The current best permutation */
 	List<T> permOpt;
 
@@ -82,7 +80,6 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 		this.graph = GraphFactory.copy(graph);
 		this.r = r;
 		this.s = s;
-		this.dice = App.getSourceOfRandomness();
 		this.permOpt = perm;		
 	}
 
@@ -210,7 +207,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 
 			// shuffle a new permutation
 			T v = anyItem(perm, tabu);
-			int j = dice.nextInt(perm.size());
+			int j = RandomNumberGenerator.nextInt(perm.size());
 			perm = modifyPerm(perm,v,pos.get(v),j);
 			rounds--;
 		}
@@ -243,7 +240,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 	 */
 	public T anyItem(List<T> perm, Queue<T> tabu){
 		while(true){
-			int index = dice.nextInt(perm.size());
+			int index = RandomNumberGenerator.nextInt(perm.size());
 			T v = perm.get(index);
 			if(!tabu.contains(v)){
 				return v;
