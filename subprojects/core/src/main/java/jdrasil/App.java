@@ -30,6 +30,8 @@ import jdrasil.utilities.RandomNumberGenerator;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.logging.Logger;
 
 /**
@@ -58,6 +60,9 @@ public class App {
 	 * @param args program arguments
 	 */
 	public static void main(String[] args) {
+
+		System.out.println(Formula.canRegisterSATSolver());
+		System.out.println(Arrays.toString(args));
 
 		// parsing arguments
 		parseArguments(args);

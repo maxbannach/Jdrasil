@@ -22,6 +22,7 @@ apply plugin: 'java'
 buildDir = new File(rootProject.projectDir, "build/")
 ext {
   jarDir = new File("${buildDir}/jars")
+  mainClass = "jdrasil.App"
 }
 
 /* addapt jar configuration */
@@ -44,4 +45,38 @@ javadoc.doFirst {
 	      + 'src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">'
 	      + '</script>'
 	     )
+}
+
+/* Start Scripts */
+task pace(type: CreateStartScripts) {
+  outputDir = file("${rootDir}")
+  mainClassName = 'jdrasil.App'
+  applicationName = 'tw-exact'
+  classpath = files('build/jar/Jdrasil.jar')
+  defaultJvmOpts = [ '-Djava.library.path=build/upgrades/' ]
+  
+  doLast {   
+    // update class path as the script is used with a fresh build
+    unixScript.text = unixScript.text.replace('$APP_HOME/lib', '$APP_HOME/build/jars/')
+    unixScript.text = unixScript.text.replace('CLASSPATH=$APP_HOME', 'CLASSPATH=build/upgrades/org.sat4j.core.jar:$APP_HOME')
+
+
+    
+    windowsScript.text = windowsScript.text.replace('%APP_HOME%\\lib', '%APP_HOME%\\config\\;%APP_HOME%\\build\\jars')
+
+    // update APP_HOME (there is no bin directory)
+    unixScript.text = unixScript.text.replace('cd "`dirname \\"$PRG\\"`/.." >/dev/null', 'cd "`dirname \\"$PRG\\"`/" >/dev/null')    
+  }
+}
+
+
+/* Update clean to remove pace executables */
+clean.doLast {
+  FileCollection scripts = files(["${rootDir}/tw-exact",
+				  "${rootDir}/tw-exact.bat",
+				  "${rootDir}/tw-heuristic",
+				  "${rootDir}/tw-heuristic.bat"])
+  scripts.each { file ->
+    if (file.exists()) file.delete()
+  }
 }
