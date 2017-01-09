@@ -1,0 +1,28 @@
+These are the sources of the SAT solver Lingeling.  To compile issue
+'./configure && make'.  This will build the library 'liblgl.o', the
+sequential solver 'lingeling', its parallel version 'plingeling',
+and the cube & conquer solvers 'treengeling' and 'ilingeling'.
+
+If you compiled a copy of the AIGER library in '../aiger/', which
+can be obtained from 'http://fmv.jku.at/aiger' then the bounded
+model checker 'blimc' will also be build.
+
+The file VERSION contains the current version number.
+
+The file NEWS lists history and latest changes.
+
+THESE SOURCES ARE FOR ACADEMIC USE ONLY.
+USE IN COMPETITIONS IS RESTRICTED TOO.
+SEE 'COPYING' FOR MORE DETAILS.
+
+a more recent version of Lingeling might be found at
+
+  http://fmv.jku.at/lingeling
+
+This site may also contain more documentation.
+
+Lingeling is copyright (c) 2010 - 2016 Armin Biere, Johannes Kepler
+University, Linz, Austria.  If you need another License please contact
+Armin Biere <biere@jku.at>.
+
+Wed Apr 20 15:55:02 CEST 2016

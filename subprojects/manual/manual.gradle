@@ -1,0 +1,109 @@
+/*
+ * Copyright (c) 2016-present, Max Bannach, Sebastian Berndt, Thorsten Ehlers
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+ * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+// directory for the pdf
+buildDir = new File(rootProject.projectDir, "build/docs/manual/")
+ext {
+
+  // directory for auxilary files
+  auxDir = new File(rootProject.projectDir, "build/tmp/aux/manual/")
+  rootFile = "manual" // file to compile
+  singleRun = false // run latex once or multiple times?
+
+  // latex command (we use lualatex and suppress output)
+  latex = { exec {
+      standardOutput = new ByteArrayOutputStream()
+      commandLine "lualatex", rootFile+".tex"
+  }}
+
+  // bibtex command
+  bibtex = { exec {
+      standardOutput = new ByteArrayOutputStream()
+      commandLine "bibtex", rootFile
+  }}
+}
+
+/** Compile the manual using lualatex and eventually bibtex. */
+task compileManual {
+  doLast {    
+    // if we compile just once and have auxiliary files, use them!
+    if (singleRun && auxDir.exists()) {
+      copy {
+	from auxDir
+	into projectDir
+      }
+    }
+
+    // compile the manual once
+    latex()
+    
+    // we it is no single run, compile the bibliography and set the manual two times
+    if (!singleRun) {
+      bibtex()
+      2.times {	latex() }
+    }    
+  }  
+}
+
+/** Move the pdf to the build directory and auxilary files to the tmp directory. */
+task distributeManual {
+  dependsOn compileManual
+  doLast {
+    // copy auxilary files to temporary directory
+    copy {
+      from projectDir
+      into auxDir
+      include rootFile+'.aux', rootFile+'.out', rootFile+'.log', rootFile+'.bbl', rootFile+'.blg'
+    }
+
+    // distribute pdf
+    copy {
+      from projectDir
+      into buildDir
+      include rootFile+'.pdf'
+    }
+
+    // delete files in project folder
+    delete {
+      delete rootFile+'.pdf'
+      delete rootFile+'.aux'
+      delete rootFile+'.log'
+      delete rootFile+'.out'
+      delete rootFile+'.bbl'
+      delete rootFile+'.blg'
+    }    
+  }  
+}
+
+/** Completly set the manual: lualatex - bibtex - lualatex - lualatex */
+task typesetManual {
+  dependsOn distributeManual
+}
+
+/** Single run of lualatex, will not set bibliography or references (unless typesetManual was used before) */
+task updateManual {
+  dependsOn distributeManual
+}
+
+// if we udpate the Manual, a single run of lualatex is enough
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(updateManual)) {
+      singleRun = true
+    }
+}
