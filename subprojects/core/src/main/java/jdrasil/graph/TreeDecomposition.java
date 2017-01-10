@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Logger;
 
-import jdrasil.App;
 import jdrasil.graph.invariants.MinimalSeparator;
 import jdrasil.utilities.logging.JdrasilLogger;
 

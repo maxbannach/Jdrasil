@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Logger;
 
-import jdrasil.App;
+
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;

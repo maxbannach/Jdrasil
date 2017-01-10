@@ -29,7 +29,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import jdrasil.App;
+
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;

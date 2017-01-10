@@ -21,7 +21,7 @@ package jdrasil.algorithms;
 import java.math.BigInteger;
 import java.util.logging.Logger;
 
-import jdrasil.App;
+
 import jdrasil.algorithms.exact.CopsAndRobber;
 import jdrasil.algorithms.exact.SATDecomposer;
 import jdrasil.algorithms.exact.SATDecomposer.Encoding;

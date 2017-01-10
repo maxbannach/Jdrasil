@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import jdrasil.App;
+
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.utilities.RandomNumberGenerator;

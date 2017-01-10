@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import jdrasil.App;
+
 import jdrasil.algorithms.upperbounds.MinFillInDecomposer.Algo;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;

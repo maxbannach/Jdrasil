@@ -134,7 +134,7 @@ or (if the upgrade is a native library):
   java -Djava.library.path=build/upgrades -jar build/jars/Jdrasil.jar
 \end{lstlisting}
 
-\section{Building for PACE}
+\section{Building Startscripts (not only ) for PACE}
 As \Jdrasil\ was developed for the \emph{Parameterized Algorithms and
   Computational Experiments Challenge} (PACE) in the first point, it
 naturally provides the by PACE required interfaces. To build them, we
@@ -156,6 +156,21 @@ will be printed if a SIGTERM is received. Example usage is:
 \end{lstlisting}
 For more details about the usage of this scripts, take a look at the
 PACE website: \url{https://pacechallenge.wordpress.com/pace-2017/track-a-treewidth/}.
+
+These scripts are available both, as Shell script for UNIX systems and
+as \texttt{.bat} script for Windows. They can also be build directly
+via:
+\begin{lstlisting}[language=bash]
+  ./gradlew exact
+  ./gradlew heuristic
+\end{lstlisting}
+Finally, there are also scripts available for running \Jdrasil\ with
+approximation algorithms:
+\begin{lstlisting}[language=bash]
+  ./gradlew approximation
+\end{lstlisting}
+This will generate \texttt{tw-approx}, which can be used as the
+scripts from above.
 
 \part{Graphs}
 Since \Jdrasil\ is a tool for computing tree decomposition's, it
