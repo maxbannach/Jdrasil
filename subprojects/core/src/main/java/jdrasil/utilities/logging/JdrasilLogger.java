@@ -56,7 +56,7 @@ public class JdrasilLogger {
     static {
         setToClassicLogging();
         LOGGER.setUseParentHandlers(false);
-        LOGGER.setLevel(Level.ALL);
+        LOGGER.setLevel(Level.OFF);
     }
 
     /**
@@ -79,6 +79,15 @@ public class JdrasilLogger {
             h.flush();
             LOGGER.removeHandler(h);
         }
+    }
+
+    /**
+     * Set the logging level of Jdrasil.
+     * @see Logger#setLevel(java.util.logging.Level)
+     * @param lvl
+     */
+    public static void setLoglevel(Level lvl) {
+        LOGGER.setLevel(lvl);
     }
 
     /**

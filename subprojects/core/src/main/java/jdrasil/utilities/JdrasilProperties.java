@@ -18,7 +18,10 @@
  */
 package jdrasil.utilities;
 
+import jdrasil.utilities.logging.JdrasilLogger;
+
 import java.util.Properties;
+import java.util.logging.Level;
 
 /**
  * Static overlay of the properties class. This is globally used to configurate Jdrasil.
@@ -30,6 +33,9 @@ public class JdrasilProperties {
 
     /** Global properties object used by Jdrasil. */
     private static Properties properties;
+
+    /** Version of the program. */
+    private static final float VERSION = 1f;
 
     /** Static constructor for the properties object. */
     static {
@@ -61,6 +67,63 @@ public class JdrasilProperties {
      */
     public static void setProperty(String key, String value) {
         properties.setProperty(key, value);
+    }
+
+    /**
+     * Parsing the programs argument and store them in parameter map.
+     * @param args the arguments of the program
+     */
+    public static void parseArguments(String[] args) {
+        for (int i = 0; i < args.length; i++) {
+            String a = args[i];
+            if (a.charAt(0) == '-') {
+
+                // help is a special case
+                if (a.equals("-h")) {
+                    printHelp();
+                    continue;
+                }
+
+                // catch format errors
+                if (a.length() < 2 || (a.length() == 2 && i == args.length-1)) {
+                    System.err.println("Error parsing arguments.");
+                    System.exit(-1);
+                }
+
+                if (a.length() == 2) { // arguments of length one are followed by a value
+                    JdrasilProperties.setProperty(a.substring(1, a.length()), args[i+1]);
+                } else { // others are just flags
+                    String cmd = a.substring(1, a.length());
+                    switch (cmd) {
+                        case "log":
+                            JdrasilLogger.setLoglevel(Level.INFO);
+                            break;
+                        case "debug":
+                            JdrasilLogger.setLoglevel(Level.ALL);
+                            break;
+                        default:
+                            JdrasilProperties.setProperty(cmd, "");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Print a static help message.
+     */
+    public static void printHelp() {
+        System.out.println("Jdrasil");
+        System.out.println("Authors: Max Bannach, Sebastian Berndt, and Thorsten Ehlers");
+        System.out.println("Version: " + VERSION);
+        System.out.println();
+        System.out.println("Parameters:");
+        System.out.println("  -h : print this dialog");
+        System.out.println("  -s <seed> : set a random seed");
+        System.out.println("  -parallel : enable parallel processing");
+        System.out.println("  -heuristic : compute a heuristic solution");
+        System.out.println("  -log : enable log output");
+        System.out.println("  -tikz : enable tikz output");
     }
 
 }

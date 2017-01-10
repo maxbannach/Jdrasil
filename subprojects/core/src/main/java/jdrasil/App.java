@@ -47,9 +47,6 @@ public class App {
 	/** Jdrasils Logger */
 	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
-	/** Version of the program. */
-	private static final float VERSION = 1f;
-
 	/**
 	 * Remember if the result has been written already
 	 */
@@ -61,15 +58,12 @@ public class App {
 	 */
 	public static void main(String[] args) {
 
-		System.out.println(Formula.canRegisterSATSolver());
-		System.out.println(Arrays.toString(args));
-
 		// parsing arguments
-		parseArguments(args);
+		JdrasilProperties.parseArguments(args);
 
 		// if Jdrasil is used as standalone, use dimacs logging
 		JdrasilLogger.setToDimacsLogging();
-		
+
 		// initialize the random number generator
 		if (JdrasilProperties.containsKey("s")) {
 			RandomNumberGenerator.seed(Long.parseLong(JdrasilProperties.getProperty("s")));
@@ -125,36 +119,6 @@ public class App {
 		}
 	}
 
-	/**
-	 * Parsing the programs argument and store them in parameter map.
-	 * @param args the arguments of the program
-	 */
-	public static void parseArguments(String[] args) {
-		for (int i = 0; i < args.length; i++) {
-			String a = args[i];
-			if (a.charAt(0) == '-') {
-				
-				// help is a special case
-				if (a.equals("-h")) {
-					printHelp();
-					continue;
-				} 
-				
-				// catch format errors
-				if (a.length() < 2 || (a.length() == 2 && i == args.length-1)) {
-					System.err.println("Error parsing arguments.");
-					System.exit(-1);
-				}
-				
-				if (a.length() == 2) { // arguments of length one are followed by a value
-					JdrasilProperties.setProperty(a.substring(1, a.length()), args[i+1]);
-				} else { // others are just flags
-					JdrasilProperties.setProperty(a.substring(1, a.length()), "");
-				}
-			}
-		}
-	}
-	
 	public static synchronized boolean shouldIWrite(){
 		boolean rVal = true;
 		if(resultWritten){
@@ -163,7 +127,7 @@ public class App {
 		resultWritten = true;
 		return rVal;
 	}
-	
+
 	/**
 	 * This method should be used by any-time-algorithms to report whenever they found a new solution.
 	 * This is a requirement by the PACE challenge.
@@ -172,23 +136,6 @@ public class App {
 	public static void reportNewSolution(int tw) {
 		if (!JdrasilProperties.containsKey("heuristic")) return; // only for heuristic
 		System.out.println("c status " + (tw+1) + " " + System.currentTimeMillis());
-	}
-	
-	/**
-	 * Print a static help message.
-	 */
-	public static void printHelp() {
-		System.out.println("Jdrasil");
-		System.out.println("Authors: Max Bannach, Sebastian Berndt, and Thorsten Ehlers");
-		System.out.println("Version: " + VERSION);
-		System.out.println();
-		System.out.println("Parameters:");
-		System.out.println("  -h : print this dialog");
-		System.out.println("  -s <seed> : set a random seed");
-		System.out.println("  -parallel : enable parallel processing");
-		System.out.println("  -heuristic : compute a heuristic solution");
-		System.out.println("  -log : enable log output");
-		System.out.println("  -tikz : enable tikz output");
 	}
 
 }
