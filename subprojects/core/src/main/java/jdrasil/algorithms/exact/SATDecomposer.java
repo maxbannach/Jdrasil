@@ -20,6 +20,7 @@ package jdrasil.algorithms.exact;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Logger;
 
 import jdrasil.App;
 import jdrasil.algorithms.EliminationOrderDecomposer;
@@ -30,6 +31,7 @@ import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.sat.Formula;
 import jdrasil.sat.formulations.BaseEncoder;
 import jdrasil.sat.formulations.ImprovedEncoder;
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * This TreeDecomposer computes a tree-decomposition using the base encoding @see BaseEncoder.java.
@@ -42,6 +44,9 @@ import jdrasil.sat.formulations.ImprovedEncoder;
 public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
 
 	private static final long serialVersionUID = 1L;
+
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
 	/**
 	 * Different encodings that are supported by this decomposer.
@@ -124,7 +129,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 		// as long as we can improve, improve
 		try {
 			while (phi.isSatisfiable() && k >= lb) {
-				if (k < ub) App.reportNewSolution(k);
+				LOG.info("new upperbound: " + k);
 				permutation = encoder.getPermutation(phi.getModel());
 				k = k - 1;							
 				encoder.improveCardinality(k);

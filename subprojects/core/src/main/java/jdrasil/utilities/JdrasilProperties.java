@@ -74,6 +74,8 @@ public class JdrasilProperties {
      * @param args the arguments of the program
      */
     public static void parseArguments(String[] args) {
+
+        // parse the arguments
         for (int i = 0; i < args.length; i++) {
             String a = args[i];
             if (a.charAt(0) == '-') {
@@ -106,6 +108,11 @@ public class JdrasilProperties {
                     }
                 }
             }
+        }
+
+        // if we found a seed apply it the the random number generator
+        if (JdrasilProperties.containsKey("s")) {
+            RandomNumberGenerator.seed(Long.parseLong(JdrasilProperties.getProperty("s")));
         }
     }
 

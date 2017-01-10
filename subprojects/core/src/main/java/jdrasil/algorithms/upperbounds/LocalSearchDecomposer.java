@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import jdrasil.App;
 import jdrasil.algorithms.EliminationOrderDecomposer;
@@ -37,6 +38,7 @@ import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.utilities.RandomNumberGenerator;
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * This class implements a tabu search on the space of elimination orders developed by Clautiax, Moukrim, Negre and Carlier
@@ -53,6 +55,8 @@ import jdrasil.utilities.RandomNumberGenerator;
  */
 public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
 
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
 	private static final long serialVersionUID = 7245062311907240240L;
 
@@ -201,7 +205,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 					permOpt = perm;
 					tdOpt = tmp;
 					evalOpt = eval;
-					App.reportNewSolution(tdOpt.getWidth());
+					LOG.info("new upper bound: " + tdOpt.getWidth());
 				}
 			}
 

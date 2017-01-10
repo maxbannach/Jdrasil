@@ -47,11 +47,33 @@ javadoc.doFirst {
 	     )
 }
 
-/* Start Scripts */
+/* Start Scripts for tw-exact */
 task exact(type: CreateStartScripts) {
   outputDir = file("${rootDir}")
-  mainClassName = 'jdrasil.App'
+  mainClassName = 'jdrasil.Exact'
   applicationName = 'tw-exact'
+  classpath = files('build/jar/Jdrasil.jar')
+  defaultJvmOpts = [ '-Djava.library.path=build/upgrades/' ]
+  
+  doLast {   
+    // update class path as the script is used with a fresh build
+    unixScript.text = unixScript.text.replace('$APP_HOME/lib', '$APP_HOME/build/jars/')
+    unixScript.text = unixScript.text.replace('CLASSPATH=$APP_HOME', 'CLASSPATH=build/upgrades/org.sat4j.core.jar:$APP_HOME')
+
+
+    
+    windowsScript.text = windowsScript.text.replace('%APP_HOME%\\lib', '%APP_HOME%\\config\\;%APP_HOME%\\build\\jars')
+
+    // update APP_HOME (there is no bin directory)
+    unixScript.text = unixScript.text.replace('cd "`dirname \\"$PRG\\"`/.." >/dev/null', 'cd "`dirname \\"$PRG\\"`/" >/dev/null')    
+  }
+}
+
+/* Start Scripts for tw-heuristic */
+task heuristic(type: CreateStartScripts) {
+  outputDir = file("${rootDir}")
+  mainClassName = 'jdrasil.Heuristic'
+  applicationName = 'tw-heuristic'
   classpath = files('build/jar/Jdrasil.jar')
   defaultJvmOpts = [ '-Djava.library.path=build/upgrades/' ]
   

@@ -25,6 +25,7 @@ import java.util.List;
  * @author bannach
  */
 import java.util.Random;
+import java.util.logging.Logger;
 
 import jdrasil.App;
 import jdrasil.algorithms.upperbounds.MinFillInDecomposer.Algo;
@@ -33,6 +34,7 @@ import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.utilities.RandomNumberGenerator;
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * The Min-Fill heuristic performs very well and can be seen as randomized algorithm as it breaks ties randomly.
@@ -45,6 +47,9 @@ import jdrasil.utilities.RandomNumberGenerator;
 public class StochasticMinFillDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
 
 	private static final long serialVersionUID = -8256243005350278791L;
+
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
 	/** The graph to be decomposed. */
 	private final Graph<T> graph;
@@ -72,7 +77,6 @@ public class StochasticMinFillDecomposer<T extends Comparable<T>> implements Tre
 
 		// iterating n times
 		int itr = Math.min(lb,100);
-//		App.log("LB: "+lb);
 		while (itr --> 0) {
 			MinFillInDecomposer<T> mfid = new MinFillInDecomposer<T>(graph);
 			// Switch between minFill and sparsestSubgraph
@@ -81,7 +85,7 @@ public class StochasticMinFillDecomposer<T extends Comparable<T>> implements Tre
 			TreeDecomposition<T> newDec = mfid.call(lb);
 			if (newDec != null && newDec.getWidth() < lb) {
 				lb = newDec.getWidth();
-				App.reportNewSolution(lb);
+				LOG.info("new bound: " + lb);
 				decomposition = newDec;
 				permutation = mfid.getPermutation();
 			}
@@ -93,7 +97,6 @@ public class StochasticMinFillDecomposer<T extends Comparable<T>> implements Tre
 		tmp.improveDecomposition();
 		if(tmp.getWidth() < decomposition.getWidth())
 			decomposition = tmp;
-//		decomposition.improveDecomposition();
 		return decomposition;
 	}
 	

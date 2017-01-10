@@ -29,7 +29,8 @@ import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
  * A full algorithm to compute a tree-decomposition heuristically.
  * 
  * The class provides access to the min-fill algorithm.
- * In the first, the stochastic min-fill algorithm is run a certain amount of time and (as it is anytime) provides consecutive improving solutions.
+ * In the first, the stochastic min-fill algorithm is run a certain amount of time and (as it is anytime) provides
+ * consecutive improving solutions.
  * 
  * @author Max Bannach
  * @author Sebastian Berndt
