@@ -18,11 +18,18 @@ GitHub at~\url{https://github.com/maxbannach/Jdrasil}. The obtained
 \texttt{.jar} file is executable, i.\,e., if \Jdrasil\ should be used
 as standalone solver, we can simple use:
 \begin{lstlisting}[language=bash]
+  # this will execute the exact mode
   java -jar Jdrasil.jar
 \end{lstlisting}
 or alternatively
 \begin{lstlisting}[language=bash]
-  java -cp Jdrasil.jar jdrasil.App
+  java -cp Jdrasil.jar jdrasil.Exact
+\end{lstlisting}
+In addition, we can execute \Jdrasil\ in the heuristic or
+approximation mode:
+\begin{lstlisting}[language=bash]
+  java -cp Jdrasil.jar jdrasil.Heuristic
+  java -cp Jdrasil.jar jdrasil.Approximation
 \end{lstlisting}
 With the same \texttt{.jar} file, \Jdrasil\ can also be used as
 library: simply add the \texttt{.jar} to the classpath of the desired project.
@@ -72,8 +79,8 @@ In order to run the freshly build \Jdrasil, we can do one of the
 following:
 \begin{lstlisting}[language=bash]
   java -jar build/jars/Jdrasil.jar
-  java -cp build/jars/Jdrasil.jar jdrasil.App
-  java -cp build/classes/main jdrasil.App
+  java -cp build/jars/Jdrasil.jar jdrasil.Exact
+  java -cp build/classes/main jdrasil.Exact
 \end{lstlisting}
 To use the present build of \Jdrasil\ as library, we can simply add
 the created \texttt{.jar} file to the classpath of our desired
@@ -120,7 +127,7 @@ Which will $\{\text{download}, \text{build},
 To run \Jdrasil\ with the installed upgrade, either do (if the upgrade is
 an Java library):
 \begin{lstlisting}[language=bash]
-  java -cp build/jars/Jdrasil.jar:build/upgrades/x.jar  jdrasil.App
+  java -cp build/jars/Jdrasil.jar:build/upgrades/x.jar  jdrasil.Exact
 \end{lstlisting}
 or (if the upgrade is a native library):
 \begin{lstlisting}[language=bash]
@@ -971,7 +978,7 @@ We can perform this step automatically with \lstinline{make upgrade-sat4j}.
 \subsection{Usage}
 Just add the SAT4J core library to the classpath:
 \begin{lstlisting}
-  java -cp bin:upgrades/org.sat4j.core.jar jdrasil.App
+  java -cp bin:upgrades/org.sat4j.core.jar jdrasil.Exact
 \end{lstlisting}
 Of course, the SAT4J library can be stored at another location as
 well. Other then that, just work with the class \JClass{jdrasil.sat.Formula}
@@ -1051,7 +1058,7 @@ IPASIR solver, i.\,e., once we have an library called
 its library path (not to be confused with its class path), so the
 following call will allows \Jdrasil\ to use the solver:
 \begin{lstlisting}[language=bash]
-  java -cp bin -Djava.library.path=upgrades/ipasir jdrasil.App
+  java -cp bin -Djava.library.path=upgrades/ipasir jdrasil.Exact
 \end{lstlisting}
 Of course, the path can be set to any location, wherever the upgrade
 is stored. Note that this only sets the path to location at which
