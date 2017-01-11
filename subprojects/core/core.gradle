@@ -22,14 +22,14 @@ apply plugin: 'java'
 buildDir = new File(rootProject.projectDir, "build/")
 ext {
   jarDir = new File("${buildDir}/jars")
-  mainClass = "jdrasil.App"
+  mainClass = "jdrasil.Exact"
 }
 
 /* addapt jar configuration */
 jar {
   manifest {
     // make it executable
-    attributes 'Main-Class': 'jdrasil.App'
+    attributes 'Main-Class': 'jdrasil.Exact'
   }
 }
 
