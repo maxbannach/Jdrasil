@@ -1,11 +1,13 @@
-JNI = /Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include
-JNIMD = /Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/include/darwin
+JNI = $(shell jrunscript -e 'java.lang.System.out.println(java.lang.System.getProperty("java.home"));')/../include
+JNIMDMAC = $(JNI)/darwin
+JNIMDLINUX = $(JNI)/linux
+JNIMDWIN32 = $(JNI)/win32
 
 all: targets
 
 targets: jni
 
 jni:
-	g++ -Xlinker -dylib -L. -lipasirsolver -I$(JNI) -I$(JNIMD)  -o libjdrasil_sat_NativeSATSolver.dylib jdrasil_sat_NativeSATSolver.cpp
+	g++ -Xlinker -dylib -L. -lipasirsolver -I$(JNI) -I$(JNIMDMAC) -I$(JNIMDLINUX) -I$(JNIMDWIN32)  -o libjdrasil_sat_NativeSATSolver.dylib jdrasil_sat_NativeSATSolver.cpp
 
 .PHONY: jni
