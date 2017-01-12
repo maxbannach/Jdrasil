@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./glucose -vbyte -certified -certified-output=$2/proof.out -model $1
