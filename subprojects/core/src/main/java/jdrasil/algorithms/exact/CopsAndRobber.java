@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
+import jdrasil.algorithms.upperbounds.MinFillInDecomposer;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
@@ -303,9 +305,13 @@ public class CopsAndRobber<T extends Comparable<T>> implements TreeDecomposer<T>
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		
+
+		// compute a lowerbound
+		MinorMinWidthLowerbound<T> mmw = new MinorMinWidthLowerbound<T>(graph);
+		int lb = mmw.call();
+
 		// search a k for which the cops have a winning strategy
-		int k = 0;
+		int k = lb;
 		BitSet root = new BitSet(n);
 		while (!computeWinningStrategy(new Node(root, 0), k)) {			
 			memorization.clear();

@@ -38,6 +38,7 @@ import jdrasil.utilities.RandomNumberGenerator;
  * 
  * @param <T>
  * @author Max Bannach
+ * @author Thorsten Ehlers
  */
 public class MinFillInDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
 
@@ -114,6 +115,7 @@ public class MinFillInDecomposer<T extends Comparable<T>> implements TreeDecompo
 
 		List<T> permutation = new LinkedList<T>();
 		Graph<T> workingCopy = GraphFactory.copy(graph);
+
 		// compute the permutation
 		for (int i = 0; i < graph.getVertices().size(); i++) {
 			if (Thread.currentThread().isInterrupted()) throw new Exception();

@@ -19,14 +19,7 @@
 package jdrasil.algorithms.exact;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
@@ -59,6 +52,9 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 	
 	/** An upper bound on the tree-width of the graph. */
 	private int ub;
+
+	/** An lower bound on the tree-width of the graph. */
+	private int lb;
 
 	/** Map the vertices of the graph to IDs */
 	private final Map<T, Integer> vertexToID;
@@ -126,7 +122,13 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		
 		@Override
 		public boolean equals(Object obj) {
-			return this.hashCode() == obj.hashCode();
+			if(obj instanceof BranchAndBoundDecomposer.Node) {
+				Node n = (BranchAndBoundDecomposer.Node) obj;
+				return this.eliminatedVertices.equals(n.eliminatedVertices)
+						&& currentVertex.equals(n.currentVertex);
+			}
+			return  false;
+			//return this.hashCode() == obj.hashCode();
 		}
 		
 	}
@@ -155,7 +157,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 	 * @param node
 	 * @return
 	 */
-	private boolean solution(Node node) {		
+	private boolean solution(Node node) {
 		if (graph.getVertices().size() == 0) {
 			if (node.width < ub) { // new optimum
 				List<T> tmp = getPermutation();
@@ -211,28 +213,28 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		
 		// if there is an almost simplicial vertex, that is not in the clique, we can simply use that
 		T almostSimple = graph.getAlmostSimplicialVertex(clique);
-		if (almostSimple != null) {
+		if (almostSimple != null && graph.getNeighborhood(almostSimple).size()+1 <= lb) {
 			children.add(new Node(node, almostSimple));
 			return children;
 		}
-		
+
 		// compute a twin decomposition of the graph, since we have to branch to only one vertex of each twin group
 		Map<T, Set<T>> twins = new TwinDecomposition<T>(graph).getModel();
 		for (Set<T> S : twins.values()) {
-			
+
 			// we only have to consider one vertex in each set
-			T v = S.iterator().next(); 
-			
+			T v = S.iterator().next();
+
 			// we can skip the clique until the graph is almost empty
 			if (clique.contains(v)) continue;
-						
+
 			// we can ignore neighbors, this costs O(1)
 			if (graph.isAdjacent(v, node.currentVertex)) continue;
-			
+
 			// if we reach this point, we have to branch to v
 			children.add(new Node(node, v));
 		}
-		
+
 		// sort vertices by fillIn value
 		children.sort((u,v) -> {
 			int fillIn_u = graph.getFillInValue(u.currentVertex);
@@ -241,7 +243,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 			if (fillIn_u > fillIn_v) return -1;
 			return u.currentVertex.compareTo(v.currentVertex); // natural ordering
 		});
-		
+
 		// at the end, we simply eliminate the clique
 		if (children.size() == 0) {
 			for (T v : clique) {
@@ -251,7 +253,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 				}
 			}
 		}
-		
+
 		// done
 		return children;
 	}
@@ -300,7 +302,6 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 	 * @throws Exception 
 	 */
 	private int BB(Node node) throws Exception {
-		if (Thread.currentThread().isInterrupted()) throw new Exception(); // timeout
 		if (solution(node)) return 0; // end of recursion
 		if (bound(node)) return Integer.MAX_VALUE; // we can prune
 		
@@ -372,19 +373,20 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		// compute upper and lower bounds
 		MinFillInDecomposer<T> MinFill = new MinFillInDecomposer<T>(graph);
 		ub = MinFill.call().getWidth();
-		int lb = new MinorMinWidthLowerbound<T>(graph).call();
+		lb = new MinorMinWidthLowerbound<T>(graph).call();
 		permutation = MinFill.getPermutation();
-		
+
 		// we can safely eliminate a clique at last
-		this.clique = new Clique<T>(graph).getClique();
-		
+//		this.clique = new Clique<T>(graph).getClique();
+		this.clique = new HashSet<T>();
+
 		// call the branch and bound algorithm to find an optimal solution, this is any time so the currently best
 		//  solution is always available
 		if (ub != lb) {
 			Node root = new Node();
 			BB(root);
 		}
-				
+
 		// done
 		return new EliminationOrderDecomposer<T>(original, permutation, decompositionQuality()).call();
 	}

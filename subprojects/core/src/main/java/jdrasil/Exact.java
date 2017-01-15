@@ -20,10 +20,16 @@ package jdrasil;
 
 import jdrasil.algorithms.ExactDecomposer;
 import jdrasil.algorithms.HeuristicDecomposer;
+import jdrasil.algorithms.exact.BranchAndBoundDecomposer;
+import jdrasil.algorithms.exact.CopsAndRobber;
+import jdrasil.algorithms.exact.DynamicProgrammingDecomposer;
+import jdrasil.algorithms.exact.SATDecomposer;
+import jdrasil.algorithms.preprocessing.GraphSeparator;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.GraphWriter;
 import jdrasil.graph.TreeDecomposition;
+import jdrasil.graph.invariants.ConnectedComponents;
 import jdrasil.utilities.JdrasilProperties;
 import jdrasil.utilities.logging.JdrasilLogger;
 
