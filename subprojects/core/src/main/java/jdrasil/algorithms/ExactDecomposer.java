@@ -22,7 +22,9 @@ import java.math.BigInteger;
 import java.util.logging.Logger;
 
 
+import jdrasil.algorithms.exact.BranchAndBoundDecomposer;
 import jdrasil.algorithms.exact.CopsAndRobber;
+import jdrasil.algorithms.exact.DynamicProgrammingDecomposer;
 import jdrasil.algorithms.exact.SATDecomposer;
 import jdrasil.algorithms.exact.SATDecomposer.Encoding;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
@@ -115,16 +117,17 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 			// otherwise check if the instance is small enough for the dynamic cops-and-robber game
 			// the algorithm has running time O(n choose k), so we check the size of n choose k
 			// This is also used if no SAT solver is available
-			if (!Formula.canRegisterSATSolver() || (n <= COPS_VERTICES_THRESHOLD && ub <= COPS_TW_THRESHOLD && expectedMemory.compareTo(freeMemory) < 0)) {	
+			if (!Formula.canRegisterSATSolver() || (n <= COPS_VERTICES_THRESHOLD && ub <= COPS_TW_THRESHOLD && expectedMemory.compareTo(freeMemory) < 0)) {
 				LOG.info("Solve with a game of Cops and Robbers");
 				TreeDecomposition<T> decomposition = new CopsAndRobber<>(reduced).call();
 				reducer.addbackTreeDecomposition(decomposition);
 				continue;
 			}
-						
+
 			/* If everything above does not work, we solve the problem using a SAT-encoding */
 			LOG.info("Solve with a SAT solver");
 			TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub).call();
+
 			reducer.addbackTreeDecomposition(decomposition);
 		}
 		return reducer.getTreeDecomposition();	

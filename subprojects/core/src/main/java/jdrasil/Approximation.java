@@ -18,22 +18,12 @@
 
 package jdrasil;
 
+import jdrasil.algorithms.ApproximationDecomposer;
 import jdrasil.algorithms.ExactDecomposer;
-import jdrasil.algorithms.HeuristicDecomposer;
-import jdrasil.algorithms.exact.BranchAndBoundDecomposer;
-import jdrasil.algorithms.exact.CopsAndRobber;
-import jdrasil.algorithms.exact.DynamicProgrammingDecomposer;
-import jdrasil.algorithms.exact.SATDecomposer;
-import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
-import jdrasil.algorithms.preprocessing.GraphReducer;
-import jdrasil.algorithms.preprocessing.GraphSeparator;
-import jdrasil.algorithms.upperbounds.StochasticMinFillDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.GraphWriter;
 import jdrasil.graph.TreeDecomposition;
-import jdrasil.graph.invariants.ConnectedComponents;
-import jdrasil.sat.Formula;
 import jdrasil.utilities.JdrasilProperties;
 import jdrasil.utilities.logging.JdrasilLogger;
 
@@ -41,25 +31,16 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
- * Jdrasil is a program to compute a small tree-decomposition of a given graph.
- * It is developed at the Universitaet zu Luebeck in context of the PACE challenge (www.pacechallenge.wordpress.com).
- *
- * <p>
- * This class provides an entry point to the program for computing exact (optimal) tree decompositions.
- * </p>
- *
  * @author Max Bannach
- * @author Sebastian Berndt
- * @author Thorsten Ehlers
  */
-public class Exact {
+public class Approximation {
 
     /** Jdrasils Logger */
     private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
     /**
-     * Entry point to Jdrasil in exact mode. The program, started with this method, will read a graph from standard
-     * input and compute an exact tree decomposition.
+     * Entry point to Jdrasil in approximation mode. The program, started with this method, will read a graph from standard
+     * input and compute an tree decomposition of width at most 4k+4.
      * @param args
      */
     public static void main(String[] args) {
@@ -78,14 +59,15 @@ public class Exact {
             long tstart = System.nanoTime();
             TreeDecomposition<Integer> decomposition = null;
 
-            /* compute an exact tree-decomposition */
-            ExactDecomposer<Integer> exact = new ExactDecomposer<Integer>(input);
-            decomposition = exact.call();
+            /* compute an approximation of the tree-decomposition */
+            ApproximationDecomposer<Integer> approx = new ApproximationDecomposer<Integer>(input);
+            decomposition = approx.call();
 
             long tend = System.nanoTime();
 
             System.out.print(decomposition);
             System.out.println();
+
             LOG.info("");
             LOG.info("Tree-Width: " + decomposition.getWidth());
             LOG.info("Used " + (tend-tstart)/1000000000 + " seconds");

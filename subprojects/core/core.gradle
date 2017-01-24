@@ -54,12 +54,13 @@ task exact(type: CreateStartScripts) {
   applicationName = 'tw-exact'
   classpath = files('build/jar/Jdrasil.jar')
   defaultJvmOpts = [ '-Djava.library.path=build/upgrades/' ]
+
   
   doLast {   
     // update class path as the script is used with a fresh build
     unixScript.text = unixScript.text.replace('$APP_HOME/lib', '$APP_HOME/build/jars/')
     unixScript.text = unixScript.text.replace('CLASSPATH=$APP_HOME', 'CLASSPATH=build/upgrades/org.sat4j.core.jar:$APP_HOME')
-
+    unixScript.text = unixScript.text.replace('exec "$JAVACMD" "$@"', 'cd "$(dirname "$0")"\nexec "$JAVACMD" "$@"')
 
     
     windowsScript.text = windowsScript.text.replace('%APP_HOME%\\lib', '%APP_HOME%\\config\\;%APP_HOME%\\build\\jars')
@@ -81,7 +82,29 @@ task heuristic(type: CreateStartScripts) {
     // update class path as the script is used with a fresh build
     unixScript.text = unixScript.text.replace('$APP_HOME/lib', '$APP_HOME/build/jars/')
     unixScript.text = unixScript.text.replace('CLASSPATH=$APP_HOME', 'CLASSPATH=build/upgrades/org.sat4j.core.jar:$APP_HOME')
+    unixScript.text = unixScript.text.replace('exec "$JAVACMD" "$@"', 'cd "$(dirname "$0")"\nexec "$JAVACMD" "$@"')
 
+    
+    windowsScript.text = windowsScript.text.replace('%APP_HOME%\\lib', '%APP_HOME%\\config\\;%APP_HOME%\\build\\jars')
+
+    // update APP_HOME (there is no bin directory)
+    unixScript.text = unixScript.text.replace('cd "`dirname \\"$PRG\\"`/.." >/dev/null', 'cd "`dirname \\"$PRG\\"`/" >/dev/null')    
+  }
+}
+
+/* Start Scripts for tw-approximation */
+task approximation(type: CreateStartScripts) {
+  outputDir = file("${rootDir}")
+  mainClassName = 'jdrasil.Approximation'
+  applicationName = 'tw-approximation'
+  classpath = files('build/jar/Jdrasil.jar')
+  defaultJvmOpts = [ '-Djava.library.path=build/upgrades/' ]
+  
+  doLast {   
+    // update class path as the script is used with a fresh build
+    unixScript.text = unixScript.text.replace('$APP_HOME/lib', '$APP_HOME/build/jars/')
+    unixScript.text = unixScript.text.replace('CLASSPATH=$APP_HOME', 'CLASSPATH=build/upgrades/org.sat4j.core.jar:$APP_HOME')
+    unixScript.text = unixScript.text.replace('exec "$JAVACMD" "$@"', 'cd "$(dirname "$0")"\nexec "$JAVACMD" "$@"')
 
     
     windowsScript.text = windowsScript.text.replace('%APP_HOME%\\lib', '%APP_HOME%\\config\\;%APP_HOME%\\build\\jars')

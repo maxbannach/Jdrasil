@@ -39,7 +39,7 @@ public class GraphWriter {
 	 * Constitutes a string representing the graph.
 	 * The string is like the PACE graph format, i.e., if the type of the vertices is Integer,
 	 * this will exactly produce the PACE format.
-	 * @param graph that should be serialized 
+	 * @param graph that should be serialized
 	 * @return string representing the graph
 	 */
 	public static <T extends Comparable<T>> String graphToString(Graph<T> graph) {
@@ -48,7 +48,23 @@ public class GraphWriter {
 		for (T v : graph.getVertices()) {
 			for (T w : graph.getNeighborhood(v)) {
 				if (v.compareTo(w) > 0) continue;
-				sb.append(v + " " + w + "\n");				
+				sb.append(v + " " + w + "\n");
+			}
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * Constitutes a string representing the directed graph.
+	 * @param graph that should be serialized
+	 * @return string representing the graph
+	 */
+	public static <T extends Comparable<T>> String directedGraphToString(Graph<T> graph) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("p tw " + graph.getVertices().size() + " " + graph.getNumberOfEdges() + "\n");
+		for (T v : graph.getVertices()) {
+			for (T w : graph.getNeighborhood(v)) {
+				sb.append(v + " " + w + "\n");
 			}
 		}
 		return sb.toString();

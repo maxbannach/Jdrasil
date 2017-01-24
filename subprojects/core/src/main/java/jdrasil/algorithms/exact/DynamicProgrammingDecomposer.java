@@ -414,7 +414,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 				    } 
 				 };
 			}
-					
+
 			S.set(v, false);
 			permutation.add(0, intToVertex.get(v));
 		}
@@ -425,7 +425,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		
+
 		// run a corresponding algorithm, this will enable @see computeEliminationOrder()
 		switch (mode) {
 		case simpleDP:
@@ -442,7 +442,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 		default:
 			break;
 		}
-		
+
 		// return a corresponding decomposition
 		return new EliminationOrderDecomposer<T>(graph, computeEliminationOrder(), TreeDecompositionQuality.Exact).call();
 	}

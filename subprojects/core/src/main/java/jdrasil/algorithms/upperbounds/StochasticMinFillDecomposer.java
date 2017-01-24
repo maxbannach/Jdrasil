@@ -43,6 +43,7 @@ import jdrasil.utilities.logging.JdrasilLogger;
  * 
  * @param <T> the vertex type
  * @author Max Bannach
+ * @author Thorsten Ehlers
  */
 public class StochasticMinFillDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
 

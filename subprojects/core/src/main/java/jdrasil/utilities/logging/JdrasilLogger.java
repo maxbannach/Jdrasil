@@ -99,7 +99,7 @@ public class JdrasilLogger {
      */
     public static void setToDimacsLogging() {
         removeHandlers();
-        Handler ch = new StreamHandler(System.err, new DimacsLogFormatter()) {
+        Handler ch = new StreamHandler(System.out, new DimacsLogFormatter()) {
             @Override
             public synchronized void publish(final LogRecord record) {
                 super.publish(record);
@@ -119,7 +119,7 @@ public class JdrasilLogger {
      */
     public static void setToClassicLogging() {
         removeHandlers();
-        Handler ch = new StreamHandler(System.out, new JdrasilLogFormatter()) {
+        Handler ch = new StreamHandler(System.err, new JdrasilLogFormatter()) {
             @Override
             public synchronized void publish(final LogRecord record) {
                 super.publish(record);
