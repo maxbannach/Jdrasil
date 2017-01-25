@@ -18,8 +18,10 @@
 
 package jdrasil;
 
-import jdrasil.algorithms.ApproximationDecomposer;
 import jdrasil.algorithms.ExactDecomposer;
+import jdrasil.algorithms.approximation.RobertsonSeymourDecomposer;
+import jdrasil.algorithms.preprocessing.GraphReducer;
+import jdrasil.algorithms.preprocessing.GraphSeparator;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.GraphWriter;
@@ -60,11 +62,19 @@ public class Approximation {
             TreeDecomposition<Integer> decomposition = null;
 
             /* compute an approximation of the tree-decomposition */
-            ApproximationDecomposer<Integer> approx = new ApproximationDecomposer<Integer>(input);
-            decomposition = approx.call();
+            GraphSeparator<Integer> separator = new GraphSeparator<>(input);
+            for (Graph<Integer> D : separator) {
+                // reduce the graph
+                GraphReducer<Integer> reducer = new GraphReducer<>(D);
+                for (Graph<Integer> reduced : reducer) {
+                    TreeDecomposition<Integer> td = new RobertsonSeymourDecomposer<>(reduced).call();
+                    reducer.addbackTreeDecomposition(td);
+                }
+                separator.addbackTreeDecomposition(reducer.getTreeDecomposition());
+            }
+            decomposition = separator.getTreeDecomposition();
 
             long tend = System.nanoTime();
-
             System.out.print(decomposition);
             System.out.println();
 

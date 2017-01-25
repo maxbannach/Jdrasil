@@ -19,16 +19,16 @@
 package jdrasil.algorithms.upperbounds;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 /**
- * StochasticMinFillDecomposer.java
+ * StochasticGreedyPermutationDecomposer.java
  * @author bannach
  */
-import java.util.Random;
 import java.util.logging.Logger;
 
 
-import jdrasil.algorithms.upperbounds.MinFillInDecomposer.Algo;
+import jdrasil.algorithms.upperbounds.GreedyPermutationDecomposer.Algorithm;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
@@ -37,15 +37,17 @@ import jdrasil.utilities.RandomNumberGenerator;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
- * The Min-Fill heuristic performs very well and can be seen as randomized algorithm as it breaks ties randomly.
+ * The Greedy-Permutation heuristic performs very well and can be seen as randomized algorithm as it breaks ties randomly.
  * Therefore, multiple runs of the algorithm produce different results and, hence, we can perform a stochastic search
- * by using the heuristic multiple times and reporting the best result.
+ * by using the heuristic multiple times and reporting the best result. As the Greedy-Permutation heuristic implements
+ * different algorithms, we can pick different algorithms in different runs. As the performance of these algortihms differ,
+ * we choose them with different probabilities.
  * 
  * @param <T> the vertex type
  * @author Max Bannach
  * @author Thorsten Ehlers
  */
-public class StochasticMinFillDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
+public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
 
 	private static final long serialVersionUID = -8256243005350278791L;
 
@@ -62,45 +64,70 @@ public class StochasticMinFillDecomposer<T extends Comparable<T>> implements Tre
 	public List<T> permutation;
 	
 	/**
-	 * The algorithm is initialized with a graph that should be decomposed and a seed for randomness.
+	 * The algorithm is initialized with a graph that should be decomposed.
 	 * @param graph to be decomposed
 	 */
-	public StochasticMinFillDecomposer(Graph<T> graph) {
+	public StochasticGreedyPermutationDecomposer(Graph<T> graph) {
 		this.graph = graph;
 		this.decomposition = new TreeDecomposition<T>(graph);
 		this.decomposition.createBag(graph.getVertices());
 	}
-	
 
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		int lb = graph.getVertices().size();
 
-		// iterating n times
-		int itr = Math.min(lb,100);
+		// an upper bound that will be improved during the run of the algortihm
+		int ub = graph.getVertices().size();
+
+		// iterating sqrt(n) times, at least 100
+		int itr = (int) Math.max(Math.sqrt(ub), 100);
+
+		// each run will call the Greed-Permutation heuristic
 		while (itr --> 0) {
-			MinFillInDecomposer<T> mfid = new MinFillInDecomposer<T>(graph);
-			// Switch between minFill and sparsestSubgraph
-			if((itr % 2) == 0)
-				mfid.setToRun(Algo.SparsestSubgraph);
-			TreeDecomposition<T> newDec = mfid.call(lb);
-			if (newDec != null && newDec.getWidth() < lb) {
-				lb = newDec.getWidth();
-				LOG.info("new bound: " + lb);
-				decomposition = newDec;
-				permutation = mfid.getPermutation();
+			if (Thread.currentThread().isInterrupted()) throw new Exception();
+			GreedyPermutationDecomposer<T> greedyPermutation = new GreedyPermutationDecomposer<T>(graph);
+
+			// choose an algorithm at random
+			// with probability 0.5 we choose fill-in, as this algorithm performs very well,
+			// the other algorithms have probability 0.1
+			double p = RandomNumberGenerator.nextDouble();
+			if (p > 0.9) {
+				greedyPermutation.setToRun(Algorithm.Degree);
+			} else if (p > 0.8) {
+				greedyPermutation.setToRun(Algorithm.DegreePlusFillIn);
+			} else if (p > 0.7) {
+				greedyPermutation.setToRun(Algorithm.SparsestSubgraph);
+			} else if (p > 0.6) {
+				greedyPermutation.setToRun(Algorithm.FillInDegree);
+			} else if (p > 0.5) {
+				greedyPermutation.setToRun(Algorithm.DegreeFillIn);
+			} else {
+				greedyPermutation.setToRun(Algorithm.FillIn);
 			}
-			
+
+			// compute the decomposition
+			TreeDecomposition<T> newDec = greedyPermutation.call(ub);
+
+			// we we get one, and if this decomposition improves the currently best -> update bound
+			if (newDec != null && newDec.getWidth() < ub) {
+				ub = newDec.getWidth();
+				LOG.info("new upper bound: " + ub);
+				decomposition = newDec;
+				permutation = greedyPermutation.getPermutation();
+			}
 		}
+
 		// Create a copy of the current decomposition, and try to improve it. 
 		// Prevents race condition if signal handler is triggered while improve is running
+		LOG.info("trying to improve the decomposition");
 		TreeDecomposition<T> tmp = decomposition.copy();
 		tmp.improveDecomposition();
 		if(tmp.getWidth() < decomposition.getWidth())
 			decomposition = tmp;
+
+		// done
 		return decomposition;
 	}
-	
 
 	/**
 	 * Returns the elimination order computed by call().

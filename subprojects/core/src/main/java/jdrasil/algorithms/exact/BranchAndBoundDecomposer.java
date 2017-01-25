@@ -23,13 +23,12 @@ import java.util.*;
 
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
-import jdrasil.algorithms.upperbounds.MinFillInDecomposer;
+import jdrasil.algorithms.upperbounds.GreedyPermutationDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
-import jdrasil.graph.invariants.Clique;
 import jdrasil.graph.invariants.TwinDecomposition;
 
 /**
@@ -371,7 +370,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		if (graph.getVertices().size() == 0) return new TreeDecomposition<T>(graph);
 				
 		// compute upper and lower bounds
-		MinFillInDecomposer<T> MinFill = new MinFillInDecomposer<T>(graph);
+		GreedyPermutationDecomposer<T> MinFill = new GreedyPermutationDecomposer<T>(graph);
 		ub = MinFill.call().getWidth();
 		lb = new MinorMinWidthLowerbound<T>(graph).call();
 		permutation = MinFill.getPermutation();

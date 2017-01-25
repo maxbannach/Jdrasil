@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.Stack;
 
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
-import jdrasil.algorithms.upperbounds.MinFillInDecomposer;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;

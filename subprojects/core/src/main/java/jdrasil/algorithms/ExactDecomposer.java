@@ -22,15 +22,13 @@ import java.math.BigInteger;
 import java.util.logging.Logger;
 
 
-import jdrasil.algorithms.exact.BranchAndBoundDecomposer;
 import jdrasil.algorithms.exact.CopsAndRobber;
-import jdrasil.algorithms.exact.DynamicProgrammingDecomposer;
 import jdrasil.algorithms.exact.SATDecomposer;
 import jdrasil.algorithms.exact.SATDecomposer.Encoding;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.algorithms.preprocessing.GraphSeparator;
-import jdrasil.algorithms.upperbounds.StochasticMinFillDecomposer;
+import jdrasil.algorithms.upperbounds.StochasticGreedyPermutationDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
@@ -98,7 +96,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 			// first compute lower and upper bounds on the tree-width
 			int lb = new MinorMinWidthLowerbound<>(reduced).call();
 			LOG.info("Computed lower bound: " + lb);
-			TreeDecomposition<T> ubDecomposition = new StochasticMinFillDecomposer<T>(reduced).call();
+			TreeDecomposition<T> ubDecomposition = new StochasticGreedyPermutationDecomposer<T>(reduced).call();
 			int ub = ubDecomposition.getWidth();		
 			LOG.info("Computed upper bound: " + ub);
 			

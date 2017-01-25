@@ -19,7 +19,12 @@
 package jdrasil;
 
 import jdrasil.algorithms.ExactDecomposer;
-import jdrasil.algorithms.HeuristicDecomposer;
+import jdrasil.algorithms.preprocessing.GraphReducer;
+import jdrasil.algorithms.preprocessing.GraphSeparator;
+import jdrasil.algorithms.upperbounds.GreedyPermutationDecomposer;
+import jdrasil.algorithms.upperbounds.LocalSearchDecomposer;
+import jdrasil.algorithms.upperbounds.StochasticGreedyPermutationDecomposer;
+import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposition;
@@ -52,8 +57,20 @@ public class Heuristic implements sun.misc.SignalHandler {
     /** Jdrasils Logger */
     private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
-    /** The decomposer used to compute the tree decomposition. */
-    private HeuristicDecomposer<Integer> heuristicDecomposer;
+    /** Start and end of the computation. */
+    private long tstart, tend;
+
+    /** The decomposition in construction. */
+    private TreeDecomposition<Integer> decomposition;
+
+    /** The reducer used to preprocess the graph. */
+    private GraphReducer<Integer> reducer;
+
+    /** The stochastic greedy permutation decomposer used in the first phase */
+    private StochasticGreedyPermutationDecomposer<Integer> greedyPermutationDecomposer;
+
+    /** The local search decomposer used in the third phase */
+    private LocalSearchDecomposer<Integer> localSearchDecomposer;
 
     /**
      * Entry point to Jdrasil in heuristic mode. The program, started with this method, will read a graph from standard
@@ -61,7 +78,6 @@ public class Heuristic implements sun.misc.SignalHandler {
      * @param args
      */
     public static void main(String[] args) {
-
         // parsing arguments
         JdrasilProperties.parseArguments(args);
 
@@ -86,28 +102,34 @@ public class Heuristic implements sun.misc.SignalHandler {
             Graph<Integer> input = GraphFactory.graphFromStdin();
 
 			/* Compute a explicit decomposition */
-            long tstart = System.nanoTime();
-            TreeDecomposition<Integer> decomposition = null;
+            tstart = System.nanoTime();
 
-            /* compute an exact tree-decomposition */
-            heuristicDecomposer = new HeuristicDecomposer<>(input);
-            decomposition = heuristicDecomposer.call();
+            LOG.info("reducing the graph");
+            reducer = new GraphReducer<>(input);
+            for (Graph<Integer> reduced : reducer) {
+                LOG.info("reduced the graph to " + reduced.getVertices().size() + " vertices");
 
-            while (true) {
+                // temporary tree decomposition to avoid raise conditions
+                TreeDecomposition<Integer> tmp;
 
-                Thread.sleep(1);
-                if (false) break;
+                LOG.info("Starting greedy permutation phase");
+                greedyPermutationDecomposer = new StochasticGreedyPermutationDecomposer<>(reduced);
+                tmp = greedyPermutationDecomposer.call();
+                synchronized (this) { this.decomposition = tmp; }
+
+                LOG.info("Improving the decomposition");
+                tmp = this.decomposition.copy();
+                tmp.improveDecomposition();
+                synchronized (this) { this.decomposition = tmp; }
+
+                LOG.info("Starting local search phase");
+                localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE,30, greedyPermutationDecomposer.getPermutation());
+                tmp = localSearchDecomposer.call();
+                synchronized (this) { this.decomposition = tmp; }
             }
 
-
-            long tend = System.nanoTime();
-
-            System.out.print(decomposition);
-            System.out.println();
-            LOG.info("");
-            LOG.info("Tree-Width: " + decomposition.getWidth());
-            LOG.info("Used " + (tend-tstart)/1000000000 + " seconds");
-            LOG.info("");
+            // print and exit
+            printSolution(this.decomposition);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -117,13 +139,51 @@ public class Heuristic implements sun.misc.SignalHandler {
             System.out.println();
             e.printStackTrace();
         }
+    }
 
+    /**
+     * This method undoes the preprocessing to create a final tree decompositions and prints this decomposition to std.out.
+     * This method will exit the program.
+     * @param td a tree decomposition of the reduced graph
+     */
+    private synchronized void printSolution(TreeDecomposition<Integer> td) {
+        if (reducer.iterator().hasNext()) { // if the reducer has fully reduced the graph, we have nothing to do here
+            reducer.addbackTreeDecomposition(td);
+        }
+        this.decomposition = reducer.getTreeDecomposition();
+        tend = System.nanoTime();
+        System.out.println(this.decomposition);
+        LOG.info("");
+        LOG.info("Tree-Width: " + decomposition.getWidth());
+        LOG.info("Used " + (tend-tstart)/1000000000 + " seconds");
+        LOG.info("");
+        System.exit(0);
     }
 
     @Override
     public void handle(Signal arg0) {
-        if (this.heuristicDecomposer == null) return;
-        System.out.println(this.heuristicDecomposer.getCurrentSolution());
+
+        // if local search has started, look if it has a solution
+        if (localSearchDecomposer != null) {
+            TreeDecomposition<Integer> td = localSearchDecomposer.getCurrentSolution();
+            if (td != null) this.decomposition = td;
+        }
+
+        // if we have no decomposition at all, the greedy permutation heuristic did not finish
+        // but maybe she has a subsolution?
+        if (this.decomposition == null) {
+            this.decomposition = greedyPermutationDecomposer.getCurrentSolution();
+        }
+
+        // if not, create trivial decomposition with a single bag
+        if (this.decomposition == null) {
+            Graph<Integer> H = reducer.iterator().next();
+            this.decomposition = new TreeDecomposition<>(H);
+            Bag<Integer> singleBag = this.decomposition.createBag(H.getVertices());
+        }
+
+        // print the decomposition
+        printSolution(decomposition);
     }
 
 }
