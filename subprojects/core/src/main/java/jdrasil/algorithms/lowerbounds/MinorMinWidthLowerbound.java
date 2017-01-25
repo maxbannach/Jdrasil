@@ -140,6 +140,7 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 			List<T> nextV = new LinkedList<>();
 			for (T v : graph) {
 				int deg = graph.getNeighborhood(v).size();
+				if (deg == 0) continue; // ignore isolated vertices
 				if (deg < min) {
 					min = deg;
 					nextV.clear();
@@ -149,16 +150,15 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 				}
 			}
 			T v = nextV.size() > 0 ? nextV.get(RandomNumberGenerator.nextInt(nextV.size())) : null;
+			if (v == null) break;
+
+			// update lowerbound
+			low = Math.max(low, graph.getNeighborhood(v).size());
 
 			// search suitable neighbor for contraction
 			T u = getNeighbor(graph, v);
+			if (u == null) break;
 
-			// update lowerbound			
-			low = Math.max(low, graph.getNeighborhood(v).size());
-				
-			// no edge left to contract
-			if (v == null || u == null) break;
-			
 			// contract edge
 			graph.contract(v, u);
 		}
