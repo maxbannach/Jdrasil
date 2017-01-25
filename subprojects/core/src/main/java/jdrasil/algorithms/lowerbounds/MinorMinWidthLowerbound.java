@@ -50,7 +50,7 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 	 * The algorithm can use different strategies to select vertices
 	 * (see Bodlaender and Koster: Treewidth Computations II).
 	 */
-	enum Algorithm {
+	public enum Algorithm {
 		minD,
 		maxD,
 		leastC;
@@ -66,7 +66,7 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 	public MinorMinWidthLowerbound(Graph<T> graph) {
 		this.graph = GraphFactory.copy(graph);
 		this.low = 0;
-		setToRun(Algorithm.minD);
+		setToRun(Algorithm.leastC);
 	}
 
 	/**

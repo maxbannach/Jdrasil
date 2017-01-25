@@ -20,6 +20,7 @@ package jdrasil.algorithms.lowerbounds;
 
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
+import jdrasil.utilities.RandomNumberGenerator;
 
 import java.util.*;
 
@@ -53,6 +54,9 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
     /** The lower bound algorithm used during the computation. */
     private Algorithm toRun;
 
+    /** The algorithm can be combined with contraction, this flag indicates if we do so. */
+    private boolean contraction;
+
     /**
      * Standard constructor, just with the graph that should be decomposed.
      * This will set the used algorithm to MinorMinWidth.
@@ -61,6 +65,7 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
     public ImprovedGraphLowerbound(Graph<T> graph) {
         this.graph = graph;
         setToRun(Algorithm.MinorMinWidth);
+        setContraction(false);
         this.low = 0;
     }
 
@@ -90,7 +95,7 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
      * @param k
      * @return the k-neighbors-imrpoved graph of G
      */
-    private Graph<T> getNeighbourImprovedGraph(Graph<T> G, int k) {
+    private Graph<T> getNeighborImprovedGraph(Graph<T> G, int k) {
 
         // we store the edges that we are allowed to add
         List<T> edgesToAdd = new ArrayList<T>();
@@ -131,8 +136,51 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
         // try to improve the lower bound via imrpoved graphs
         Graph<T> H = GraphFactory.copy(graph);
         while (true) {
-            H = getNeighbourImprovedGraph(H, low+1);
+            H = getNeighborImprovedGraph(H, low+1);
             tmp = getLowerbound(H);
+
+            // contract a safe minor, as in the minor-min-width heuristic
+            if (contraction) {
+                while (tmp <= low && H.getNumberOfEdges() >= 1) {
+                    // search vertex of min degree
+                    int min = Integer.MAX_VALUE;
+                    List<T> nextV = new LinkedList<>();
+                    for (T v : H) {
+                        int deg = H.getNeighborhood(v).size();
+                        if (deg < min) {
+                            min = deg;
+                            nextV.clear();
+                            nextV.add(v);
+                        } else if (deg == min) { // break ties randomly
+                            nextV.add(v);
+                        }
+                    }
+                    T v = nextV.size() > 0 ? nextV.get(RandomNumberGenerator.nextInt(nextV.size())) : null;
+
+                    // search neighbor with minimum number of common neighbors
+                    List<T> nextU = new LinkedList<T>();
+                    min = Integer.MAX_VALUE;
+                    for (T u : H.getNeighborhood(v)) {
+                        Set<T> common = new HashSet<>();
+                        common.addAll(H.getNeighborhood(v));
+                        common.retainAll(H.getNeighborhood(u));
+                        int k = common.size();
+                        if (k < min) {
+                            min = k;
+                            nextU.clear();
+                            nextU.add(u);
+                        } else if (k == min) {
+                            nextU.add(u);
+                        }
+                    }
+                    T u = nextV.size() > 0 ? nextU.get(RandomNumberGenerator.nextInt(nextU.size())) : null;
+
+                    // contract and update lower bound
+                    H.contract(v, u);
+                    tmp = getLowerbound(H);
+                }
+            }
+
             if (tmp <= low) break; // no improvement, we can stop
             low = low + 1;
         }
@@ -158,4 +206,11 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
      * @return
      */
     public Algorithm getToRun(Algorithm toRun) { return this.toRun; }
+
+    /**
+     * The algorithm can alternate between the heuristic and contraction. Set this to true to enable contraction.
+     * (Default: false)
+     * @param contraction
+     */
+    public void setContraction(boolean contraction) { this.contraction = contraction; }
 }
