@@ -19,6 +19,9 @@
 package jdrasil;
 
 import jdrasil.algorithms.ExactDecomposer;
+import jdrasil.algorithms.lowerbounds.DegeneracyLowerbound;
+import jdrasil.algorithms.lowerbounds.ImprovedGraphLowerbound;
+import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.algorithms.preprocessing.GraphSeparator;
 import jdrasil.algorithms.upperbounds.GreedyPermutationDecomposer;

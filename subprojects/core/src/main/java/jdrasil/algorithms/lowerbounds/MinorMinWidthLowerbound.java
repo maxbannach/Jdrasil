@@ -19,9 +19,7 @@
 package jdrasil.algorithms.lowerbounds;
 
 import java.io.Serializable;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 
 import jdrasil.graph.Graph;
@@ -40,11 +38,26 @@ import jdrasil.utilities.RandomNumberGenerator;
  */
 public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbound<T>, Serializable {
 
-
 	private static final long serialVersionUID = -7729782858493633708L;
 
 	/** The graph for which we wish to find a lowerbound. */
 	private final Graph<T> graph;
+
+	/** Current best lower bound */
+	private int low;
+
+	/**
+	 * The algorithm can use different strategies to select vertices
+	 * (see Bodlaender and Koster: Treewidth Computations II).
+	 */
+	enum Algorithm {
+		minD,
+		maxD,
+		leastC;
+	}
+
+	/** Strategy selected. */
+	private Algorithm toRun;
 
 	/**
 	 * The algorithm is initialized with a graph that should be decomposed and a seed for randomness.
@@ -52,12 +65,73 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 	 */
 	public MinorMinWidthLowerbound(Graph<T> graph) {
 		this.graph = GraphFactory.copy(graph);
+		this.low = 0;
+		setToRun(Algorithm.minD);
+	}
+
+	/**
+	 * Get a neighbor of the given vertex \(v\) in the given graph \(G\) which is suitable for being contracted.
+	 * @param G
+	 * @param v
+	 * @return a neighbor of v that should be contracted into v
+	 */
+	private T getNeighbor(Graph<T> G, T v) {
+		// store all optimal vertices and pick one at random
+		List<T> nextU = new LinkedList<T>();
+
+		// select the neighbor depending on the selected strategy
+		switch (toRun) {
+			case minD: // select neighbor of minimum degree
+				int min = Integer.MAX_VALUE;
+				for (T u : G.getNeighborhood(v)) {
+					int deg = G.getNeighborhood(u).size();
+					if (deg < min) {
+						min = deg;
+						nextU.clear();
+						nextU.add(u);
+					} else if (deg == min) {
+						nextU.add(u);
+					}
+				}
+				break;
+			case maxD: // select neighbor of maximum degree
+				int max = Integer.MIN_VALUE;
+				for (T u : G.getNeighborhood(v)) {
+					int deg = G.getNeighborhood(u).size();
+					if (deg > max) {
+						max = deg;
+						nextU.clear();
+						nextU.add(u);
+					} else if (deg == max) {
+						nextU.add(u);
+					}
+				}
+				break;
+			case leastC: // select neighbor with minimum amount of common neighbors
+				int minN = Integer.MAX_VALUE;
+				for (T u : G.getNeighborhood(v)) {
+					Set<T> common = new HashSet<>();
+					common.addAll(G.getNeighborhood(v));
+					common.retainAll(G.getNeighborhood(u));
+					int k = common.size();
+					if (k < minN) {
+						minN = k;
+						nextU.clear();
+						nextU.add(u);
+					} else if (k == minN) {
+						nextU.add(u);
+					}
+				}
+				break;
+		}
+
+		// done
+		return nextU.size() > 0 ? nextU.get(RandomNumberGenerator.nextInt(nextU.size())) : null;
 	}
 
 	@Override
 	public Integer call() throws Exception {	 
-		int lb = 0;
-		
+
 		// as long as the graph has vertices we can still contract some
 		while (graph.getVertices().size() > 0) {
 			
@@ -75,24 +149,12 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 				}
 			}
 			T v = nextV.size() > 0 ? nextV.get(RandomNumberGenerator.nextInt(nextV.size())) : null;
-			
-			// search min degree neighbor of nextV
-			min = Integer.MAX_VALUE;
-			List<T> nextU = new LinkedList<T>();
-			for (T u : graph.getNeighborhood(v)) {
-				int deg = graph.getNeighborhood(u).size();
-				if (deg < min) {
-					min = deg;
-					nextU.clear();
-					nextU.add(u);
-				} else if (deg == min) { // break ties randomly
-					nextU.add(u);
-				}
-			}
-			T u = nextU.size() > 0 ? nextU.get(RandomNumberGenerator.nextInt(nextU.size())) : null;
-			
+
+			// search suitable neighbor for contraction
+			T u = getNeighbor(graph, v);
+
 			// update lowerbound			
-			lb = Math.max(lb, graph.getNeighborhood(v).size());
+			low = Math.max(low, graph.getNeighborhood(v).size());
 				
 			// no edge left to contract
 			if (v == null || u == null) break;
@@ -100,13 +162,27 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 			// contract edge
 			graph.contract(v, u);
 		}
-		
-		return lb;
+
+		// done
+		return low;
 	}
 
 	@Override
 	public Integer getCurrentSolution() {
-		return null;
+		return low;
 	}
-	
+
+	/**
+	 * Set the strategy used by this class.
+	 * @param toRun
+	 */
+	public void setToRun(Algorithm toRun) { this.toRun = toRun; }
+
+	/**
+	 * Get the strategy used by this class.
+	 * @param toRun
+	 * @return
+	 */
+	public Algorithm getToRun(Algorithm toRun) { return this.toRun; }
+
 }

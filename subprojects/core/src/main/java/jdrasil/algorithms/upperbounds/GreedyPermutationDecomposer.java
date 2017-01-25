@@ -30,7 +30,6 @@ import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.utilities.RandomNumberGenerator;
-import sun.security.provider.certpath.Vertex;
 
 /**
  * This class implements greedy permutation heuristics to compute a tree-decomposition. The heuristic eliminates
