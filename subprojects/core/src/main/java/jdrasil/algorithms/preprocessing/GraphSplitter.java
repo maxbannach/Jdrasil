@@ -29,19 +29,18 @@ import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.invariants.ConnectedComponents;
 
 /**
- * The GraphSeparator splits a graph into multiple components such that the tree decompositions of these components can
+ * The GraphSplitter splits a graph into multiple components such that the tree decompositions of these components can
  * be glued to obtain an optimal decomposition for the input graph.
  * 
  * @author Max Bannach
  */
-public class GraphSeparator<T extends Comparable<T>> extends Preprocessor<T> {
+public class GraphSplitter<T extends Comparable<T>> extends Preprocessor<T> {
 
 	/**
 	 * @param graph
 	 */
-	public GraphSeparator(Graph<T> graph) {
+	public GraphSplitter(Graph<T> graph) {
 		super(graph);
-		// TODO Auto-generated constructor stub
 	}
 
 	//MARK: Preprocessor interface

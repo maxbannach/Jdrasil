@@ -27,7 +27,7 @@ import jdrasil.algorithms.exact.SATDecomposer;
 import jdrasil.algorithms.exact.SATDecomposer.Encoding;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
-import jdrasil.algorithms.preprocessing.GraphSeparator;
+import jdrasil.algorithms.preprocessing.GraphSplitter;
 import jdrasil.algorithms.upperbounds.StochasticGreedyPermutationDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
@@ -135,12 +135,12 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 	public TreeDecomposition<T> call() throws Exception {
 		LOG.info("");
 		
-		GraphSeparator<T> separator = new GraphSeparator<>(this.graph);
-		for (Graph<T> component : separator) {
+		GraphSplitter<T> splitter = new GraphSplitter<>(this.graph);
+		for (Graph<T> component : splitter) {
 			TreeDecomposition<T> decomposition = computeTreeDecompositionOfComponent(component);
-			separator.addbackTreeDecomposition(decomposition);
+			splitter.addbackTreeDecomposition(decomposition);
 		}
-		return separator.getTreeDecomposition();
+		return splitter.getTreeDecomposition();
 	}
 
 	@Override
