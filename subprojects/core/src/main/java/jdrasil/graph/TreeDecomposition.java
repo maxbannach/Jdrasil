@@ -238,7 +238,55 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		// done
 		return startVertices;
 	}
-	
+
+	/**
+	 * This method checks whether nor not the tree decomposition is valid.
+	 * If it is invalid, the reason will be logged.
+	 * @return true if the decomposition is valid
+	 */
+	public boolean isValid() {
+		boolean valid = true;
+
+		// Property 1: every vertex is in a bag
+		for (T v : graph) {
+			boolean contained = false;
+			for (Bag<T> b : tree) {
+				if (b.contains(v)) contained = true;
+			}
+			if (!contained) {
+				valid = false;
+				LOG.warning("Vertex " + v + " not contained in any bag!");
+			}
+		}
+
+		// Property 2: every edge is in a bag
+		for (T v : graph) {
+			for (T w : graph.getNeighborhood(v)) {
+				if (v.compareTo(w) >= 0) continue;
+				boolean contained = false;
+				for (Bag<T> b : tree) {
+					if (b.contains(v) && b.contains(w)) contained = true;
+				}
+				if (!contained) {
+					valid = false;
+					LOG.warning("Edge {" + v + ", " + w + "} not contained in any bag!");
+				}
+			}
+		}
+
+		// Property 3: subtrees connected
+		for (T v : graph) {
+			Stack<Bag<T>> S = connectedComponents(v);
+			if (S.size() != 1) {
+				valid = false;
+				LOG.warning("Tree containing vertex " + v + " is not connected!");
+			}
+		}
+
+		// done
+		return valid;
+	}
+
 	/**
 	 * Computes the unique path between s and t in the tree-decomposition.
 	 * @param s

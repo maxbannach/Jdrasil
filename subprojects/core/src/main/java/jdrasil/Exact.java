@@ -19,13 +19,17 @@
 package jdrasil;
 
 import jdrasil.algorithms.ExactDecomposer;
+import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposition;
+import jdrasil.sat.Formula;
+import jdrasil.sat.ISATSolver;
 import jdrasil.utilities.JdrasilProperties;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**

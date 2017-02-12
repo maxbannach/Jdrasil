@@ -258,6 +258,17 @@ Compiled: \today{}
   showstringspaces=false
 }
 
+\lstdefinelanguage{BibTeX}
+  {keywords={%
+      @article,@book,@collectedbook,@conference,@electronic,@ieeetranbstctl,%
+      @inbook,@incollectedbook,@incollection,@injournal,@inproceedings,%
+      @manual,@mastersthesis,@misc,@patent,@periodical,@phdthesis,@preamble,%
+      @proceedings,@standard,@string,@techreport,@unpublished%
+      },
+   comment=[l][\itshape]{@comment},
+   sensitive=false,
+  }
+
 \newcommand{\codeWithOutput}[2]{%
   \quad\lstinline[language=Java]{#1}
   \quad\tikz[baseline={([yshift=-0.5ex](0,0))}]{\draw[->, >=stealth,

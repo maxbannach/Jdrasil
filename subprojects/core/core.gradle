@@ -128,8 +128,8 @@ clean.doLast {
 				  "${rootDir}/tw-exact.bat",
 				  "${rootDir}/tw-heuristic",
 				  "${rootDir}/tw-heuristic.bat",
-				  "${rootDir}/tw-approx",
-				  "${rootDir}/tw-approx.bat"])
+				  "${rootDir}/tw-approximation",
+				  "${rootDir}/tw-approximation.bat"])
   scripts.each { file ->
     if (file.exists()) file.delete()
   }

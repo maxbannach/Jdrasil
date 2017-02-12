@@ -6,13 +6,63 @@
 \begin{document}
 
 \part{Getting Started}
-\chapter{About \Jdrasil}
+%\chapter{About \Jdrasil}
 \section{Technical Overview and Design Principles}
+\Jdrasil{} is a modular Java library for computing tree
+decompositions both, exact and heuristically. The goal of \Jdrasil\ is
+to allow other projects to add tree decompositions to there
+applications as easy as possible. In order to achieve this, \Jdrasil\
+is designed in a very modular way: Every algorithm is implemented as
+interchangeable as possible. At the same time, algorithms are
+implemented in a clean object oriented manner, making it easy to
+understand and extend the implementation. We hope that this approach
+makes it easier to study the practical aspects of tree width
+algorithms, and that it helps to push the practical usage of tree
+decompositions.
+
+To make the usage of \Jdrasil\ as easy as possible, the whole library can be
+compiled and used without any dependencies. Everything boils down to a
+single, platform independent \texttt{jar} file that can freely be used
+with the mentioned copyright.
+
+However, this design principle comes with the price of algorithms that
+are not ``on the edge optimized''. We believe that this is not a
+problem for most applications, as the algorithms run in the same
+principle time complexity anyway. If we, however, which to use super
+optimized algorithms, \Jdrasil{} provides the concept of
+\emph{upgrades}. An upgrade is a piece of third party software
+(e.\,g., another Java library, an optimized C implementation of an
+algorithm, a SAT solver, \dots) that can be used to \emph{replace} some
+functionality of \Jdrasil. An upgrade will usually boost the
+performance of \Jdrasil\ in general, or on a specific target platform
+(for instance on a parallel machine), and will add dependencies
+(\Jdrasil\ with upgrades may not be platform
+independent). Nevertheless, an upgrade will \emph{not} increase the
+functionality of \Jdrasil, only the performance and, hence, a scripted
+based on an upgraded version of \Jdrasil\ is still platform
+independent.
+
 \section{Contributors}
+The core developer of \Jdrasil\ are (in lexicographical order):
+\begin{itemize}
+  \item Max Bannach
+  \item Sebastian Berndt
+  \item Thorsten Ehlers
+\end{itemize}
 \section{How to Cite \Jdrasil}
+If you use \Jdrasil\ for your project, please reference our GitHub
+page and respect the copyright. If you use \Jdrasil\ for a research
+project, please cite our introduction paper:
+\begin{lstlisting}[language=BibTeX]
+  @inproceedings{jdrasil,
+    author = {Max Bannach and Sebastian Berndt and Thorsten Ehlers},
+    title = {Jdrasil: A Modular Library for Computing Tree Decompositions},
+    booktitle = {tba},
+    year = 2017
+  }
+\end{lstlisting}
 \chapter{Build and Run \Jdrasil}
 \section{Obtain and Use the Latest Version}
-\todo{actually from the github.io page~–~tba}
 The latest version of \Jdrasil{} can be obtained from
 GitHub at~\url{https://github.com/maxbannach/Jdrasil}. The obtained
 \texttt{.jar} file is executable, i.\,e., if \Jdrasil\ should be used
@@ -531,6 +581,85 @@ as map from vertices to vertices, i.\,e., a vertex is mapped to the
 vertex it is matched with.
   
 \chapter{Tree Decompositions}\label{chapter:treedecompositions}
+Since \Jdrasil{} is a library for computing tree decompositions, a
+well thought out representation of such decompositions is
+required. Recall the formal definition of a tree decomposition: A
+\emph{tree decomposition} of a graph $G$ is a pair $(T,\iota)$
+consisting of a tree $T$ and a mapping $\iota$ from nodes of $T$ to
+subsets of vertices of $G$ (called \emph{bags}), such that:
+\begin{itemize}
+  \item $\forall x\in V(G)$ there is a node $n\in V(T)$ with $x\in\iota(n)$;
+  \item $\forall \{x,y\}\in E(G)$ there is a node $n\in V(T)$ with $\{x,y\}\subseteq\iota(n)$;
+  \item $\forall x,y,z\in V(T)$ we have $\iota(y)\subseteq \iota(x)\cap\iota(z)$
+whenever $y$ lies on the unique path between $x$ and $z$ in $T$.
+\end{itemize}
+
+\section{Design Principle}
+The formal definition of tree decompositions and the way \Jdrasil\
+represents graphs (remember that graphs can build up on any vertex
+class) gives rise to the following approach: a tree decomposition in
+\Jdrasil\ is pretty much just a \JClass{Graph} with a special vertex
+class \JClass{Bag}. The \JClass{bag} class on the other hand is actually just a
+collection of vertices.
+
+To put it all together, the class \JClass{TreeDecomposition}
+represents a tree decomposition. It can store the original graph $G$,
+and a graph representing the tree $T$ with \JClass{bag}
+vertices. Furthermore, the class \JClass{TreeDecomposition} provides
+method to create new nodes in the decomposition and to link existing nodes.
+
+\section{Building and Using Tree Decompositions}
+Let us assume we wish to implement a new algorithm for computing a
+tree decomposition. The following code snippets illustrate how we would
+create and store the decomposition in \Jdrasil. Note that during the
+construction, the tree decomposition has not to be valid in any means.
+
+Assume we read a graph with integer vertices from the standard
+input. We can create a tree decomposition for the graph as
+follows. At this point, the decomposition will be \emph{empty} and
+\emph{invalid}, i.\,e., it will only correspond to the graph, but will
+not have any in formations about the decomposition stored yet.
+\begin{lstlisting}[language=Java]
+  // read the graph G
+  Graph<Integer> G = GraphFactory.graphFromStdin();
+  // create empty tree decomposition for graph G
+  TreeDecomposition<Integer> td = new TreeDecomposition<>(G);
+
+  // check if the decomposition is valid
+  boolean isValid = td.isValid(); // returns false
+\end{lstlisting}
+To create a bag, we need a subset of the vertices of $G$ that we wish
+to store in the bag. Finding these subsets is of course the (hard) task of
+the algorithm. Let us, in this example, just create the trivial tree
+decomposition of a single bag:
+\begin{lstlisting}[language=Java]
+  Set<Integer> someVertices = G.getVertices();
+  Bag<Integer> myBag = td.createBag(someVertices);
+
+  // decomposition now is valid
+  boolean isValid = td.isValid(); // returns true
+\end{lstlisting}
+The bag is created with the method \JMethod{createBag}. This will do
+two things: it will create the \JClass{Bag} object and store it in the
+tree decomposition, and it will return a reference to this
+\JClass{Bag} object as well. This reference may be needed later on,
+for instance, if we wish to connect some bags with a tree edge:
+\begin{lstlisting}[language=Java]
+  // anotherBag is a reference to another bag that we have created
+  td.addTreeEdge(myBag, anotherBag);
+\end{lstlisting}
+And that's it. We have successfully created a tree
+decomposition. \Jdrasil\ allows us to improve the quality of the
+decomposition (whenever we know that we do not have an optimal
+decomposition) with the separator technique
+of~\cite{bodlaender2010treewidth}. Just do the following and the
+decomposition may be improved:
+\begin{lstlisting}[language=Java]
+  td.improveDecomposition();
+\end{lstlisting}
+This method, however, may take some time if there are huge bags and
+should rather be used on already good decompositions (and not on the
+trivial one as in this example).
 
 \part{Algorithms}
 At its core engine, \Jdrasil\ implements a bunch of algorithms to
@@ -565,18 +694,18 @@ components, etc.) we can do the following:
 \begin{lstlisting}[language=Java]
   
   // a) generate instance of preprocessing algorithm
-  GraphSeparator<T> separator = new GraphSeparator<>(graph);
+  GraphSplitter<T> splitter = new GraphSplitter<>(graph);
 
   // b) iterate over all generated graphs
-  for (Graph<T> component : separator) {
+  for (Graph<T> component : splitter) {
     // c) compute decomposition of the component
     TreeDecomposition<T> decomposition = ... 
     // and add it to the preprocessor object
-    separator.addbackTreeDecomposition(decomposition);
+    splitter.addbackTreeDecomposition(decomposition);
   }
 
   // we can now access the final decomposition of the original graph
-  separator.getTreeDecomposition();
+  splitter.getTreeDecomposition();
 \end{lstlisting}
 
 \section{Reduction Rules}
@@ -598,7 +727,7 @@ $3$. If this class fully reduces the input graph, it will generate an
 empty set of graphs. So it is always save to simply loop over the
 generated graphs, without caring about this special case.
 
-\section{Separating the Graph}
+\section{Splitting up the Graph}
 A separator $S\subseteq V$ of a graph $G=(V,E)$ is a subset of the
 vertices such that $G\setminus S$ has more connected components
 then $G$. In particular, the connected components of $G$ are separated
@@ -638,12 +767,227 @@ decomposition is at most \(2k+1\).
   
 
 \chapter{Lowerbounds}
+The \JClass{lowerbound} interface describes a class that models an
+algorithm for computing a lower bound of the tree width of a graph.
+By implementing this interface, a class has to implement the Callable
+interface, which computes a lower bound on the tree width 
+a graph. In addition, a class implementing this interface has to
+implement the method \JMethod{getCurrentSolution}, which can be used
+if the lower bound algorithm can already provide lower bounds during
+its execution. \Jdrasil{} implements the following lowerbound algorithms.
+
+\section{Degeneracy of a Graph}
+We call a Graph $G=(V,E)$ $d$-degenerated if each subgraph $H$ of $G$ contains
+a vertex of maximal degree $d$.  It is a well known fact that we have
+\(d \le tw(G)\) and, thus, we can use the degeneracy of a graph as
+lowerbound for the tree width.
+
+The class \JClass{DegeneracyLowerbound} implements the linear time algorithm from Matula and Beck
+to compute the degeneracy of a graph.
+
+\section{Lowerbounds based on Minors}
+It is a well known fact that for every minor $H$ of $G$ the following
+holds: \(tw(H) \le tw(G)\). To obtain a lowerbound on the tree width
+of $G$ it is thus sufficient to find good lowerbounds for minors of
+$G$.  The minor-min-width heuristic devoloped by Gogate and Dechter
+for the QuickBB algorithm~\cite{GogateD2004} does exactly this. It
+computes a lowerbound for a minor of G and tries heuristically to find
+a good minor for this task.
+
+In \Jdrasil{} the class \JClass{MinorMinWidthLowerbound} implements
+this heuristic with different strategies discussed by Bodlaender and Koster~\cite{bodleanderK2011}.
+
+\section{Compute Lowerbound in Improved Graphs}
+The \{$k$-neighbor, $k$-path\}-improved graph \(H\) of a given graph \(G\)
+is obtained by adding an edge between all non adjacent vertices that
+have at least $k$ \{common neighbors, vertex disjoint paths\}. A crucial
+lemma states that adding these edges will not increase the tree
+width. Hence, we can compute a lower bound on the tree width of \(G\)
+by computing lower bounds on increasing improved graphs of \(G\). In
+this way, improved graphs can be used to improve the performance of
+any lower bound algorithm.
+
+The class \JClass{ImprovedGraphLowerbound} implements the improve graph trick to improve some
+implemented lower bound algorithms. The implementation is based on~\cite{bodleanderK2011}.
 
 \chapter{Heuristics}
+Since computing the exact tree width of a graph is
+$\Class{NP}$-complete, there are many graphs for which we are not yet
+able to compute an optimal tree decomposition. However, it turns out
+that there are very powerful heuristics for this problem.
+
+In \Jdrasil{}, all heuristics implement the interface
+\JClass{TreeDecomposer} and produce tree decompositions of quality ``Heuristic''.
+
+In addition to the different implemented algorithms, there is the
+class \JClass{Heuristic} which provides stand alone access to a
+combination of heuristics and is used by us for the PACE heuristic
+track. This class can be compiled and used with
+\begin{lstlisting}[language=bash]
+  ./gradlew heuristic
+  ./tw-heuristic
+\end{lstlisting}
+The program combines some of the implemented heuristics to get the
+best from each world. In particular, it does the following:
+\begin{enumerate}
+  \item reduce the graph using \JClass{GraphReducer};
+  \item computes a first decomposition using;
+    \JClass{StochasticGreedyPermutationDecomposer};
+  \item tries to improve the decomposition;
+  \item starts an infinite local search to further improve the
+    decomposition using the algorithm implemented in \JClass{LocalSearchDecomposer}.
+\end{enumerate}
+The program will try to improve the decomposition, until a
+\texttt{SIGTERM} is received. 
+
+\section{Greedily Compute an Elimination Order}
+The class \JClass{GreedyPermutationDecomposer} implements greedy
+permutation heuristics to compute a tree decomposition. The heuristic
+eliminates the vertex $v$ that minimizes some function $\gamma(v)$,
+while ties are broken randomly. See~\cite{bodlaender2010treewidth}
+for an overview of possible functions $\gamma$. The class implements
+six different value functions, which can be selected by the method
+\JClass{setToRun}. Experiments have shown that different functions are
+preferable on different graphs. It is, thus, worth to test different
+ones when computing a tree decomposition of a graph.
+
+To improve the quality of the found decomposition, we can do some sort
+of \emph{look-a-head}: instead of taking the vertex that minimizes
+$\gamma$, we take the vertex such the sum of the next $k$ choices
+minimizes $\gamma$. A look-a-head for $k>1$ can be set with
+\JClass{setLookAhead}. Already for $k=2$ this improves the quality of
+the heuristic on many graphs. However, increasing $k$ by one increases
+the running time by a factor of $|V|$ and, hence, the look-a-head
+should be used with care.
+
+\section{Greedily Compute an Elimination Order with Many Coins}
+The Greedy-Permutation heuristic performs very well and can be seen as
+\emph{randomized algorithm} as it breaks ties randomly.  Therefore,
+multiple runs of the algorithm produce different results and, hence,
+we can perform a stochastic search by using the heuristic multiple
+times and reporting the best result we found. As the
+Greedy-Permutation heuristic implements different algorithms, we can
+pick different algorithms in different runs. As the performance of
+these algortihms differ, we choose them with different probabilities.
+In \Jdrasil{}, this strategy is implemented by the class \JClass{StochasticGreedyPermutationDecomposer}.
+
+\section{Maximum Cardinality Search}
+The class \JClass{MaximumCardinalitySearchDecomposer} implements the
+Maximum-Cardinality Search heuristic. The heuristic order the vertices
+of $G$ from $1$ to $n$ in the following ordering: We first put a
+random vertex $v$ at position $|V|$. Then we choose the vertex $v'$
+with the most neighbors that are already placed at position $|V|-1$
+and recurse this way. Ties are broken randomly.
+
+\section{Local Search}
+The class \JClass{LocalSearchDecomposer} implements a tabu search on
+the space of elimination orders developed by Clautiaux, Moukrim,
+N{\`e}gre, and Carlier~\cite{clautiaux2004heuristic}.
+
+The algorithms expects two error parameters $r$ and $s$: the number of
+restarts and the number of steps.  To find a tree decomposition the
+algorithms starts upon a given permutation, then it will try to move a
+single vertex to improve the decomposition and do this $s$ times. If
+no vertex can be moved, a random vertex is moved and the process
+restarts. At most $r$ restarts will be performed.  At the end, the
+best found tree decomposition is returned.
 
 \chapter{Approximation}
+An approximation algorithm as the one by Robertson and Seymour can be interesting in two ways: it
+produces lower \emph{and} upper bounds at the same time, while also
+provides a guarantee on its quality. This section list the
+approximation algorithms implemented by \Jdrasil.
+
+In \Jdrasil{}, all approximation algorithms implement the interface
+\JClass{TreeDecomposer} and produce tree decompositions of quality ``Approximation''.
+
+In addition to the different implemented algorithms, there is the
+class \JClass{Approximation} which provides stand alone access to a
+combination of approximation algorithms.
+\begin{lstlisting}[language=bash]
+  ./gradlew approximation
+  ./tw-approximation
+\end{lstlisting}
+The program combines some of the implemented approximations to get the
+best from each world. In particular, it does the following:
+\begin{enumerate}
+  \item split the graph into safe components using \JClass{GraphSplitter}
+  \item reduce the graph using \JClass{GraphReducer};
+  \item computes a decomposition using \JClass{RobertsonSeymourDecomposer}.
+\end{enumerate}
+
+\section{Robertson and Seymour like Approximation}
+The class \JClass{RobertsonSeymourDecomposer} uses the standard $\Class{FPT}$ approximation algorithm for tree width based on the work of Robertson and Seymour.
+The algorithm assumes that the graph is connected and computes in time \(O(8^k k^2 \cdot n^2)\) a tree decomposition
+of width at most \(4k+4\).
+
+A detailed explanation of the algorithms can be found in many text
+books about $\Class{FPT}$, for instance~\cite{CyganFKLMPPS2015, FlumGrohe2006}.
 
 \chapter{Exact}
+At heart of \Jdrasil{} is a collection of algorithms that compute
+optimal tree decompositions. As different algorithms may be preferable
+on different graphs, the class \JClass{ExactDecomposer} selects
+between different algorithms, in particular it will:
+\begin{enumerate}
+  \item split the graph into safe components using \JClass{GraphSplitter};
+  \item reduce the graph using \JClass{GraphReducer};
+  \item solve the problem with \JClass{SATDecomposer} if a SAT solver
+    is available;
+  \item solve with \JClass{CopsAndRobber}.
+\end{enumerate}
+
+In \Jdrasil{}, all exact algorithms implement the interface
+\JClass{TreeDecomposer} and produce tree decompositions of quality ``Exact''.
+
+In addition to the different implemented algorithms, there is the
+class \JClass{Exact} which provides stand alone access the
+\JClass{ExactDecomposer} class. This class can be compiled and used with
+\begin{lstlisting}[language=bash]
+  ./gradlew exact
+  ./tw-exact
+\end{lstlisting}
+
+\section{Branch and Bound}
+The class \JClass{BranchAndBoundDecomposer} implements a classical branch and bound algorithm based on QuickBB~\cite{GogateD2004} and its successors.
+The algorithm searches through the space of elimination orders an utilizes dynamic programming,
+reducing the search space to $O(2^n)$.
+
+\section{Cops and Robber}
+A classic result of Seymour and Thomas~\cite{SeymourT1993}
+provides a connection of the tree width of the graph and the
+cops-and-robber search game. Together with an algorithm by Berarducci
+and Intrigila~\cite{BerarducciI1993} to evaluate such games in time
+$n^{O(k)}$, this yield a way to compute exact tree decompositions. In
+\Jdrasil{} the class \JClass{CopsAndRobber} implements this approach.
+
+\section{Dynamic Programming}
+The class \JClass{DynamicProgrammingDecomposer} implements exact exponential time (and exponential space)
+algorithms to compute a tree decomposition via dynamic programming.
+The algorithms are based on the work of 
+Bodlaender, Fomin, Koster, Kratsch, and Thilikos~\cite{BodlaenderFKKT2012}.
+
+\section{Naive Brute Force}
+The tree width characterization via elimination order gives a very
+simple brute force algorithm: just check all $n!$ permutations. This
+is of course only feasible for very small graphs. The approach is
+implemented by the class \JClass{BruteForceEliminationOrderDecomposer}.
+
+\section{Using a SAT Solver}
+A very common (theoretical and practical) approach to solve intractable
+problems is to first represent them as \emph{constraint satisfaction
+  problems} (CSP) and then solve those problems via specialized solvers. The
+most widely used solvers are SAT solvers that work on Boolean
+formulas.
+
+\Jdrasil{} provides the classes \JClass{BaseEncoder} and
+\JClass{ImprovedEncoder} to encode the problem of finding an optimal
+tree decomposition into a logic formula. The class
+\JClass{SATDecomposer} constructs such formulas, solves them using a
+SAT solver, and extracts the corresponding tree decomposition.
+
+The class \JClass{SATDecomposer} only works if a SAT solver is
+installed as upgrade, see Section~\ref{upgrade:sat} for details.
 
 \part{Upgrades}\label{part:upgrades}
 
@@ -672,12 +1016,27 @@ functionality of \Jdrasil, but will provide tools \emph{for} \Jdrasil\
 such that it can execute its functionality faster.
 
 The default location of upgrades for \Jdrasil\ is the folder
-\file{upgrades} next to \file{jdrasil.jar}. Since \Jdrasil\ comes
+\file{build/upgrades/}. Since \Jdrasil\ comes
 without any upgrade, this folder, at default, does not contain
-much. However, the \file{Makefile} of \Jdrasil\ provides some targets
+much. However, the gradle file of \Jdrasil\ provides some targets
 to obtain upgrades.
+\begin{center}
+\vfill
+\fbox{
+  \begin{minipage}{0.75\textwidth}
+  \vspace{1ex}
+  ~\hfill\textcolor{jdrasil.alert}{Licence Warning}\hfill~
+  \vspace{0.5ex}
 
-\chapter{Boolean Satisfiability}
+  While \Jdrasil\ stands under the open MIT licence, the third party
+  software installed through upgrades may not. Whenever we install an
+  upgrade, we may have to restrict the licence. Please read the
+  licence of used third party software before you install an upgrade.
+  \end{minipage}
+}
+\vfill
+\end{center}
+\chapter{Boolean Satisfiability}\label{upgrade:sat}
 The boolean satisfiablity problem \Lang{SAT} is the most canonical
 $\Class{NP}$-complete problem, and ``simply'' asks if a boolean
 formula in CNF has a satisfying model. Many $\Class{NP}$-complete
@@ -692,8 +1051,7 @@ SAT solver can solve hard problems on many instances very quickly.
 The power of SAT solver makes it interesting to use them while
 computing a tree decomposition. Equipped with a SAT solver, \Jdrasil\
 can directly encode the problem of finding a tree decomposition (or
-more precisely, an elimination order) into a $\Lang{SAT}$-formula. See
-section~\ref{???} for more details. On the other hand, \Jdrasil\ can
+more precisely, an elimination order) into a $\Lang{SAT}$-formula. On the other hand, \Jdrasil\ can
 also use the SAT solver to solve different subproblems while computing
 the tree decomposition. For instance, if \Jdrasil\ computes an
 elimination order, it can always put a clique of the graph at the
@@ -988,12 +1346,19 @@ loaded upgrades), the method \JMethod{init()} will return the String
 \subsection{Installation}
 To use SAT4J in \Jdrasil, it is sufficient to download the core
 library\footnote{\url{http://forge.objectweb.org/project/showfiles.php?group_id=228}}.
-We can perform this step automatically with \lstinline{make upgrade-sat4j}.
-
+We can perform this step automatically with:
+\begin{lstlisting}[language=bash]
+  ./gradlew upgrade_sat4j
+\end{lstlisting}
 \subsection{Usage}
 Just add the SAT4J core library to the classpath:
 \begin{lstlisting}
-  java -cp bin:upgrades/org.sat4j.core.jar jdrasil.Exact
+  java -cp bin:build/upgrades/org.sat4j.core.jar jdrasil.Exact
+\end{lstlisting}
+Or use one of \Jdrasil's start scripts, which automatically look for
+upgrades in these locations:
+\begin{lstlisting}
+  ./tw-exact
 \end{lstlisting}
 Of course, the SAT4J library can be stored at another location as
 well. Other then that, just work with the class \JClass{jdrasil.sat.Formula}
@@ -1039,9 +1404,9 @@ related to IPASIR.
 
 The corresponding C interface of \JClass{jdrasil.sat.NativeSATSolver} can be found
 in the header file \file{jdrasil_sat_NativeSATSolver.h}, which is
-stored in \file{upgrades/ipasir}.\note{We can always create this file with
-\lstinline[basicstyle=\footnotesize\codefamily]{make cinterface}} The
-corresponding C++ implementation
+located in the corresponding subproject folder at \file{subprojects/upgrades/ipasir/}.\note{We can always create this file with
+\lstinline[basicstyle=\footnotesize\codefamily]{./gradlew cinterface}} The
+corresponding C/C++ implementation
 \file{jdrasil_sat_NativeSATSolver.cpp} implements these methods and
 maps them against \file{ipasir.h}. This implementation takes care of
 keeping \Jdrasil\ and the actual solver in sync, allowing \Jdrasil\ to
@@ -1057,14 +1422,26 @@ operating system,
 \file{libjdrasil_sat_NativeSATSolver.dylib}. In order to do so, we
 have to link against an exiting implementation of an IPASIR solver.
 
-In \file{upgrades/ipasir} there is an example \file{Makefile} that compiles
-C++-file under the assumption that there
-is an library \file{libipasirsolver.dylib}.
+In \file{subprojects/upgrades/ipasir} there is a \file{Makefile} that
+compiles the C++-file under the assumption that there is an library
+\file{libipasirsolver.dylib} in the same folder. This library should
+implement the ipasir interface with an actual SAT solver.
 
-\todo{There should be make targets to download and compile (platform generic) some
-  predefined native solvers (from an alternative git-repo. For
-  instance lingeling, picosat, glucose}
+\emph{Using Gradle:} To install a custom IPASIR solver, place a IPASIR compatible
+implementation called \file{libipasirsolver.dylib} in
+\file{subprojects/upgrades/ipasir} and run
+\begin{lstlisting}[language=bash]
+  ./gradlew upgrade_ipasir
+\end{lstlisting}
+in the root folder of \Jdrasil.
 
+\Jdrasil\ is also shipped with two default IPASIR compatible SAT solvers:
+gluccose\footnote{\url{www.labri.fr/perso/lsimon/glucose/}} and lingeling\footnote{\url{www.fmv.jku.at/lingeling/}}. To upgrade \Jdrasil\ with these state of the
+art solvers, use the following commands:
+\begin{lstlisting}[language=bash]
+  ./gradlew upgrade_gluccose
+  ./gradlew upgrade_lingeling
+\end{lstlisting}
 \subsection{Usage}
 Once we have compiled \Jdrasil's IPASIR-JNI interface against an
 IPASIR solver, i.\,e., once we have an library called
@@ -1073,13 +1450,18 @@ IPASIR solver, i.\,e., once we have an library called
 its library path (not to be confused with its class path), so the
 following call will allows \Jdrasil\ to use the solver:
 \begin{lstlisting}[language=bash]
-  java -cp bin -Djava.library.path=upgrades/ipasir jdrasil.Exact
+  java -cp bin -Djava.library.path=build/upgrades jdrasil.Exact
 \end{lstlisting}
 Of course, the path can be set to any location, wherever the upgrade
 is stored. Note that this only sets the path to location at which
 \Jdrasil\ searches the upgrade. If, however, the upgrade is compiled
 against other dynamic libraries, these libraries are searched in the
 default system depend way (and not in the above specified path).
+
+Alternatively, we can use one of \Jdrasil's premade runscripts:
+\begin{lstlisting}[language=bash]
+  ./tw-exact
+\end{lstlisting}
 
 
 \bibliography{manual}

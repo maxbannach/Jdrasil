@@ -67,7 +67,6 @@ task cinterface(type: Exec, description: "Building Jdrasil's C-interface (needed
 
 /** 
  * Build the native ipasir solver interface.
- * TODO: replace the static make by a dynamic (platform independent) gradle build
  */
 task upgrade_ipasir {
   doLast {
@@ -86,5 +85,37 @@ task upgrade_ipasir {
     delete {
       delete "${ipasirDir}/libjdrasil_sat_NativeSATSolver.dylib"
     }
+  }
+}
+
+/**
+ * Build the glucose SAT solver
+ */
+task upgrade_gluccose {
+  doLast {
+
+    // compile glucose
+    exec {
+      workingDir "${ipasirDir}/ipasirglucose/"
+      commandLine "make"
+    }
+
+    upgrade_ipasir.execute()
+  }
+}
+
+/**
+ * Build the lingeling SAT solver
+ */
+task upgrade_lingeling {
+  doLast {
+
+    // compile glucose
+    exec {
+      workingDir "${ipasirDir}/ipasirlingeling/"
+      commandLine "make"
+    }
+
+    upgrade_ipasir.execute()
   }
 }
