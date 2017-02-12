@@ -16,11 +16,11 @@ To build Jdrasil, simply invoke the gradle build script:
 cd Jdrasil
 ./gradlew build
 ```
-There is also a bat-file for windows systems. After the script is finished, an executable jar will be placed in 
+There is also a bat-file for windows systems. After the script is finished, an executable jar will be placed in: 
 ```
 build/jars/Jdrasil.jar
 ```
-The jar can be used as library or as standalone
+The jar can be used as library or as standalone:
 ```
 java −jar build/jars/Jdrasil.jar
 java −cp build/jars/Jdrasil.jar jdrasil.Exact
