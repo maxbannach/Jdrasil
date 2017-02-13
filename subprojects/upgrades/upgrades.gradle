@@ -91,7 +91,7 @@ task upgrade_ipasir {
 /**
  * Build the glucose SAT solver
  */
-task upgrade_gluccose {
+task upgrade_glucose {
   doLast {
 
     // compile glucose
@@ -110,7 +110,7 @@ task upgrade_gluccose {
 task upgrade_lingeling {
   doLast {
 
-    // compile glucose
+    // compile lingeling
     exec {
       workingDir "${ipasirDir}/ipasirlingeling/"
       commandLine "make"

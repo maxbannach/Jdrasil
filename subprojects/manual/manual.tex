@@ -87,7 +87,7 @@ library: simply add the \texttt{.jar} to the classpath of the desired project.
 \Jdrasil\ uses Gradle\footnote{\url{www.gradle.org}} as building
 tool. Thereby it takes advantage of the Gradle wrapper: 
 in order to build \Jdrasil\ the only requirements are an up-to-date
-\texttt{JDK} and an active internet connection. The Gradle wrapper
+\texttt{JDK}\footnote{\Jdrasil needs at least Java $8$.} and an active internet connection. The Gradle wrapper
 will download everything needed by itself.
 
 To get started, we need the latest version of \Jdrasil\ and switch to
@@ -166,7 +166,7 @@ section~\ref{part:upgrades}.
 
 All upgrades have in common, that \Jdrasil\ uses the following
 convention to build and use them. To $\{\text{download}, \text{build},
-\text{install}\}$ (depending on the upgrade) upgrade $x$, we can
+\text{install}\}$ (depending on the upgrade) an upgrade $x$, we can
 execute the following command:
 \begin{lstlisting}[language=bash]
   ./gradlew upgrade_x
@@ -186,8 +186,8 @@ or (if the upgrade is a native library):
 
 \section{Building Startscripts (not only ) for PACE}
 As \Jdrasil\ was developed for the \emph{Parameterized Algorithms and
-  Computational Experiments Challenge} (PACE) in the first point, it
-naturally provides the by PACE required interfaces. To build them, we
+  Computational Experiments Challenge} (PACE) \cite{pace} in the first place, it
+naturally provides the interfaces required by PACE. To build them, we
 can simply use:
 \begin{lstlisting}[language=bash]
   ./gradlew pace
@@ -195,9 +195,9 @@ can simply use:
 This will, if not already done, build the Java files and will place
 two shell scripts in the root directory: \texttt{tw-exact} and
 \texttt{tw-heuristic}. The first script will execute \Jdrasil\ in
-exact mode (meaning it reads an graph from stdin , computes an optimal
+exact mode (meaning it reads an graph from stdin, computes an optimal
 decomposition, and prints it on stdout); while the second script runs
-\Jdrasil\ in heuristic mode, meaning it will run in an infinity loop
+\Jdrasil\ in heuristic mode, meaning it will run in an infinite loop
 trying to heuristically find a good decomposition~–~the decomposition
 will be printed if a SIGTERM is received. Example usage is:
 \begin{lstlisting}[language=bash]
@@ -248,7 +248,7 @@ The work horse of \Jdrasil's graph engine is the class
 that were made during the development of this class, which grant some
 advantages in the context of computing tree decompositions, but which
 may result in disadvantages in other algorithmic tasks. We will
-discuss the implementation details in the following. 
+discuss these implementation details in the following. 
 
 An object of the \JClass{Graph} class represents a directed graph
 $G=(V, E)$ where $V$ is a set of \emph{arbitrary objects}, and
@@ -267,7 +267,7 @@ the \JClass{Graph} represents a directed graph where
 $V$ is a set of arbitrary objects.  Consequently, there is no vertex
 or node class in \Jdrasil, instead, the \JClass{Graph} class is
 generic and \emph{any class} can be used as vertex type~–~the only
-restriction is that the class has a natural order, i.\,e., is
+restriction is that the class has a natural order, i.\,e., it is
 \emph{comparable}. For instance, the following graphs are of the types
 \JClass{Integer} and \JClass{Character}, respectively.
 \begin{center}
@@ -316,7 +316,7 @@ see Chapter~\ref{chapter:treedecompositions} for more details.
 The second part we mentioned earlier is that we simply consider $E$ as
 $E\subseteq V\times V$, and in fact, \Jdrasil\ does not have a class
 representing an edge. The \JClass{Graph} class only represents
-adjacency information about its stored vertices. This makes the work
+adjacency information about its stored vertices. This makes working
 with the \JClass{Graph} class more natural in many situations and
 keeps algorithms simple. In the few cases where an edge class would be
 useful, for instance if we work with weighted graphs, we interpreted
@@ -331,7 +331,8 @@ time $O(|V|+|E|)$. Furthermore, the edge relation is stored in an hash
 map, allowing us to perform adjacency tests in $O(1)$.
 
 Adding vertices to the graph is performed in $O(1)$ as well, adding an
-edge $(u,v)$ costs $O(\delta(v))$.  Adding directed edges actually is
+edge $(u,v)$ costs $O(\delta(v))$\footnote{$\delta(v)$ denotes the
+  \emph{degree} of $v$: the number of nodes connected to $v$.}.  Adding directed edges actually is
 (practically) faster, as this realized by array manipulation. When an
 undirected edge is added, however, this time bound is strict, as some
 additional information about the neighborhood is gathered. This
@@ -383,7 +384,7 @@ graph:
 \end{lstlisting}
 Removing an undirected edge will remove both directed edges, even if
 only one of them is present (i.\,e., if the edge is actually
-directed). Concretely deleting a directed edge can be done by:
+directed). Concretely, deleting a directed edge can be done by:
 \begin{lstlisting}[language=Java]
   // directed version
   myGraph.removeDirectedEdge(1, 2);
@@ -392,7 +393,7 @@ directed). Concretely deleting a directed edge can be done by:
 Many graph algorithms have to iterate over the vertices and edges of
 the graph. The \JClass{Graph} implements an iterator for its vertices,
 so to iterate over the vertices we can simply do (here, the graph has
-vertices of type integer):
+vertices of type \JClass{Integer}):
 \begin{lstlisting}[language=Java]
   for (Integer v : myGraph) {
     // do something with v
@@ -436,14 +437,15 @@ are:
     revert the contraction.
  \item\lstinline[language=Java]{deContract(ContractionInformation info)}: Will revert the contraction of an edge.
   \item\lstinline[language=Java]{eliminateVertex(T v)}: Eliminating
-    a vertex $v$ will a) turn $N(v)$ into an clique, and b) remove $v$
+    a vertex $v$ will a) turn $N(v)$\footnote{$N(v)$ denotes the
+      \emph{neighbourhood} of $v$: all nodes connected to $v$.} into a clique, and b) remove $v$
     from the graph. This method will return an
     \JClass{EliminationInformation} object, which can be used to
     revert the elimination.
   \item\lstinline[language=Java]{deEliminateVertex(EliminationInformation info)}:
  Will revert the elimination of a vertex.
  \item\lstinline[language=Java]{getSimplicialVertex(Set<T> forbidden)}: Get an arbitrary simplicial vertex, that is not
-   contained in the forbidden set. A simplicial vertex that has a
+   contained in the forbidden set. A simplicial vertex is a vertex that has a
    clique as neighborhood. As required information are already
    gathered during the construction of the graph, this method runs in
    $O(|V|)$.
@@ -501,7 +503,9 @@ decomposition, to the standard output, we can use the following code:
   GraphWriter.writeTreeDecomposition(decomposition);
 \end{lstlisting}
 Additionally, \Jdrasil\ also provides methods to write graphs and tree
-decomposition directly into Ti\emph{k}Z code, which is very useful for debugging:
+decomposition directly into Ti\emph{k}Z code, which is very useful for
+debugging, especially combined with the \emph{graph drawing}
+capabilities of Ti\emph{k}Z:
 \begin{lstlisting}[language=Java]
   // write a graph to TikZ
   GraphWriter.writeTikz(myGraph);
@@ -512,7 +516,7 @@ decomposition directly into Ti\emph{k}Z code, which is very useful for debugging
 
 \chapter{Graph Invariants}
 A graph property is a class of graphs that is closed under
-isomorphism. A graph invariant is a function that maps isomorphic
+isomorphisms. A graph invariant is a function that maps isomorphic
 graphs to the same value. Examples for graph invariants are ``number of
 vertices'', or ``size of the minimum vertex-cover''. An example of a
 graph property could be ``contains a triangle''. In this sense, we can
@@ -558,7 +562,8 @@ solver is available, a maximal clique will be computed. Otherwise, a
 greedy strategy is used.
 
 \section{Twin Decomposition}
-The class \JClass{TwinDecomposition} computes a twin decomposition of the graph. Two vertices $u$, $v$ are
+The class \JClass{TwinDecomposition} computes a twin decomposition of
+the graph. Two vertices $u$ and $v$ are
 called twins if we have $N(u)=N(v)$. This relation defines an
 equivalence relation on the graph, which we call twin decomposition.
 
@@ -585,7 +590,7 @@ Since \Jdrasil{} is a library for computing tree decompositions, a
 well thought through representation of such decompositions is
 required. Recall the formal definition of a tree decomposition: A
 \emph{tree decomposition} of a graph $G$ is a pair $(T,\iota)$
-consisting of a tree $T$ and a mapping $\iota$ from nodes of $T$ to
+consists of a tree $T$ and a mapping $\iota$ from nodes of $T$ to
 subsets of vertices of $G$ (called \emph{bags}), such that:
 \begin{itemize}
   \item $\forall x\in V(G)$ there is a node $n\in V(T)$ with $x\in\iota(n)$;
@@ -668,7 +673,7 @@ such decompositions, or assist other algorithms in doing so. In
 particular, the implemented algorithms (that are related to the
 computation of tree decompositions) are partitioned into five types:
 \emph{Preprocessing} algorithms, algorithms that compute
-\emph{lowerbounds}, \emph{heuristics}, \emph{approximation}
+\emph{lowerbounds}, \emph{heuristics}/\emph{upperbounds}, \emph{approximation}
 algorithms, and \emph{exact} algorithms.
 
 \chapter{Preprocessing}
@@ -712,7 +717,7 @@ There are many reduction rules for tree width known in the
 literature, see for instance~\cite{DowneyF2013}. A reduction rule thereby is a function that removes (in
 polynomial time) a vertex from the graph and creates a bag of the
 tree decomposition such that this bag can be glued to an optimal
-tree decomposition of the remaining graph~–~yielding to an optimal
+tree decomposition of the remaining graph~–~yielding  an optimal
 tree decomposition. For graphs of tree width at most 3, these rules
 produce an optimal decomposition in polynomial time.  For graphs with
 higher tree width, the rules can only be applied up to a certain
@@ -721,7 +726,7 @@ point. From this point on, another algorithm has to be used.
 In \Jdrasil, the class \JClass{GraphReducer} implements several
 reduction rules and can be used as preprocessing for any other
 algorithm. As mentioned before, this class will (automatically)
-compute optimal tree decompositions of graphs of tree width at most
+compute optimal tree decompositions of graphs with tree width at most
 $3$. If this class fully reduces the input graph, it will generate an
 empty set of graphs. So it is always save to simply loop over the
 generated graphs, without caring about this special case.
@@ -750,7 +755,9 @@ with tree decompositions for all components produced, it will generate
 a tree decomposition for the original graph.
 
 \section{Contracting the Graph}
-It is a well known fact that tree width is closed under taking minors,
+It is a well known fact that tree width is closed under taking
+minors\footnote{A \emph{minor} of $G$ can be formed by deleting edges
+  and vertices and contracting edges.},
 i.\,e., if \(H\) is a minor of \(G\), then \(\mathrm{tw}(H)\leq
 \mathrm{tw}(G)\). Many algorithms that compute tree decompositions use
 this fact in some way.
@@ -812,7 +819,7 @@ implemented lower bound algorithms. The implementation is based on~\cite{bodlean
 
 \chapter{Heuristics}
 Since computing the exact tree width of a graph is
-$\Class{NP}$-complete, there are many graphs for which we are not yet
+$\Class{NP}$-hard, there are many graphs for which we are not yet
 able to compute an optimal tree decomposition. However, it turns out
 that there are very powerful heuristics for this problem.
 
@@ -852,12 +859,12 @@ preferable on different graphs. It is, thus, worth to test different
 value function when we compute a tree decomposition of a graph.
 
 To improve the quality of the found decomposition, we can do some sort
-of \emph{look-a-head}: instead of taking the vertex that minimizes
+of \emph{look-ahead}: instead of taking the vertex that minimizes
 $\gamma$, we take the vertex such that the sum of the next $k$ choices
-minimizes $\gamma$. A look-a-head for $k>1$ can be set with
+minimizes $\gamma$. A look-ahead for $k>1$ can be set with
 \JClass{setLookAhead}. Already for $k=2$ this improves the quality of
 the heuristic on many graphs. However, increasing $k$ by one increases
-the running time by a factor of $|V|$ and, hence, the look-a-head
+the running time by a factor of $|V|$ and, hence, the look-ahead
 should be used with care.
 
 \section{Greedily Compute an Elimination Order with Many Coins}
@@ -917,7 +924,9 @@ best from each world. In particular, it does the following:
 \end{enumerate}
 
 \section{Robertson and Seymour like Approximation}
-The class \JClass{RobertsonSeymourDecomposer} uses the standard $\Class{FPT}$ approximation algorithm for tree width based on the work of Robertson and Seymour.
+The class \JClass{RobertsonSeymourDecomposer} uses the standard
+$\Class{FPT}$\footnote{$\Class{FPT}$ stands for \emph{fixed-parameter
+    tractable}.} approximation algorithm for tree width based on the work of Robertson and Seymour.
 The algorithm assumes that the graph is connected and computes in time \(O(8^k k^2 \cdot n^2)\) a tree decomposition
 of width at most \(4k+4\).
 
@@ -958,7 +967,7 @@ A classic result of Seymour and Thomas~\cite{SeymourT1993}
 provides a connection of the tree width of the graph and the
 cops-and-robber search game. Together with an algorithm by Berarducci
 and Intrigila~\cite{BerarducciI1993} to evaluate such games in time
-$n^{O(k)}$, this yields a way to compute exact tree decompositions. In
+$n^{O(tw(G))}$, this yields a way to compute exact tree decompositions. In
 \Jdrasil{} the class \JClass{CopsAndRobber} implements this approach.
 
 \section{Dynamic Programming}
@@ -1048,7 +1057,7 @@ particular, there are annual challenges\footnote{\url{http://baldur.iti.kit.edu/
 find the fastest solver. The result of this effort is that modern
 SAT solver can solve hard problems on many instances very quickly.
 
-The power of SAT solver makes it interesting to use them while
+The power of SAT solvers makes it interesting to use them while
 computing a tree decomposition. Equipped with a SAT solver, \Jdrasil\
 can directly encode the problem of finding a tree decomposition (or
 more precisely, an elimination order) into a $\Lang{SAT}$-formula. On the other hand, \Jdrasil\ can
@@ -1057,7 +1066,7 @@ the tree decomposition. For instance, if \Jdrasil\ computes an
 elimination order, it can always put a clique of the graph at the
 end of the permutation. If the clique is large, this can reduce the
 search space dramatically. However, finding large cliques in a graph is
-$\Class{NP}$-hard as well. \Jdrasil\ can use a SAT solver to find the
+$\Class{NP}$-hard as well and \Jdrasil\ will thus use a SAT solver to find the
 largest clique in the graph.
 
 \section{The Formula Class}\label{section:satFormula}
@@ -1069,7 +1078,7 @@ and manage logic formulas.
 \subsection{Specifying a Formula}
 A formula $\phi$ is always represented in CNF and in the classic
 DIMACS format, that is, variables are positive integers
-$x\in\mathbb{N}$, and negated variables are simply stored $-x$. We
+$x\in\mathbb{N}$, and negated variables are simply stored as $-x$. We
 can specify a formula by adding clauses to it, for instances
 $\phi=(x_1\vee\neg x_2\vee x_3)\wedge(x_2\vee\neg x_3)\wedge x_3$ can
 be created as follows:
@@ -1436,10 +1445,10 @@ implementation called \file{libipasirsolver.dylib} in
 in the root folder of \Jdrasil.
 
 \Jdrasil\ is also shipped with two default IPASIR compatible SAT solvers:
-gluccose\footnote{\url{www.labri.fr/perso/lsimon/glucose/}} and lingeling\footnote{\url{www.fmv.jku.at/lingeling/}}. To upgrade \Jdrasil\ with these state of the
+glucose\footnote{\url{www.labri.fr/perso/lsimon/glucose/}} and lingeling\footnote{\url{www.fmv.jku.at/lingeling/}}. To upgrade \Jdrasil\ with these state of the
 art solvers, use the following commands:
 \begin{lstlisting}[language=bash]
-  ./gradlew upgrade_gluccose
+  ./gradlew upgrade_glucose
   ./gradlew upgrade_lingeling
 \end{lstlisting}
 \subsection{Usage}
