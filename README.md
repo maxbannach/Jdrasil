@@ -1,33 +1,52 @@
 # Jdrasil
-A Modular Tool to Compute Tree Decompositions
+A Modular Library for Computing Tree Decompositions
 
 Authors: [Max Bannach](http://www.tcs.uni-luebeck.de/de/mitarbeiter/bannach/), [Sebastian Berndt](http://www.tcs.uni-luebeck.de/de/mitarbeiter/berndt/), and [Thorsten Ehlers](http://www.zs.informatik.uni-kiel.de/de/mitarbeiter)
 
 # About
-Jdrasil is a tool to compute tree decompositions of simple, undirected graphs. It was developed for the first Parameterized Algorithms and Computational Experiments Challenge [(PACE)](https://pacechallenge.wordpress.com). It provides exact sequential and parallel, as well as heuristic algorithms.
+Jdrasil is a library to compute tree decompositions of simple, undirected graphs. It was developed for the first Parameterized Algorithms and Computational Experiments Challenge [(PACE)](https://pacechallenge.wordpress.com). It provides exact sequential and parallel, as well as heuristic, and approximation algorithms.
 
 Jdrasil is build in a very modular fashion. This allows researchers to simply add new algorithms, heuristics, or preprocessing routines, which can then be combined in any way.
 
 # Installation
-For an installation that fits the PACE requirements change the path to
-the java compiler, the c++ compiler, the java directory containing `jni.h` and the java
-executable in the first four lines of `Makefile`.
-Afterwards you can simply execute the following:
-```
-cd jdrasil
-make
-```
-The programs `tw-exact`, `tw-heuristic`, `tw-exact-parallel`, `tw-heuristic-parallel` should now work. You can use them as follows:
-```
-tw-exact < graph.gr
-tw-exact -s seed < graph.gr
-```
-For a description of the graph file format, see the [PACE website](https://pacechallenge.wordpress.com/track-a-treewidth/).
+Jdrasil uses [Gradle](https://gradle.org) as build tool. Thanks to the gradle wrapper, nothing extra has to be installed in order to install Jdrasil.
 
-# Maven
-If you wish to use Jdrasil as Maven project, you have to build the C++ dependecies first.
+To build Jdrasil, simply invoke the gradle build script:
 ```
-make glucose
-make pblib
+cd Jdrasil
+./gradlew build
 ```
-Now you can do the "usual Maven stuff" in the folder containing `pom.xml`. test
+There is also a bat-file for windows systems. After the script is finished, an executable jar will be placed in: 
+```
+build/jars/Jdrasil.jar
+```
+The jar can be used as library or as standalone:
+```
+java −jar build/jars/Jdrasil.jar
+java −cp build/jars/Jdrasil.jar jdrasil.Exact
+java −cp build/jars/Jdrasil.jar jdrasil.Heuristic
+java −cp build/jars/Jdrasil.jar jdrasil.Approximation
+```
+
+## Building Start Scripts
+Jdrasil comes with PACE like starting scripts: `tw-exact`, `tw-heuristic`, and `tw-approximation`. They can be build with gradle:
+```
+./gradlew exact
+./gradlew heuristic
+./gradlew approximation
+```
+Use the scripts as defined on the [(PACE)](https://pacechallenge.wordpress.com) website:
+```
+./tw−exact −s 42 < myGraph.gr > myGraph.td
+./tw−heuristic −s 42 < myHugeGraph.gr > myHugeGraph.td
+```
+
+## Build the Documentation
+Jdrasil comes with a manual and JavaDocs. To build the manual, an up-to-date LuaLaTeX installation is required:
+```
+./gradlew manual
+./gradlew javadoc
+```
+The manual will be placed in `build/docs/manual/manual.pdf` and the JavaDocs in `build/docs/javadoc`.
+
+
