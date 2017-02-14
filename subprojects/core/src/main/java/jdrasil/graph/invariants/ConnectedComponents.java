@@ -75,6 +75,7 @@ public class ConnectedComponents<T extends Comparable<T>> extends Invariant<T, I
 	 */
 	@Override
 	protected Integer computeValue() {		
+		if ( getModel().keySet().size() == 0 ) return 0;
 		return getModel().values().stream().max( (x,y) -> x-y ).get();
 	}
 

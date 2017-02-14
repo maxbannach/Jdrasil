@@ -59,7 +59,8 @@ public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<
 	public Preprocessor(Graph<T> graph) {
 		this.graph = graph;
 		this.processedGraphs = computeGraphs();
-		this.treeDecompositions = new HashSet<>();		
+		this.treeDecompositions = new HashSet<>();
+		this.treeDecomposition = new TreeDecomposition<T>(graph);
 	}
 	
 	/**
