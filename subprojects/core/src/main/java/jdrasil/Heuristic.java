@@ -119,6 +119,9 @@ public class Heuristic implements sun.misc.SignalHandler {
                 tmp.improveDecomposition();
                 synchronized (this) { this.decomposition = tmp; }
 
+                // we may skip the local search phase
+                if (JdrasilProperties.containsKey("instant")) break;
+
                 LOG.info("Starting local search phase");
                 localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE,30, greedyPermutationDecomposer.getPermutation());
                 tmp = localSearchDecomposer.call();

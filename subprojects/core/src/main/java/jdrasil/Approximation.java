@@ -29,6 +29,8 @@ import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.io.IOException;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Max Bannach
@@ -61,15 +63,21 @@ public class Approximation {
 
             /* compute an approximation of the tree-decomposition */
             GraphSplitter<Integer> splitter = new GraphSplitter<>(input);
-            for (Graph<Integer> D : splitter) {
-                // reduce the graph
+
+            /* iterate over the connected components, this may happen in parallel */
+            splitter.stream().forEach( D -> {
                 GraphReducer<Integer> reducer = new GraphReducer<>(D);
                 for (Graph<Integer> reduced : reducer) {
-                    TreeDecomposition<Integer> td = new RobertsonSeymourDecomposer<>(reduced).call();
+                    TreeDecomposition<Integer> td = null;
+                    try {
+                        td = new RobertsonSeymourDecomposer<>(reduced).call();
+                    } catch (Exception e) {
+                       LOG.warning("Robertson Seymour failed with unknown error");
+                    }
                     reducer.addbackTreeDecomposition(td);
                 }
                 splitter.addbackTreeDecomposition(reducer.getTreeDecomposition());
-            }
+            });
             decomposition = splitter.getTreeDecomposition();
 
             long tend = System.nanoTime();

@@ -19,6 +19,7 @@
 package jdrasil;
 
 import jdrasil.algorithms.ExactDecomposer;
+import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;

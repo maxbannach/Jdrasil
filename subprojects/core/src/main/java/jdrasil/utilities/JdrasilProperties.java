@@ -35,7 +35,7 @@ public class JdrasilProperties {
     private static Properties properties;
 
     /** Version of the program. */
-    private static final float VERSION = 1f;
+    private static final float VERSION = 0.1f;
 
     /** Static constructor for the properties object. */
     static {
@@ -128,9 +128,8 @@ public class JdrasilProperties {
         System.out.println("  -h : print this dialog");
         System.out.println("  -s <seed> : set a random seed");
         System.out.println("  -parallel : enable parallel processing");
-        System.out.println("  -heuristic : compute a heuristic solution");
+        System.out.println("  -instant : computes solution directly (only heuristic mode)");
         System.out.println("  -log : enable log output");
-        System.out.println("  -tikz : enable tikz output");
     }
 
 }

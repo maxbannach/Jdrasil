@@ -81,13 +81,97 @@ approximation mode:
   java -cp Jdrasil.jar jdrasil.Heuristic
   java -cp Jdrasil.jar jdrasil.Approximation
 \end{lstlisting}
+Note that the heuristic mode tries to improve the solution
+until a \texttt{SIGTERM} is received, i.\,e., \Jdrasil\ has to be stopped
+manually in this mode. 
+
 With the same \texttt{.jar} file, \Jdrasil\ can also be used as
-library: simply add the \texttt{.jar} to the classpath of the desired project.
+library: simply add the \texttt{.jar} to the classpath of the desired
+project. For instance, the following simple program uses \Jdrasil\ to
+compute an exact tree decomposition:
+\begin{lstlisting}[language=Java]
+  import jdrasil.graph.*;
+  import jdrasil.algorithms.*;
+
+  public class Main {
+    public static void main(String[] args) {
+      // create your own graph
+      Graph<Integer> G = GraphFactory.emptyGraph();
+      for (int v = 1; v <= 5; v++) { G.addVertex(v); }
+      G.addEdge(1, 2);
+      G.addEdge(1, 4);
+      G.addEdge(2, 3);
+      G.addEdge(2, 4);
+      G.addEdge(4, 5);
+
+      // output graph in PACE format
+      System.out.println(G);
+      
+      // compute exact decomposition
+      TreeDecomposition<Integer> td = null;
+      try {
+        td = new ExactDecomposer<Integer>(G).call();
+      } catch (Exception e) {
+        System.out.println("something went wrong");
+      }
+
+      // ouput tree decomposition in PACE format
+      System.out.println(td);
+    }
+  }
+\end{lstlisting}
+If the program is stored in a file \file{Main.java}, it can be
+compiled and used with the following commands:
+\begin{lstlisting}[language=bash]
+  javac -cp Jdrasil.jar: Main.java
+  java -cp Jdrasil.jar: Main
+\end{lstlisting}
+\section{Program Arguments}
+The behavior of \Jdrasil\ can be influenced by program arguments. The
+following tables provides an overview of all available arguments:
+\begin{center}
+  \def\check{\textcolor{jdrasil.fg}{\checkmark}}
+  \begin{longtable}{lp{5cm}ccc}
+    \toprule
+    Argument & Effect & Exact & Heuristic & Approximation\\
+    \cmidrule(lr){1-5}
+    -h & prints a help dialog & \check & \check & \check \\
+    %
+    -s <seed> & seeds the RNG & \check & \check & \check\\
+    % 
+    -parallel & enables parallel processing (preprocessing streams will
+    be parallel, i.\,e., connected components are handled in parallel)
+    & \check & \check &
+    \check\\
+    % 
+    -instant & heuristic will output a solution as fast as possible &
+    & \check & \\
+    %
+    -log & prints log information during computation & \check & \check
+    & \check \\
+    \bottomrule
+  \end{longtable}
+\end{center}
+Some of the arguments may only make sense if \Jdrasil\ is used as
+stand alone program, others may also be useful in an scenario where
+\Jdrasil\ is used as a library. For instance, the argument ``-parallel''
+modifes some algorithms to run in parallel, this is useful in other
+applications as well. \Jdrasil\ handles such properties in the class
+\JClass{JdrasilProperties} and to enable an property ``-x'' (for
+instance ``-parallel'') we can do from source:
+\begin{lstlisting}[language=Java]
+  // set value of property "x" to "some value"
+  JdrasilProperties.setProperty("x", "some value");
+  // just add property "parallel"
+  JdrasilProperties.setProperty("parallel", "");
+\end{lstlisting}
+Note that some properties (as the random seed) need an actual value,
+this is the second argument in the example code above.
 \section{Build \Jdrasil\ from Source}
 \Jdrasil\ uses Gradle\footnote{\url{www.gradle.org}} as building
 tool. Thereby it takes advantage of the Gradle wrapper: 
 in order to build \Jdrasil\ the only requirements are an up-to-date
-\texttt{JDK}\footnote{\Jdrasil needs at least Java $8$.} and an active internet connection. The Gradle wrapper
+\texttt{JDK}\footnote{\Jdrasil\ needs at least Java $8$.} and an active internet connection. The Gradle wrapper
 will download everything needed by itself.
 
 To get started, we need the latest version of \Jdrasil\ and switch to
@@ -183,7 +267,8 @@ or (if the upgrade is a native library):
 \begin{lstlisting}[language=bash]
   java -Djava.library.path=build/upgrades -jar build/jars/Jdrasil.jar
 \end{lstlisting}
-
+The start scripts of \Jdrasil\ (see next section) will automatically look for upgrades in
+these locations.
 \section{Building Startscripts (not only ) for PACE}
 As \Jdrasil\ was developed for the \emph{Parameterized Algorithms and
   Computational Experiments Challenge} (PACE) \cite{pace} in the first place, it
@@ -711,6 +796,31 @@ components, etc.) we can do the following:
   // we can now access the final decomposition of the original graph
   splitter.getTreeDecomposition();
 \end{lstlisting}
+
+The \JClass{Preprocessor} class also supports the Stream API of Java
+8, i.\,e., the above example can also be formulated as follows:
+\begin{lstlisting}[language=Java]
+  
+  // a) generate instance of preprocessing algorithm
+  GraphSplitter<T> splitter = new GraphSplitter<>(graph);
+
+  // b) iterate over all generated graphs (may be parallel!)
+  splitter.stream().forEach( component -> {
+    // c) compute decomposition of the component
+    TreeDecomposition<T> decomposition = ... 
+    // and add it to the preprocessor object
+    splitter.addbackTreeDecomposition(decomposition);
+  });
+
+
+  // we can now access the final decomposition of the original graph
+  splitter.getTreeDecomposition();
+\end{lstlisting}
+As the streaming interface allows easy parallelization, this is
+supported by \Jdrasil\ as well. In the above code, each component will
+be handled in parallel if the ``parallel'' flag is set in the
+configuration class \JClass{JdrasilProperties}. This is usually done
+by a program argument.
 
 \section{Reduction Rules}
 There are many reduction rules for tree width known in the

@@ -137,7 +137,12 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		
 		GraphSplitter<T> splitter = new GraphSplitter<>(this.graph);
 		for (Graph<T> component : splitter) {
-			TreeDecomposition<T> decomposition = computeTreeDecompositionOfComponent(component);
+			TreeDecomposition<T> decomposition = null;
+			try {
+				decomposition = computeTreeDecompositionOfComponent(component);
+			} catch (Exception e) {
+				LOG.warning("failed to compute decomposition of a component");
+			}
 			splitter.addbackTreeDecomposition(decomposition);
 		}
 		return splitter.getTreeDecomposition();

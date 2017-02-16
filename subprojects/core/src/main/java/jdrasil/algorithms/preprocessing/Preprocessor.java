@@ -21,9 +21,11 @@ package jdrasil.algorithms.preprocessing;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposition;
+import jdrasil.utilities.JdrasilProperties;
 
 /**
  * A Preprocessor is a function that maps an arbitrary input graph to a collection of "easier" graphs. 
@@ -58,9 +60,9 @@ public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<
 	 */
 	public Preprocessor(Graph<T> graph) {
 		this.graph = graph;
-		this.processedGraphs = computeGraphs();
-		this.treeDecompositions = new HashSet<>();
 		this.treeDecomposition = new TreeDecomposition<T>(graph);
+		this.treeDecompositions = new HashSet<>();
+		this.processedGraphs = computeGraphs();
 	}
 	
 	/**
@@ -86,7 +88,7 @@ public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<
 	 * This method will call @see glueDecompositions() ones enough tree decompositions where added.
 	 * @param decomposition the decomposition to be added back
 	 */
-	public void addbackTreeDecomposition(TreeDecomposition<T> decomposition) {
+	public synchronized void addbackTreeDecomposition(TreeDecomposition<T> decomposition) {
 		this.treeDecompositions.add(decomposition);
 		if (this.treeDecompositions.size() == this.processedGraphs.size()) {
 			this.treeDecomposition = glueDecompositions();
@@ -136,5 +138,18 @@ public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<
 			return itr.next();
 		}		
 	}
-	
+
+	/**
+	 * Returns a stream of the produced graphs.
+	 * This stream will be a parallel stream, if the "parallel" falg is set in
+	 * @see JdrasilProperties
+	 * @return a stream over the produced graphs
+	 */
+	public Stream<Graph<T>> stream() {
+		if (JdrasilProperties.containsKey("parallel")) {
+			return this.processedGraphs.parallelStream();
+		}
+		return this.processedGraphs.stream();
+	};
+
 }
