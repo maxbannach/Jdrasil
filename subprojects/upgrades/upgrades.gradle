@@ -80,10 +80,12 @@ task upgrade_ipasir {
       from ipasirDir
       into buildDir
       include "libjdrasil_sat_NativeSATSolver.dylib"
+      include "libjdrasil_sat_NativeSATSolver.so"
     }
     // clean up
     delete {
       delete "${ipasirDir}/libjdrasil_sat_NativeSATSolver.dylib"
+      delete "${ipasirDir}/libjdrasil_sat_NativeSATSolver.so"
     }
   }
 }
