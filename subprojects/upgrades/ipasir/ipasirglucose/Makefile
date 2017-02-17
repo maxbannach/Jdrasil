@@ -19,7 +19,7 @@ libipasirsolver.dylib:
 	cp libipasirsolver.dylib ..
 
 libipasirsolver.so:
-	make -C glucose lr
+	CXX="g++ -fPIC" make -C glucose lr
 	cp glucose/build/release/lib/libglucose.a glucose/
 	$(CC) $(CFLAGS) -std=c++11 -fPIC  ipasirsolver.cc -shared -o libipasirsolver.so -Wl,-rpath,. -I$(GLUCOSE) -L$(GLUCOSE) -lglucose	
 	cp libipasirsolver.so ..
