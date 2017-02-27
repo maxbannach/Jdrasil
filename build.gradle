@@ -20,3 +20,13 @@
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
+/**
+ * Build the proejct for PACE. This will build Jdrasil, upgrade
+ * it with Gucose as SAT solver and will install the start scripts tw-exact and tw-heuristic.
+ */
+task pace() {
+  dependsOn('core:build')
+  dependsOn('upgrades:upgrade_glucose')
+  dependsOn('core:exact')
+  dependsOn('core:heuristic')
+}
