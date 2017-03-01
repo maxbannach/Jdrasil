@@ -35,6 +35,7 @@ import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.utilities.RandomNumberGenerator;
 import jdrasil.utilities.logging.JdrasilLogger;
+import jdrasil.utilities.JdrasilProperties;
 
 /**
  * The Greedy-Permutation heuristic performs very well and can be seen as randomized algorithm as it breaks ties randomly.
@@ -115,6 +116,8 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 				decomposition = newDec;
 				permutation = greedyPermutation.getPermutation();
 			}
+			if(JdrasilProperties.timeout())
+                          break;
 		}
 
 		// Create a copy of the current decomposition, and try to improve it. 

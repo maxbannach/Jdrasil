@@ -39,6 +39,7 @@ import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.utilities.RandomNumberGenerator;
 import jdrasil.utilities.logging.JdrasilLogger;
+import jdrasil.utilities.JdrasilProperties;
 
 /**
  * This class implements a tabu search on the space of elimination orders developed by Clautiax, Moukrim, Negre and Carlier
@@ -214,6 +215,8 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 			int j = RandomNumberGenerator.nextInt(perm.size());
 			perm = modifyPerm(perm,v,pos.get(v),j);
 			rounds--;
+			if(JdrasilProperties.timeout())
+                          break;
 		}
 		tdOpt.connectComponents();
 		return tdOpt;

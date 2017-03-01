@@ -68,6 +68,15 @@ public class JdrasilProperties {
     public static void setProperty(String key, String value) {
         properties.setProperty(key, value);
     }
+    
+    /**
+    * If a timeout is specified, return whether this has been reached or not. 
+    */
+    public static boolean timeout(){
+      if(!properties.containsKey("t"))
+        return false;
+      return System.nanoTime() > Long.parseLong(properties.getProperty("t")); 
+    }
 
     /**
      * Parsing the programs argument and store them in parameter map.
@@ -114,6 +123,11 @@ public class JdrasilProperties {
         if (JdrasilProperties.containsKey("s")) {
             RandomNumberGenerator.seed(Long.parseLong(JdrasilProperties.getProperty("s")));
         }
+        
+        // Set timeout
+        if(JdrasilProperties.containsKey("t")){
+          setProperty("t", "" + (System.nanoTime() + 1000 * 1000 * 1000 * Long.parseLong(JdrasilProperties.getProperty("t"))));
+        }
     }
 
     /**
@@ -127,6 +141,7 @@ public class JdrasilProperties {
         System.out.println("Parameters:");
         System.out.println("  -h : print this dialog");
         System.out.println("  -s <seed> : set a random seed");
+        System.out.println("  -t <timeout> : set a time limit");
         System.out.println("  -parallel : enable parallel processing");
         System.out.println("  -instant : computes solution directly (only heuristic mode)");
         System.out.println("  -log : enable log output");
