@@ -114,14 +114,6 @@ task approximation(type: CreateStartScripts) {
   }
 }
 
-// build the project and provide pace like start scripts
-task pace() {
-  dependsOn build
-  dependsOn exact
-  dependsOn heuristic
-}
-
-
 /* Update clean to remove pace executables */
 clean.doLast {
   FileCollection scripts = files(["${rootDir}/tw-exact",
