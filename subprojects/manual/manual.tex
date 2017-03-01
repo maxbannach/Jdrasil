@@ -284,7 +284,7 @@ exact mode (meaning it reads an graph from stdin, computes an optimal
 decomposition, and prints it on stdout); while the second script runs
 \Jdrasil\ in heuristic mode, meaning it will run in an infinite loop
 trying to heuristically find a good decomposition~–~the decomposition
-will be printed if a SIGTERM is received. Example usage is:
+will be printed if a SIGINT or SIGTERM is received. Example usage is:
 \begin{lstlisting}[language=bash]
   ./tw-exact -s 42 < myGraph.gr > myGraph.td
   ./tw-heuristic -s 42 < myHugeGraph.gr > myHugeGraph.gr.td
