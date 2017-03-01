@@ -83,7 +83,7 @@ public class JdrasilProperties {
                 // help is a special case
                 if (a.equals("-h")) {
                     printHelp();
-                    continue;
+                    System.exit(0);
                 }
 
                 // catch format errors

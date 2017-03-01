@@ -93,7 +93,7 @@ public class Heuristic implements sun.misc.SignalHandler {
 
         /* Handle systems signals */
         sun.misc.Signal.handle( new sun.misc.Signal("TERM"), this );
-
+        sun.misc.Signal.handle( new sun.misc.Signal("INT"), this );
         try {
             // read graph from stdin
             Graph<Integer> input = GraphFactory.graphFromStdin();
