@@ -57,6 +57,9 @@ public class Heuristic implements sun.misc.SignalHandler {
     /** Start and end of the computation. */
     private long tstart, tend;
 
+    /** The graph to be decomposed. */
+    private Graph<Integer> input;
+
     /** The decomposition in construction. */
     private TreeDecomposition<Integer> decomposition;
 
@@ -96,9 +99,9 @@ public class Heuristic implements sun.misc.SignalHandler {
         sun.misc.Signal.handle( new sun.misc.Signal("INT"), this );
         try {
             // read graph from stdin
-            Graph<Integer> input = GraphFactory.graphFromStdin();
+            input = GraphFactory.graphFromStdin();
 
-			/* Compute a explicit decomposition */
+            /* Compute a explicit decomposition */
             tstart = System.nanoTime();
 
             LOG.info("reducing the graph");
@@ -162,6 +165,21 @@ public class Heuristic implements sun.misc.SignalHandler {
 
     @Override
     public void handle(Signal arg0) {
+
+        // catch super early abort
+        if (input == null) {
+            LOG.warning("Did not finish reading the graph!");
+            System.exit(1);
+        }
+
+        // catch abort during reduction phase
+        if (reducer == null) {
+            LOG.warning("Did not finish reducing the graph!");
+            this.decomposition = new TreeDecomposition<>(input);
+            Bag<Integer> singleBag = this.decomposition.createBag(input.getVertices());
+            System.out.println(this.decomposition);
+            System.exit(0);
+        }
 
         // if local search has started, look if it has a solution
         if (localSearchDecomposer != null) {

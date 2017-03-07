@@ -120,14 +120,6 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
                           break;
 		}
 
-		// Create a copy of the current decomposition, and try to improve it. 
-		// Prevents race condition if signal handler is triggered while improve is running
-		LOG.info("trying to improve the decomposition");
-		TreeDecomposition<T> tmp = decomposition.copy();
-		tmp.improveDecomposition();
-		if(tmp.getWidth() < decomposition.getWidth())
-			decomposition = tmp;
-
 		// done
 		return decomposition;
 	}
