@@ -53,7 +53,7 @@ task exact(type: CreateStartScripts) {
   mainClassName = 'jdrasil.Exact'
   applicationName = 'tw-exact'
   classpath = files('build/jar/Jdrasil.jar')
-  defaultJvmOpts = [ '-Djava.library.path=build/upgrades/' ]
+  defaultJvmOpts = [ '-Djava.library.path=build/upgrades/', '-XX:+UseSerialGC' ]
 
   
   doLast {   
@@ -76,7 +76,7 @@ task heuristic(type: CreateStartScripts) {
   mainClassName = 'jdrasil.Heuristic'
   applicationName = 'tw-heuristic'
   classpath = files('build/jar/Jdrasil.jar')
-  defaultJvmOpts = [ '-Djava.library.path=build/upgrades/' ]
+  defaultJvmOpts = [ '-Djava.library.path=build/upgrades/', '-XX:+UseSerialGC' ]
   
   doLast {   
     // update class path as the script is used with a fresh build
@@ -98,7 +98,7 @@ task approximation(type: CreateStartScripts) {
   mainClassName = 'jdrasil.Approximation'
   applicationName = 'tw-approximation'
   classpath = files('build/jar/Jdrasil.jar')
-  defaultJvmOpts = [ '-Djava.library.path=build/upgrades/' ]
+  defaultJvmOpts = [ '-Djava.library.path=build/upgrades/', '-XX:+UseSerialGC' ]
   
   doLast {   
     // update class path as the script is used with a fresh build
