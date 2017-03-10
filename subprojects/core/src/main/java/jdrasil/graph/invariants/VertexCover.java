@@ -84,7 +84,10 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 			Map<Integer, Boolean> model;
 			model = phi.getModel();
 			for (T v : graph) vertexCover.put(v, model.get(vertToInt.get(v)));
-			
+
+			// clean up
+			phi.unregisterSATSolver();
+
 			// done
 			return vertexCover;
 

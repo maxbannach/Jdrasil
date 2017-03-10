@@ -136,7 +136,8 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 				encoder.improveCardinality(k);
 			}
 		} catch (Exception e) {}
-				
+		phi.unregisterSATSolver(); // clean up
+
 		// done
 		return permutation;
 	}

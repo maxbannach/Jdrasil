@@ -567,6 +567,7 @@ public class Formula implements Iterable<List<Integer>> {
 	 *  
 	 */
 	public void unregisterSATSolver() {
+		if (this.solver != null) this.solver.release();
 		this.solver = null;
 	}
 	

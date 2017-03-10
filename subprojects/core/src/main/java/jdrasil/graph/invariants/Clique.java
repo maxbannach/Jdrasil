@@ -81,13 +81,16 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 			}
 			
 			// compute the model
-			Map<T, Boolean> vertexCover = new HashMap<>();
+			Map<T, Boolean> clique = new HashMap<>();
 			Map<Integer, Boolean> model;
 			model = phi.getModel();
-			for (T v : graph) vertexCover.put(v, model.get(vertToInt.get(v)));
-			
+			for (T v : graph) clique.put(v, model.get(vertToInt.get(v)));
+
+			// clean up
+			phi.unregisterSATSolver();
+
 			// done
-			return vertexCover;
+			return clique;
 
 		} catch (Exception e) {
 			return null;

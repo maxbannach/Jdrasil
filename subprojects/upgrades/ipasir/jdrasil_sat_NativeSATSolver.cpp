@@ -91,6 +91,7 @@ JNIEXPORT void JNICALL Java_jdrasil_sat_NativeSATSolver_init(JNIEnv* env, jobjec
 JNIEXPORT void JNICALL Java_jdrasil_sat_NativeSATSolver_release(JNIEnv* env, jobject callingObject) {
   void* instance = getInstance(env, callingObject);
   ipasir_release(instance);
+  fflush(stdout);
 }
 
 JNIEXPORT void JNICALL Java_jdrasil_sat_NativeSATSolver_add(JNIEnv* env, jobject callingObject, jint literal) {
