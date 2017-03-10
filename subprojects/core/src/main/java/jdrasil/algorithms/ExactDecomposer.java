@@ -123,7 +123,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 			}
 
 			/* If everything above does not work, we solve the problem using a SAT-encoding */
-			LOG.info("Solve with a SAT solver");
+			LOG.info("Solve with a SAT solver [" + Formula.getExpectedSignature() + "]");
 			TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub).call();
 
 			reducer.addbackTreeDecomposition(decomposition);

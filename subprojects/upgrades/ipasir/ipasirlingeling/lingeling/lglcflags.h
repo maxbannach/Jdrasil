@@ -1,2 +1,2 @@
-#define LGL_CC "Apple LLVM version 8.0.0 (clang-800.0.42.1)"
+#define LGL_CC "Apple LLVM version 7.0.2 (clang-700.1.81)"
 #define LGL_CFLAGS "-Wall -O3 -DNLGLOG -DNDEBUG -DNCHKSOL -DNLGLDRUPLIG -DNLGLYALSAT -DNLGLFILES -DNLGLDEMA"

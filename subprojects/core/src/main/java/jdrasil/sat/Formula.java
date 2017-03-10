@@ -49,6 +49,25 @@ public class Formula implements Iterable<List<Integer>> {
 		if (SAT4JSolver.isAvailable()) return true;
 		return false;
 	}
+
+	/**
+	 * Get the expected signature of the SAT solver, that is, the name of the SAT solver we
+	 * expect to register.
+	 * @return expected signature
+	 */
+	public static String getExpectedSignature() {
+		String signature = "No solver available";
+		try {
+			if (NativeSATSolver.isAvailable()) {
+				ISATSolver tmp = new NativeSATSolver();
+				signature = tmp.signature();
+			} else if (SAT4JSolver.isAvailable()) {
+				ISATSolver tmp = new SAT4JSolver();
+				signature = tmp.signature();
+			}
+		} catch (Exception e) { /* we do not have to do anything here */ }
+		return signature;
+	}
 	
 	/**
 	 * The formula (in CNF) is represented as list of clauses, a clause 

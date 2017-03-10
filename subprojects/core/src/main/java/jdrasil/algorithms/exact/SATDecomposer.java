@@ -103,7 +103,6 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	 * @return
 	 */
 	protected List<T> computePermutation() {
-		
 		// load the selected encoding
 		BaseEncoder<T> encoder = null;
 		switch (encoding) {
@@ -116,16 +115,18 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 			default:
 				return null;
 		}
-		
+
 		encoder.initCardinality(ub);
 		Formula phi = encoder.getFormula();
 		try {
 			phi.registerSATSolver();
-		} catch(Exception e) {}
+		} catch(Exception e) {
+			LOG.warning("Failed to register the SAT solver");
+		}
 		
 		// starting at the ub, this will for sure give us one solution
 		int k = ub;
-		
+
 		// as long as we can improve, improve
 		try {
 			while (phi.isSatisfiable() && k >= lb) {
@@ -145,8 +146,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	public TreeDecomposition<T> call() throws Exception {
 		// catch the empty graph
 		if (graph.getVertices().size() == 0) return new TreeDecomposition<T>(graph);
-						
-		
+
 		// compute the permutation with respect to the choose encoding
 		List<T> permutation = computePermutation();
 
