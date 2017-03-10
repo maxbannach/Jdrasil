@@ -50,7 +50,6 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <errno.h>
 
 #include <signal.h>
-#include <zlib.h>
 #include <sys/resource.h>
 
 #include "utils/System.h"
@@ -201,7 +200,7 @@ int main(int argc, char** argv)
         if (argc == 1)
             printf("c Reading from standard input... Use '--help' for help.\n");
 
-        gzFile in = (argc == 1) ? gzdopen(0, "rb") : gzopen(argv[1], "rb");
+        FILE in = (argc == 1) ? fdopen(0, "rb") : fopen(argv[1], "rb");
         if (in == NULL)
             printf("ERROR! Could not open file: %s\n", argc == 1 ? "<stdin>" : argv[1]), exit(1);
 
@@ -211,7 +210,7 @@ int main(int argc, char** argv)
 
         FILE* res = (argc >= 3) ? fopen(argv[argc-1], "wb") : NULL;
         parse_DIMACS(in, S);
-        gzclose(in);
+        fclose(in);
 
        if (S.verbosity > 0){
             printf("c |  Number of variables:  %12d                                                                   |\n", S.nVars());
