@@ -1420,7 +1420,6 @@ lbool Solver::search(int nof_conflicts) {
                 decisions++;
                 next = pickBranchLit();
                 if (next == lit_Undef) {
-                    printf("c last restart ## conflicts  :  %d %d \n", conflictC, decisionLevel());
                     // Model found:
                     return l_True;
                 }
@@ -1472,7 +1471,7 @@ lbool Solver::solve_(bool do_simp, bool turn_off_simp) // Parameters are useless
 {
   incremental = true;
 
-  printf("c %d assumptions\n",assumptions.size());
+  //  printf("c %d assumptions\n",assumptions.size());
   if(incremental && certifiedUNSAT) {
     printf("Can not use incremental and certified unsat in the same time\n");
     exit(-1);
