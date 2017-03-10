@@ -54,7 +54,7 @@ public:
   IPAsirMiniSAT () : szfmap (0), fmap (0), nomodel (false), calls (0) {
     // MiniSAT by default produces non standard conforming messages.
     // So either we have to set this to '0' or patch the sources.
-    verbosity = 1;
+    verbosity = 0;
   }
   ~IPAsirMiniSAT () { reset (); }
   void add (int lit) {
