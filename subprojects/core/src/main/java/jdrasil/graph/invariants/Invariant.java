@@ -19,6 +19,7 @@
 package jdrasil.graph.invariants;
 
 import java.util.Map;
+import java.util.Set;
 
 import jdrasil.graph.Graph;
 
@@ -52,12 +53,16 @@ public abstract class Invariant<T extends Comparable<T>, Value, Image> {
 	 * The constructor of the invariant for a fixed graph G.
 	 * This method will invoke the computation of the invariant. In order to do so,
 	 * it will call (in this order) the methods @see computeModel() and @see computeValue().
+	 *
+	 * Optionally an array of sets of vertices can be provides. This array will be piped to the computeModel method
+	 * which may use it. For instances, this could be a set of forbidden vertices in the computation of connected components.
 	 * 
 	 * @param graph
+	 * @param X
 	 */
-	public Invariant(Graph<T> graph) {
+	public Invariant(Graph<T> graph, Set<T>... X) {
 		this.graph = graph;
-		this.model = computeModel();
+		this.model = computeModel(X);
 		this.value = computeValue();
 	}
 	
@@ -70,7 +75,7 @@ public abstract class Invariant<T extends Comparable<T>, Value, Image> {
 	 * 
 	 * @return
 	 */
-	protected abstract Map<T, Image> computeModel();
+	protected abstract Map<T, Image> computeModel(Set<T>... X);
 	
 	/**
 	 * Compute the value of the invariant, i.e., "the invariant".

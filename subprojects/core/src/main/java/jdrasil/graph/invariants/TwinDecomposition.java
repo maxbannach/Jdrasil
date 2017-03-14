@@ -48,7 +48,7 @@ public class TwinDecomposition<T extends Comparable<T>> extends Invariant<T, Int
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, Set<T>> computeModel() {
+	protected Map<T, Set<T>> computeModel(Set<T>... X) {
 		Map<T, Set<T>> trueTwins = getTwinDecomposition(true);
 		Map<T, Set<T>> falseTwins = getTwinDecomposition(false);
 		Map<T, Set<T>> twins = new HashMap<T, Set<T>>();

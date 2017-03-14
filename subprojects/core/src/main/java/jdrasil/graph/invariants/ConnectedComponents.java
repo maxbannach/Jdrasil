@@ -18,10 +18,7 @@
  */
 package jdrasil.graph.invariants;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import jdrasil.graph.Graph;
@@ -33,7 +30,10 @@ import jdrasil.graph.GraphFactory;
  * 
  * @author Max Bannach
  */
-public class ConnectedComponents<T extends Comparable<T>> extends Invariant<T, Integer, Integer>{
+public class ConnectedComponents<T extends Comparable<T>> extends Invariant<T, Integer, Integer> {
+
+	/** A set of vertices that is forbidden and will not be added to any connected component (for instances a separator) */
+	private Set<T> forbidden;
 
 	/**
 	 * @param graph
@@ -41,12 +41,16 @@ public class ConnectedComponents<T extends Comparable<T>> extends Invariant<T, I
 	public ConnectedComponents(Graph<T> graph) {
 		super(graph);
 	}
+	public ConnectedComponents(Graph<T> graph, Set<T>... X) {
+		super(graph, X);
+	}
 
 	/* (non-Javadoc)
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, Integer> computeModel() {		
+	protected Map<T, Integer> computeModel(Set<T>... X) {
+		Set<T> forbidden = X.length > 0 ? X[0] : new HashSet<T>();
 		Map<T, Integer> components = new HashMap<>();
 		Stack<T> S = new Stack<>();
 		int currentComponent = 0;
@@ -54,12 +58,14 @@ public class ConnectedComponents<T extends Comparable<T>> extends Invariant<T, I
 		// perform DFS to identify components
 		for (T s : graph) {
 			if (components.containsKey(s)) continue; // already visited
+			if (forbidden.contains(s)) continue; // a vertex that we do not use
 			S.push(s);
 			components.put(s, ++currentComponent);
 			while (!S.isEmpty()) {
 				T v = S.pop();
 				for (T w : graph.getNeighborhood(v)) {
 					if (components.containsKey(w)) continue;
+					if (forbidden.contains(w)) continue;
 					S.push(w);
 					components.put(w, currentComponent);
 				}

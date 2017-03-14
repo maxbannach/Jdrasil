@@ -100,7 +100,7 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, Boolean> computeModel() {
+	protected Map<T, Boolean> computeModel(Set<T>... X) {
 		Map<T, Boolean> vertexCover = null;
 		
 		// if we have a SAT solver, solve the problem exactly

@@ -20,6 +20,7 @@ package jdrasil.graph.invariants;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import jdrasil.graph.Graph;
 
@@ -46,7 +47,7 @@ public class Matching<T extends Comparable<T>> extends Invariant<T, Integer, T> 
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, T> computeModel() {
+	protected Map<T, T> computeModel(Set<T>... X) {
 		Map<T, T> matching = new HashMap<>();
 		
 		// greedy match vertices

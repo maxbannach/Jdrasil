@@ -101,7 +101,7 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, Boolean> computeModel() {
+	protected Map<T, Boolean> computeModel(Set<T>... X) {
 		Map<T, Boolean> clique = null;
 		
 		// if we have a SAT solver -> use it
