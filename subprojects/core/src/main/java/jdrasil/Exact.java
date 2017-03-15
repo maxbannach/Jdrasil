@@ -20,10 +20,12 @@ package jdrasil;
 
 import jdrasil.algorithms.ExactDecomposer;
 import jdrasil.algorithms.GraphSplitter;
+import jdrasil.algorithms.exact.CopsAndRobber;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
+import jdrasil.graph.GraphWriter;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.utilities.JdrasilProperties;
 import jdrasil.utilities.logging.JdrasilLogger;
@@ -72,25 +74,30 @@ public class Exact {
             /* use reduction rules to reduce the graph */
             GraphReducer<Integer> reducer = new GraphReducer<Integer>(input);
             Graph<Integer> H = reducer.getProcessedGraph();
-            int lb = new MinorMinWidthLowerbound<>(H).call();
-            if (lb < 4) lb = 4; // we know this from preprocessing
+            if (H.getVertices().size() == 0) {
+                decomposition = reducer.getTreeDecomposition();
+            } else {
+                int lb = new MinorMinWidthLowerbound<>(H).call();
+                if (lb < 4) lb = 4; // we know this from preprocessing
 
-            // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
-            GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
-                TreeDecomposition<Integer> td;
-                try { // use ExactDecomposer to handle atoms
-                    td = new ExactDecomposer<>(atom).call();
-                } catch (Exception e) { // something went wrong, provide trivial decomposition
-                    td = new TreeDecomposition<>(atom);
-                    td.createBag(atom.getVertices());
-                }
-                return td;
-            },lb);
-            splitter.setTargetConnectivity(GraphSplitter.Connectivity.ATOM);
+                // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
+                GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
+                    TreeDecomposition<Integer> td;
+                    try { // use ExactDecomposer to handle atoms
+                        td = new ExactDecomposer<>(atom).call();
+                    } catch (Exception e) { // something went wrong, provide trivial decomposition
+                        LOG.warning("Error while handling atom: " + e);
+                        td = new TreeDecomposition<>(atom);
+                        td.createBag(atom.getVertices());
+                    }
+                    return td;
+                }, 0);
+                splitter.setTargetConnectivity(GraphSplitter.Connectivity.ATOM);
 
-            // glue to final decomposition
-            reducer.addbackTreeDecomposition(splitter.call());
-            decomposition = reducer.getTreeDecomposition();
+                // glue to final decomposition
+                reducer.addbackTreeDecomposition(splitter.call());
+                decomposition = reducer.getTreeDecomposition();
+            }
 
             long tend = System.nanoTime();
             System.out.print(decomposition);

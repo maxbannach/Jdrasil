@@ -86,8 +86,10 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 	 */
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
+
 		GraphReducer<T> reducer = new GraphReducer<>(graph);
 		Graph<T> reduced = reducer.getProcessedGraph();
+		if (reduced.getVertices().size() == 0) return reducer.getTreeDecomposition();
 
 		int n = reduced.getVertices().size();
 		LOG.info("Reduced the graph from " + graph.getVertices().size() + " to " + n + " vertices");

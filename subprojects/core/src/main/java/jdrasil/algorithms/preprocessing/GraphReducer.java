@@ -88,18 +88,18 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		Graph<T> reduced = GraphFactory.copy(graph);
 				
 		// input was empty graph – nothing to do
-		if (reduced.getVertices().size() == 0) return GraphFactory.emptyGraph();
+		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
 		// handle easy cases: vertices of degree 0 and 1
 		eliminateLowDegreeNodes(reduced, 0);
 		eliminateLowDegreeNodes(reduced, 1);
 		
 		// input was a tree
-		if (reduced.getVertices().size() == 0) { return GraphFactory.emptyGraph(); }
+		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
 		// no tree, eliminate degree 2 vertices
 		eliminateLowDegreeNodes(reduced, 2);
-		if (reduced.getVertices().size() == 0) { return GraphFactory.emptyGraph(); }
+		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
 		// apply classic reduction rules until exhaustion 
 		boolean fixPointReached = false;
@@ -119,7 +119,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 				bags.push(bag);
 			}
 		}
-		if (reduced.getVertices().size() == 0) { return GraphFactory.emptyGraph(); }
+		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); }
 		
 		// done
 		return reduced;
@@ -134,7 +134,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		// we have only one decomposition, use it
 		this.treeDecomposition = processedTreeDecomposition;
 		this.treeDecomposition.setGraph(graph);
-		
+
 		// add the reduced bags
 		glueBags();
 		

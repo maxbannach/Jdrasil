@@ -167,6 +167,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
 
         // if the graph fits in a single bag we have neither to separate it further nor to handle it as atom
         if (graph.getVertices().size() <= low+1) {
+            LOG.info("Atom fits in a single bag");
             TreeDecomposition<T> oneBag = new TreeDecomposition<T>(graph);
             oneBag.createBag(graph.getVertices());
             return oneBag;
@@ -291,6 +292,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         }
 
         // no further separation possible -> decompose the atom using the provided function
+        LOG.info("Handle atom of size " + graph.getVertices().size());
         return handleAtom.apply(graph);
     }
 
