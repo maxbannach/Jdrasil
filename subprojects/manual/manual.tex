@@ -1,6 +1,6 @@
 \documentclass[a4paper, ukenglish, twoside, openright]{jdrasilmanual}
 
-\setversion{0.1}
+\setversion{0.2}
 \author{Max Bannach, Sebastian Berndt, Thorsten Ehlers}
 
 \begin{document}
@@ -139,9 +139,9 @@ following tables provides an overview of all available arguments:
     %
     -s <seed> & seeds the RNG & \check & \check & \check\\
     % 
-    -parallel & enables parallel processing (preprocessing streams will
-    be parallel, i.\,e., connected components are handled in parallel)
-    & \check & \check &
+    -parallel & enables parallel processing (the
+    \JClass{GraphSplitter} will split and handle atoms in parallel)
+    & \check &  &
     \check\\
     % 
     -instant & heuristic will output a solution as fast as possible &
@@ -669,7 +669,39 @@ In \Jdrasil, the class \JClass{Matching} greedily computes a maximal matching, i
 guaranteed that it is a maximum matching. The matching is represented
 as map from vertices to vertices, i.\,e., a vertex is mapped to the
 vertex it is matched with.
-  
+
+\section{Cut Vertices}
+A \emph{cut vertex} or \emph{articulation point} is a vertex whose removal
+disconnects the graph. If the graph is biconnected, no such vertex
+exists. The class \JClass{CutVertex} computes an arbitrary cut vertex using the
+algorithm from Hopcroft and Tarjan in time $O(n+m)$.
+ 
+The class allows to forbid some vertices in the graph, this can be used
+to compute 2 or 3 connected components as follows: If the graph has not
+cut vertex, but the graph without some vertex \(v\in V\) has a cut
+vertex \(c\), then the pair \(v,c\) is a 2-cut.
+
+\section{Clique Minimal Separator}
+The class \JClass{CliqueMinimalSeparator} computes a clique minimal separator of the graph, that is, a set
+\(S\subseteq V\) such that \(G[S]\) is a clique, \(G[V\setminus S]\)
+has more components then $G$, and such that \(S\) is a minimal separator
+for some vertices \(a,b\in V\).
+ 
+This class takes \(O(nm)\) time and implements the algorithm described
+in "An Introduction to Clique Minimal Separator Decomposition" by
+Berry et al.\, In short, it does the following:
+\begin{enumerate}
+  \item compute a minimal triangulation of the graph;
+  \item find minimal separators of the triangulation;
+  \item check which of these separators are cliques in the graph.
+ \end{enumerate}
+ The class allows to specify a set of forbidden vertex, which are
+ assumed to be not part of the graph then. In this way, the invariant
+ can be used to compute almost clique minimal separators: take a
+ vertex \(v\in V\) and remove it, if the resulting graph has a clique
+ minimal separator \(S\), then \(S\cup\{v\}\) is an almost clique
+ minimal separator.
+
 \chapter{Tree Decompositions}\label{chapter:treedecompositions}
 Since \Jdrasil{} is a library for computing tree decompositions, a
 well thought through representation of such decompositions is
@@ -762,65 +794,39 @@ computation of tree decompositions) are partitioned into five types:
 algorithms, and \emph{exact} algorithms.
 
 \chapter{Preprocessing}
-A Preprocessor is a function that maps an arbitrary input graph to a collection of ``easier'' graphs. 
-Easier here is meant with respect to computing a tree decomposition and often just means ``smaller'', but 
-could also refer to adding structures to the graph that improve pruning potential.
+A Preprocessor is a function that maps an arbitrary input graph to an
+``easier'' graph.  Easier here is meant with respect to computing a tree
+decomposition and often just means ``smaller'', but could also reefer to
+adding structures to the graph that improve pruning potential.
  
-The class \JClass{Preprocessor} models a preprocessor by providing the
-methods \JMethod{computeGraphs}, \JMethod{addbackTreeDecomposition},
-\JMethod{glueDecompositions}, and \JMethod{getTreeDecomposition}. The
-first method represents the actual preprocessing and computes a
-collection of graphs from the input graph. The following two methods
-can be used to add a tree decomposition of one of the produced graphs
-back, and to combine these tree decompositions to one for the input
+The class \JClass{Preprocessor} models a preprocessor by providing the methods
+\JMethod{preprocessGraph,} \JMethod{addbackTreeDecomposition}, \JMethod{computeTreeDecomposition},
+\JMethod{getTreeDecomposition}. The first method represents the
+actual preprocessing and computes a smaller graph from the input
+graph.  The following two methods can be used to add a tree
+decomposition of the reduced graph produced by the first method back,
+and to use this tree decomposition to create one for the input
 graph. The last method is a getter for this decomposition.
 
 The usual way to use a preprocessing algorithm is by a) initializing an
-instance of it, b) loop over the generated graphs, and c) add back a
-tree decomposition for every graph. For instance, if we wish to
-iterate over safe components (connected components, bi-connected
-components, etc.) we can do the following:
+instance of it, b) get the generated graph, and c) add back a
+tree decomposition for this graph. For instance, if we wish to
+apply standard reduction rules, we could do the following:
 \begin{lstlisting}[language=Java]
   
   // a) generate instance of preprocessing algorithm
-  GraphSplitter<T> splitter = new GraphSplitter<>(graph);
+  GraphReducer<T> reducer = new GraphReducer<>(G);
 
-  // b) iterate over all generated graphs
-  for (Graph<T> component : splitter) {
-    // c) compute decomposition of the component
-    TreeDecomposition<T> decomposition = ... 
-    // and add it to the preprocessor object
-    splitter.addbackTreeDecomposition(decomposition);
-  }
+  // b) get the generated graph
+  Graph<T> H = reducer.getProcessedGraph();
 
-  // we can now access the final decomposition of the original graph
-  splitter.getTreeDecomposition();
-\end{lstlisting}
-
-The \JClass{Preprocessor} class also supports the Stream API of Java
-8, i.\,e., the above example can also be formulated as follows:
-\begin{lstlisting}[language=Java]
-  
-  // a) generate instance of preprocessing algorithm
-  GraphSplitter<T> splitter = new GraphSplitter<>(graph);
-
-  // b) iterate over all generated graphs (may be parallel!)
-  splitter.stream().forEach( component -> {
-    // c) compute decomposition of the component
-    TreeDecomposition<T> decomposition = ... 
-    // and add it to the preprocessor object
-    splitter.addbackTreeDecomposition(decomposition);
-  });
-
+  // c) add the decomposition of H
+  TreeDecomposition<T> td = ...
+  reducer.addbackTreeDecomposition(td);
 
   // we can now access the final decomposition of the original graph
-  splitter.getTreeDecomposition();
+  reducer.getTreeDecomposition();
 \end{lstlisting}
-As the streaming interface allows easy parallelization, this is
-supported by \Jdrasil\ as well. In the above code, each component will
-be handled in parallel if the ``parallel'' flag is set in the
-configuration class \JClass{JdrasilProperties}. This is usually done
-by a program argument.
 
 \section{Reduction Rules}
 There are many reduction rules for tree width known in the
@@ -838,31 +844,7 @@ reduction rules and can be used as preprocessing for any other
 algorithm. As mentioned before, this class will (automatically)
 compute optimal tree decompositions of graphs with tree width at most
 $3$. If this class fully reduces the input graph, it will generate an
-empty set of graphs. So it is always save to simply loop over the
-generated graphs, without caring about this special case.
-
-\section{Splitting up the Graph}
-A separator $S\subseteq V$ of a graph $G=(V,E)$ is a subset of the
-vertices such that $G\setminus S$ has more connected components
-than $G$. In particular, the connected components of $G$ are separated
-by the separator $\emptyset$, while bi-connected components have a
-separator $S$ with $|S|=1$.
-
-Bodlaender and Koster have presented a list of \emph{safe} separators
-for tree width~\cite{BodlaenderK2006}. A safe separator is one that
-does not effect the tree width, i.\,e., one that allows to reproduce
-an optimal tree decomposition for $G$ from optimal tree decompositions
-of the connected components of $G\setminus S$ (in polynomial
-time). Having such safe separators allows us to compute tree
-decomposition in an divide-and-conquer manner: Split the graph using
-safe separators until the graph is small enough to solve it, or until
-there are no separators left.
-
-In \Jdrasil, the class \JClass{GraphSplitter} implements some safe
-separators. The class will split the graph using such separators, and
-will keep track of potential glue points. Once the class is provided
-with tree decompositions for all components produced, it will generate
-a tree decomposition for the original graph.
+empty graph.
 
 \section{Contracting the Graph}
 It is a well known fact that tree width is closed under taking
@@ -881,6 +863,86 @@ not optimal) tree decomposition of the input graph. Furthermore, if
 the decomposition of the minor has width \(k\), the width of the final
 decomposition is at most \(2k+1\).
   
+\chapter{Splitting up the Graph}
+When we compute the tree width of a graph, it is often not necessary
+to compute the tree width of the whole graph at once. In stead, it is
+often possible to \emph{split} the graph into some components that can
+be handled separately. For instance, each connected component can be
+decomposed for its one.
+
+A separator $S\subseteq V$ of a graph $G=(V,E)$ is a subset of the
+vertices such that $G\setminus S$ has more connected components
+than $G$. In particular, the connected components of $G$ are separated
+by the separator $\emptyset$, while biconnected components have a
+separator $S$ with $|S|=1$.
+
+Bodlaender and Koster have presented a list of \emph{safe} separators
+for tree width~\cite{BodlaenderK2006}. A safe separator is one that
+does not effect the tree width, i.\,e., one that allows to reproduce
+an optimal tree decomposition for $G$ from optimal tree decompositions
+of the connected components of $G\setminus S$ (in polynomial
+time). Having such safe separators allows us to compute tree
+decomposition in an divide-and-conquer manner: Split the graph using
+safe separators until the graph is small enough to solve it, or until
+there are no separators left. We call these unsplittable graphs \emph{atoms}.
+
+In \Jdrasil, the class \JClass{GraphSplitter} implements some safe
+separators. The class will split the graph using such separators, and
+will keep track of potential glue points. Once the class is provided
+with tree decompositions for all components produced, it will generate
+a tree decomposition for the original graph.
+
+In particular, \JClass{GraphSplitter} splits the graph using the
+following separators:
+\begin{enumerate}
+  \item separators of size $0$, i.\,e., it splits into connected
+    components;
+  \item separators of size $1$, i.\,e., it splits into biconnected
+    components;
+  \item separators of size $2$, i.\,e., it splits into triconnected
+    components;
+  \item safe separators of size $3$;
+  \item clique minimal separators;
+  \item almost clique minimal separators.
+\end{enumerate}
+The \JClass{GraphSplitter} makes use of two Java concepts in order to
+make it easy to use and efficient.
+
+\emph{Splitting the graph using recursive tasks.} First of all, it implements its
+divide-and-conquer procedure using Javas \JClass{RecursiveTask}
+interface. This let Java handle the recursion efficiently and, if the
+``parallel'' flag is set, leads to an direct and automatic parallelization (each atom can
+be handled in parallel).
+
+\emph{Handling atoms using Lambda expressions.} Splitting the graph
+into safe components is a generic task that may be used by many
+different tree decomposition algorithms (let it be exact, approximation,
+or heuristic algorithms). Hence, the \JClass{GraphSplitter} is
+designed to handle atoms with an arbitrary function that it obtains as
+parameter. In particular, the \JClass{GraphSplitter} expects a
+functions as parameter that maps graphs to tree decompositions, and
+this function will be applied to all atoms. Afterwards, the created
+tree decompositions will be glued together. All of this will happen in
+parallel, if the ``parallel'' flag is set.
+
+The usual way of using the \JClass{GraphSplitter} is straight forward:
+\begin{lstlisting}[language=Java]
+  // 1. create a splitter for the graph G
+  GraphSplitter<T> splitter = new GraphSplitter<T>(G, H -> {
+    // 2. create a tree decomposition of the atom H
+                TreeDecomposition<T> td = ...
+                return td;
+            },lb);
+
+  // 3. Obtain a tree decomposition of G
+  // this will invoke the splitting process
+  TreeDecomposition<T> final = splitter.call();
+\end{lstlisting}
+Note that, intuitive, one would first split the graph and then apply
+preprocessing to the atoms. However, splitting the graph is more
+expensive then preprocessing, so the advice is to apply preprocessing
+first and to split the result afterwards. However, it can also be
+useful to apply preprocessing to the atoms again.
 
 \chapter{Lowerbounds}
 The \JClass{lowerbound} interface describes a class that models an
@@ -1045,9 +1107,18 @@ books about $\Class{FPT}$, for instance~\cite{CyganFKLMPPS2015, FlumGrohe2006}.
 
 \chapter{Exact}
 At the heart of \Jdrasil{} is a collection of algorithms that compute
-optimal tree decompositions. As different algorithms may be preferable
-on different graphs, the class \JClass{ExactDecomposer} selects
-between different algorithms, in particular it will:
+optimal tree decompositions. All these algorithms implement the interface
+\JClass{TreeDecomposer} and produce tree decompositions of quality ``Exact''.
+
+In addition to the different implemented algorithms, there is the
+class \JClass{Exact} which provides direct access to some
+decomposition algorithms. This class can be compiled and used with
+\begin{lstlisting}[language=bash]
+  ./gradlew exact
+  ./tw-exact
+\end{lstlisting}
+As different algorithms may be preferable on different graphs, the
+program selects between different algorithms, in particular it will:
 \begin{enumerate}
   \item split the graph into safe components using \JClass{GraphSplitter};
   \item reduce the graph using \JClass{GraphReducer};
@@ -1055,17 +1126,8 @@ between different algorithms, in particular it will:
     is available;
   \item solve with \JClass{CopsAndRobber}.
 \end{enumerate}
-
-In \Jdrasil{}, all exact algorithms implement the interface
-\JClass{TreeDecomposer} and produce tree decompositions of quality ``Exact''.
-
-In addition to the different implemented algorithms, there is the
-class \JClass{Exact} which provides stand alone access to the
-\JClass{ExactDecomposer} class. This class can be compiled and used with
-\begin{lstlisting}[language=bash]
-  ./gradlew exact
-  ./tw-exact
-\end{lstlisting}
+The selection of \JClass{SATDecomposer} and \JClass{CopsAndRobber} is
+also separated in the class \JClass{ExactDecomposer}.
 
 \section{Branch and Bound}
 The class \JClass{BranchAndBoundDecomposer} implements a classical branch and bound algorithm based on QuickBB~\cite{GogateD2004} and its successors.

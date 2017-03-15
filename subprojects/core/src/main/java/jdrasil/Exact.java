@@ -19,7 +19,7 @@
 package jdrasil;
 
 import jdrasil.algorithms.ExactDecomposer;
-import jdrasil.algorithms.SafeSeparatorDecomposer;
+import jdrasil.algorithms.GraphSplitter;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.graph.Graph;
@@ -69,26 +69,33 @@ public class Exact {
             long tstart = System.nanoTime();
             TreeDecomposition<Integer> decomposition = null;
 
-            /* compute an exact tree-decomposition */
-//            ExactDecomposer<Integer> exact = new ExactDecomposer<Integer>(input);
-//            decomposition = exact.call();
-
-            /* test separator based approach */
+            /* use reduction rules to reduce the graph */
             GraphReducer<Integer> reducer = new GraphReducer<Integer>(input);
-            for (Graph H : reducer) {
-                int lb = new MinorMinWidthLowerbound<>(H).call();
-                if (lb < 4) lb = 4; // we know this from preprocessing
-                SafeSeparatorDecomposer<Integer> ssd = new SafeSeparatorDecomposer<Integer>(H, lb);
-                ssd.setTargetConnectivity(SafeSeparatorDecomposer.Connectivity.ATOM);
-                reducer.addbackTreeDecomposition(ssd.call());
-            }
+            Graph<Integer> H = reducer.getProcessedGraph();
+            int lb = new MinorMinWidthLowerbound<>(H).call();
+            if (lb < 4) lb = 4; // we know this from preprocessing
+
+            // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
+            GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
+                TreeDecomposition<Integer> td;
+                try { // use ExactDecomposer to handle atoms
+                    td = new ExactDecomposer<>(atom).call();
+                } catch (Exception e) { // something went wrong, provide trivial decomposition
+                    td = new TreeDecomposition<>(atom);
+                    td.createBag(atom.getVertices());
+                }
+                return td;
+            },lb);
+            splitter.setTargetConnectivity(GraphSplitter.Connectivity.ATOM);
+
+            // glue to final decomposition
+            reducer.addbackTreeDecomposition(splitter.call());
             decomposition = reducer.getTreeDecomposition();
-            if (true) System.exit(0);
 
             long tend = System.nanoTime();
-
             System.out.print(decomposition);
             System.out.println();
+
             LOG.info("");
             LOG.info("Tree-Width: " + decomposition.getWidth());
             LOG.info("Used " + (tend-tstart)/1000000000 + " seconds");
@@ -102,7 +109,6 @@ public class Exact {
             System.out.println();
             e.printStackTrace();
         }
-
     }
 
 }

@@ -55,7 +55,7 @@ public class GraphContractor<T extends Comparable<T>> extends Preprocessor<T> {
 	 * @see jdrasil.algorithms.preprocessing.Preprocessor#computeGraphs()
 	 */
 	@Override
-	protected Set<Graph<T>> computeGraphs() {
+	protected Graph<T> preprocessGraph() {
 		
 		// result
 		Graph<T> contracted = GraphFactory.copy(graph);
@@ -72,19 +72,17 @@ public class GraphContractor<T extends Comparable<T>> extends Preprocessor<T> {
 		}
 		
 		// done
-		Set<Graph<T>> result = new HashSet<>();
-		result.add(contracted);
-		return result;
+		return contracted;
 	}
 
 	/* (non-Javadoc)
 	 * @see jdrasil.algorithms.preprocessing.Preprocessor#glueDecompositions()
 	 */
 	@Override
-	protected TreeDecomposition<T> glueDecompositions() {
+	protected TreeDecomposition<T> computeTreeDecomposition() {
 		
-		// there will only be one decomposition, take it
-		TreeDecomposition<T> decomposition = treeDecompositions.iterator().next();
+		// take decmposition of reduced graph
+		TreeDecomposition<T> decomposition = processedTreeDecomposition;
 		
 		// undo contractions on tree decomposition
 		while (!contractions.isEmpty()) {

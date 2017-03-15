@@ -34,7 +34,6 @@ import java.util.*;
  * This class implements the improve graph trick to improve some implemented lower bound algorithms. The implementation
  * is based on Bodlaender and Koster: Treewidth Computations II
  *
- *
  * @author Max Bannach
  */
 public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbound<T> {
@@ -133,7 +132,7 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
         int tmp = getLowerbound(graph);
         if (tmp > low) low = tmp;
 
-        // try to improve the lower bound via imrpoved graphs
+        // try to improve the lower bound via improved graphs
         Graph<T> H = GraphFactory.copy(graph);
         while (true) {
             H = getNeighborImprovedGraph(H, low+1);

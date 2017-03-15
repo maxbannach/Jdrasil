@@ -18,9 +18,10 @@
 
 package jdrasil;
 
+import jdrasil.algorithms.GraphSplitter;
 import jdrasil.algorithms.approximation.RobertsonSeymourDecomposer;
+import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
-import jdrasil.algorithms.preprocessing.GraphSplitter;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposition;
@@ -29,8 +30,6 @@ import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.io.IOException;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * @author Max Bannach
@@ -61,24 +60,28 @@ public class Approximation {
             long tstart = System.nanoTime();
             TreeDecomposition<Integer> decomposition = null;
 
-            /* compute an approximation of the tree-decomposition */
-            GraphSplitter<Integer> splitter = new GraphSplitter<>(input);
+            /* use reduction rules to reduce the graph */
+            GraphReducer<Integer> reducer = new GraphReducer<Integer>(input);
+            Graph<Integer> H = reducer.getProcessedGraph();
+            int lb = new MinorMinWidthLowerbound<>(H).call();
+            if (lb < 4) lb = 4; // we know this from preprocessing
 
-            /* iterate over the connected components, this may happen in parallel */
-            splitter.stream().forEach( D -> {
-                GraphReducer<Integer> reducer = new GraphReducer<>(D);
-                for (Graph<Integer> reduced : reducer) {
-                    TreeDecomposition<Integer> td = null;
-                    try {
-                        td = new RobertsonSeymourDecomposer<>(reduced).call();
-                    } catch (Exception e) {
-                       LOG.warning("Robertson Seymour failed with unknown error");
-                    }
-                    reducer.addbackTreeDecomposition(td);
+            // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
+            GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
+                TreeDecomposition<Integer> td;
+                try { // use ExactDecomposer to handle atoms
+                    td = new RobertsonSeymourDecomposer<>(atom).call();
+                } catch (Exception e) { // something went wrong, provide trivial decomposition
+                    td = new TreeDecomposition<>(atom);
+                    td.createBag(atom.getVertices());
                 }
-                splitter.addbackTreeDecomposition(reducer.getTreeDecomposition());
-            });
-            decomposition = splitter.getTreeDecomposition();
+                return td;
+            },lb);
+            splitter.setTargetConnectivity(GraphSplitter.Connectivity.ATOM);
+
+            // glue to final decomposition
+            reducer.addbackTreeDecomposition(splitter.call());
+            decomposition = reducer.getTreeDecomposition();
 
             long tend = System.nanoTime();
             System.out.print(decomposition);

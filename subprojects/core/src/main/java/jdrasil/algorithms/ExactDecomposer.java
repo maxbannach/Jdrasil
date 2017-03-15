@@ -27,7 +27,6 @@ import jdrasil.algorithms.exact.SATDecomposer;
 import jdrasil.algorithms.exact.SATDecomposer.Encoding;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
-import jdrasil.algorithms.preprocessing.GraphSplitter;
 import jdrasil.algorithms.upperbounds.StochasticGreedyPermutationDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
@@ -41,15 +40,15 @@ import jdrasil.utilities.logging.JdrasilLogger;
  * tree-decomposition. 
  * 
  * Using call() will invoke the following:
- *   a) the graph will be partitioned into its connected components, which are treated separately in the following
- *   b) the graph will be reduced by preprocessing
- *   c) and upper bound will be computed by stochastic-min fill
- *   d) a lower bound will be computed by minor-min-width
- *   e) if ub == lb the computation is done
- *   f) if n^ub is smaller then some threshold the optimal solution will be computed by the dynamic cops-and-robber game
- *   g) otherwise the optimal solution will be computed by a SAT-Encoding, either serial or parallel
- *   h) finally, all computed decompositions are merged
- *   
+ *   a) the graph will be reduced by preprocessing
+ *   b) and upper bound will be computed by stochastic-min fill
+ *   c) a lower bound will be computed by minor-min-width
+ *   d) if ub == lb the computation is done
+ *   e) if n^ub is smaller then some threshold the optimal solution will be computed by the dynamic cops-and-robber game
+ *   f) otherwise the optimal solution will be computed by a SAT-Encoding, either serial or parallel
+ *
+ * It is assumed that the graph is connected.
+ *
  * @param <T> vertex type
  * @author Max Bannach
  */
@@ -74,78 +73,59 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 	public ExactDecomposer(Graph<T> graph) {
 		this.graph = graph;
 	}
-	
-	/**
-	 * Compute a tree-decomposition of a connected component of the graph.
-	 * This method is the core of the algorithm invoked by @see call(), it will
-	 * a) use preprocessing to reduce the size of the component
+
+	/*
+	 * Compute a tree-decomposition of of the graph. It will:
+	 * a) use preprocessing to reduce the size of the graph
 	 * b) compute lower and upper bounds of the component
 	 * c) compute an optimal tree-decomposition via the cops-and-robber game if the component is small enough
 	 * d) compute an optimal tree-decomposition via a SAT-encoding
-	 * @param component
-	 * @return
-	 * @throws Exception
+	 *
+	 * This method assumes that the graph is connected.
+	 *
 	 */
-	private TreeDecomposition<T> computeTreeDecompositionOfComponent(Graph<T> component) throws Exception {
-		
-		GraphReducer<T> reducer = new GraphReducer<>(component);
-		for (Graph<T> reduced : reducer) {
-			int n = reduced.getVertices().size();
-			LOG.info("Reduced the graph from " + component.getVertices().size() + " to " + n + " vertices");
-			
-			// first compute lower and upper bounds on the tree-width
-			int lb = new MinorMinWidthLowerbound<>(reduced).call();
-			LOG.info("Computed lower bound: " + lb);
-			TreeDecomposition<T> ubDecomposition = new StochasticGreedyPermutationDecomposer<T>(reduced).call();
-			int ub = ubDecomposition.getWidth();		
-			LOG.info("Computed upper bound: " + ub);
-			
-			// if they match, we are done as well
-			if (lb == ub) {
-				LOG.info("The bounds match, extract decomposition");
-				reducer.addbackTreeDecomposition(ubDecomposition);
-				continue;
-			}
-
-			BigInteger freeMemory = new BigInteger(""+ Runtime.getRuntime().freeMemory());
-			BigInteger expectedMemory = binom(new BigInteger(""+n), new BigInteger(""+ub)).multiply(new BigInteger(""+(n+32)/8));
-			LOG.info("Free Memory: " + freeMemory);
-			LOG.info("Expected Memory: " + expectedMemory);
-			
-			// otherwise check if the instance is small enough for the dynamic cops-and-robber game
-			// the algorithm has running time O(n choose k), so we check the size of n choose k
-			// This is also used if no SAT solver is available
-			if (!Formula.canRegisterSATSolver() || (n <= COPS_VERTICES_THRESHOLD && ub <= COPS_TW_THRESHOLD && expectedMemory.compareTo(freeMemory) < 0)) {
-				LOG.info("Solve with a game of Cops and Robbers");
-				TreeDecomposition<T> decomposition = new CopsAndRobber<>(reduced).call();
-				reducer.addbackTreeDecomposition(decomposition);
-				continue;
-			}
-
-			/* If everything above does not work, we solve the problem using a SAT-encoding */
-			LOG.info("Solve with a SAT solver [" + Formula.getExpectedSignature() + "]");
-			TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub).call();
-
-			reducer.addbackTreeDecomposition(decomposition);
-		}
-		return reducer.getTreeDecomposition();	
-	}
-	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		LOG.info("");
-		
-		GraphSplitter<T> splitter = new GraphSplitter<>(this.graph);
-		for (Graph<T> component : splitter) {
-			TreeDecomposition<T> decomposition = null;
-			try {
-				decomposition = computeTreeDecompositionOfComponent(component);
-			} catch (Exception e) {
-				LOG.warning("failed to compute decomposition of a component");
-			}
-			splitter.addbackTreeDecomposition(decomposition);
+		GraphReducer<T> reducer = new GraphReducer<>(graph);
+		Graph<T> reduced = reducer.getProcessedGraph();
+
+		int n = reduced.getVertices().size();
+		LOG.info("Reduced the graph from " + graph.getVertices().size() + " to " + n + " vertices");
+
+		// first compute lower and upper bounds on the tree-width
+		int lb = new MinorMinWidthLowerbound<>(reduced).call();
+		LOG.info("Computed lower bound: " + lb);
+		TreeDecomposition<T> ubDecomposition = new StochasticGreedyPermutationDecomposer<T>(reduced).call();
+		int ub = ubDecomposition.getWidth();
+		LOG.info("Computed upper bound: " + ub);
+
+		// if they match, we are done as well
+		if (lb == ub) {
+			LOG.info("The bounds match, extract decomposition");
+			reducer.addbackTreeDecomposition(ubDecomposition);
+			return reducer.getTreeDecomposition();
 		}
-		return splitter.getTreeDecomposition();
+
+		BigInteger freeMemory = new BigInteger(""+ Runtime.getRuntime().freeMemory());
+		BigInteger expectedMemory = binom(new BigInteger(""+n), new BigInteger(""+ub)).multiply(new BigInteger(""+(n+32)/8));
+		LOG.info("Free Memory: " + freeMemory);
+		LOG.info("Expected Memory: " + expectedMemory);
+
+		// otherwise check if the instance is small enough for the dynamic cops-and-robber game
+		// the algorithm has running time O(n choose k), so we check the size of n choose k
+		// This is also used if no SAT solver is available
+		if (!Formula.canRegisterSATSolver() || (n <= COPS_VERTICES_THRESHOLD && ub <= COPS_TW_THRESHOLD && expectedMemory.compareTo(freeMemory) < 0)) {
+			LOG.info("Solve with a game of Cops and Robbers");
+			TreeDecomposition<T> decomposition = new CopsAndRobber<>(reduced).call();
+			reducer.addbackTreeDecomposition(decomposition);
+			return reducer.getTreeDecomposition();
+		}
+
+		/* If everything above does not work, we solve the problem using a SAT-encoding */
+		LOG.info("Solve with a SAT solver [" + Formula.getExpectedSignature() + "]");
+		TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub).call();
+		reducer.addbackTreeDecomposition(decomposition);
+		return reducer.getTreeDecomposition();
 	}
 
 	@Override

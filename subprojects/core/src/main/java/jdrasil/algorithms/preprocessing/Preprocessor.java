@@ -28,128 +28,84 @@ import jdrasil.graph.TreeDecomposition;
 import jdrasil.utilities.JdrasilProperties;
 
 /**
- * A Preprocessor is a function that maps an arbitrary input graph to a collection of "easier" graphs. 
+ * A Preprocessor is a function that maps an arbitrary input graph to an "easier" graph.
  * Easier here is meant with respect to computing a tree decomposition and often just means "smaller", but 
  * could also reefer to adding structures to the graph that improve pruning potential.
  * 
- * This class models a preprocessor by providing the methods @see computeGraphs(), @see addbackTreeDecomposition(), @see glueDecompositions(), and
- * @see Preprocessor#getTreeDecomposition() . The first method represents the actual preprocessing and computes a collection of graphs from the input graph.
- * The following two methods can be used to add a tree decomposition of one of the graphs produced by the first method back, and to combine these
- * tree decompositions to one for the input graph. The last method is a getter for this decomposition.
+ * This class models a preprocessor by providing the methods @see preprocessGraph(), @see addbackTreeDecomposition(), @see computeTreeDecomposition(), and
+ * @see Preprocessor#getTreeDecomposition() . The first method represents the actual preprocessing and computes a smaller graph from the input graph.
+ * The following two methods can be used to add a tree decomposition of the reduced graph produced by the first method back, and to use this
+ * tree decomposition to create one for the input graph. The last method is a getter for this decomposition.
  * 
  * @author Max Bannach
  */
-public abstract class Preprocessor<T extends Comparable<T>> implements Iterable<Graph<T>> {
+public abstract class Preprocessor<T extends Comparable<T>> {
 
 	/** The graph that is preprocessed. */
 	protected Graph<T> graph;
 	
-	/** The graphs computed by the algorithm. */
-	protected Set<Graph<T>> processedGraphs;
+	/** The graph computed by the algorithm. */
+	protected Graph<T> processedGraph;
 	
-	/** TreeDecompositions of the small Graphs. */
-	protected Set<TreeDecomposition<T>> treeDecompositions;
+	/** TreeDecomposition of the easier Graph. */
+	protected TreeDecomposition<T> processedTreeDecomposition;
 	
 	/** The tree decomposition of the input graph, computed by the preprocessor. */
 	protected TreeDecomposition<T> treeDecomposition;
 	
 	/**
 	 * The constructor of an Preprocessor will invoke the computation of the preprocessing (i.e., it may be time expensive).
-	 * After the construction did finish, one can access the smaller graphs over the methods implemented by this class.
+	 * After the construction did finish, one can access the smaller graph over the methods implemented by this class.
 	 * @param graph that should be preproccessed
 	 */
 	public Preprocessor(Graph<T> graph) {
 		this.graph = graph;
 		this.treeDecomposition = new TreeDecomposition<T>(graph);
-		this.treeDecompositions = new HashSet<>();
-		this.processedGraphs = computeGraphs();
+		this.processedGraph = preprocessGraph();
 	}
 	
 	/**
 	 * This method actually computes the preprocessing. It will use @see graph as input, and produce 
-	 * a (eventually singleton) set of easier (or smaller) graphs.
+	 * an easier (or smaller) graph.
 	 * @return the set of smaller graphs
 	 */
-	protected abstract Set<Graph<T>> computeGraphs();
+	protected abstract Graph<T> preprocessGraph();
 	
 	/**
-	 * This method should compute a tree decomposition of the input graph, using the tree decompositions for 
-	 * the small graphs (@see treeDecompositions). This method will automatically be called, if
-	 * the number of small tree decompositions equals the number of small graphs, i.e., if for every graph produced by this class
-	 * a corresponding tree decompositions was added.
+	 * This method should compute a tree decomposition of the input graph, using the tree decomposition of the
+	 * the smaller graphs (@see processedTreeDecomposition). This method will automatically be called, if
+	 * the tree decompositions of the smaller graph is added.
 	 * This method should not be called manually.
 	 * 
 	 * @return tree decomposition of the input graph
 	 */
-	protected abstract TreeDecomposition<T> glueDecompositions();
-	
+	protected abstract TreeDecomposition<T> computeTreeDecomposition();
+
+	/**
+	 * Get the preprocessed graph.
+	 * @return
+	 */
+	public Graph<T> getProcessedGraph() {
+		return processedGraph;
+	}
+
 	/**
 	 * Add a tree decomposition of a graph produced by this class back.
-	 * This method will call @see glueDecompositions() ones enough tree decompositions where added.
+	 * This method will call @see computeTreeDecomposition()
 	 * @param decomposition the decomposition to be added back
 	 */
-	public synchronized void addbackTreeDecomposition(TreeDecomposition<T> decomposition) {
-		this.treeDecompositions.add(decomposition);
-		if (this.treeDecompositions.size() == this.processedGraphs.size()) {
-			this.treeDecomposition = glueDecompositions();
-		}
+	public void addbackTreeDecomposition(TreeDecomposition<T> decomposition) {
+		this.processedTreeDecomposition = decomposition;
+		this.treeDecomposition = computeTreeDecomposition();
 	}
 	
 	/**
 	 * Get a tree decomposition of the input graph, if available, otherwise null will be returned.
-	 * The decomposition is available, if @see addbackTreeDecomposition() was called for every graph produced 
-	 * by the preprocessor, i.e., after @see glueDecompositions() was called.
+	 * The decomposition is available, if @see addbackTreeDecomposition() was called.
 	 * @return the tree decomposition
 	 */
 	public TreeDecomposition<T> getTreeDecomposition() {
 		return this.treeDecomposition;
 	}
-	
-	//MARK: an iterator
-	
-	/**
-	 * Returns an iterator over the graphs produced by the preprocessing.
-	 * @return graph iterator
-	 */
-	@Override
-	public Iterator<Graph<T>> iterator() {
-		return new GraphIterator<T>(this);
-	}
-	
-	/**
-	 * Iterator graph to make the iterator over @see processedGraphs available.
-	 * @param <Z>
-	 */
-	class GraphIterator<Z extends Comparable<Z>> implements Iterator<Graph<Z>> {
-
-		private final Iterator<Graph<Z>> itr;
-		
-		GraphIterator(Preprocessor<Z> preprocessor) {
-			itr = preprocessor.processedGraphs.iterator();
-		}
-		
-		@Override
-		public boolean hasNext() {
-			return itr.hasNext();
-		}
-
-		@Override
-		public Graph<Z> next() {
-			return itr.next();
-		}		
-	}
-
-	/**
-	 * Returns a stream of the produced graphs.
-	 * This stream will be a parallel stream, if the "parallel" falg is set in
-	 * @see JdrasilProperties
-	 * @return a stream over the produced graphs
-	 */
-	public Stream<Graph<T>> stream() {
-		if (JdrasilProperties.containsKey("parallel")) {
-			return this.processedGraphs.parallelStream();
-		}
-		return this.processedGraphs.stream();
-	};
 
 }

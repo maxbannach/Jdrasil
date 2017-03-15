@@ -43,7 +43,7 @@ public abstract class Invariant<T extends Comparable<T>, Value, Image> {
 	/** The graph for which the invariant is computed. */
 	protected Graph<T> graph;
 	
-	/** The value of the invariant (or  "the invariant"). */
+	/** The value of the invariant (or "the invariant"). */
 	private Value value;
 	
 	/** A corresponding model, i.e., a function that maps vertices to values of type @see Image. */

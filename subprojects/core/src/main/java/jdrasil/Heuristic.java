@@ -106,29 +106,32 @@ public class Heuristic implements sun.misc.SignalHandler {
 
             LOG.info("reducing the graph");
             reducer = new GraphReducer<>(input);
-            for (Graph<Integer> reduced : reducer) {
-                LOG.info("reduced the graph to " + reduced.getVertices().size() + " vertices");
+            Graph<Integer> reduced = reducer.getProcessedGraph();
+            LOG.info("reduced the graph to " + reduced.getVertices().size() + " vertices");
 
-                // temporary tree decomposition to avoid raise conditions
-                TreeDecomposition<Integer> tmp;
+            // temporary tree decomposition to avoid raise conditions
+            TreeDecomposition<Integer> tmp;
 
-                LOG.info("Starting greedy permutation phase");
-                greedyPermutationDecomposer = new StochasticGreedyPermutationDecomposer<>(reduced);
-                tmp = greedyPermutationDecomposer.call();
-                synchronized (this) { this.decomposition = tmp; }
+            LOG.info("Starting greedy permutation phase");
+            greedyPermutationDecomposer = new StochasticGreedyPermutationDecomposer<>(reduced);
+            tmp = greedyPermutationDecomposer.call();
+            synchronized (this) { this.decomposition = tmp; }
 
-                LOG.info("Improving the decomposition");
-                tmp = this.decomposition.copy();
-                tmp.improveDecomposition();
-                synchronized (this) { this.decomposition = tmp; }
+            LOG.info("Improving the decomposition");
+            tmp = this.decomposition.copy();
+            tmp.improveDecomposition();
+            synchronized (this) { this.decomposition = tmp; }
 
-                // we may skip the local search phase
-                if (JdrasilProperties.containsKey("instant")) break;
+            // we may skip the local search phase
+            if (!JdrasilProperties.containsKey("instant")) {
 
                 LOG.info("Starting local search phase");
-                localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE,30, greedyPermutationDecomposer.getPermutation());
+                localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE, 30, greedyPermutationDecomposer.getPermutation());
                 tmp = localSearchDecomposer.call();
-                synchronized (this) { this.decomposition = tmp; }
+                synchronized (this) {
+                    this.decomposition = tmp;
+                }
+
             }
 
             // print and exit
@@ -150,9 +153,7 @@ public class Heuristic implements sun.misc.SignalHandler {
      * @param td a tree decomposition of the reduced graph
      */
     private synchronized void printSolution(TreeDecomposition<Integer> td) {
-        if (reducer.iterator().hasNext()) { // if the reducer has fully reduced the graph, we have nothing to do here
-            reducer.addbackTreeDecomposition(td);
-        }
+        reducer.addbackTreeDecomposition(td);
         this.decomposition = reducer.getTreeDecomposition();
         tend = System.nanoTime();
         System.out.println(this.decomposition);
@@ -195,7 +196,7 @@ public class Heuristic implements sun.misc.SignalHandler {
 
         // if not, create trivial decomposition with a single bag
         if (this.decomposition == null) {
-            Graph<Integer> H = reducer.iterator().next();
+            Graph<Integer> H = reducer.getProcessedGraph();
             this.decomposition = new TreeDecomposition<>(H);
             Bag<Integer> singleBag = this.decomposition.createBag(H.getVertices());
         }

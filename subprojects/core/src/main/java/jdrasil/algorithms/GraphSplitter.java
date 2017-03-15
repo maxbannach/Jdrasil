@@ -18,19 +18,16 @@
  */
 package jdrasil.algorithms;
 
-import jdrasil.algorithms.exact.CopsAndRobber;
-import jdrasil.algorithms.exact.SATDecomposer;
-import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
-import jdrasil.algorithms.preprocessing.GraphReducer;
-import jdrasil.algorithms.upperbounds.StochasticGreedyPermutationDecomposer;
 import jdrasil.graph.*;
+import jdrasil.graph.invariants.CliqueMinimalSeparator;
 import jdrasil.graph.invariants.ConnectedComponents;
-import jdrasil.sat.Formula;
+import jdrasil.graph.invariants.CutVertex;
 import jdrasil.utilities.JdrasilProperties;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.util.*;
 import java.util.concurrent.RecursiveTask;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 /**
@@ -51,7 +48,7 @@ import java.util.logging.Logger;
  *
  * @param <T>
  */
-public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveTask<TreeDecomposition<T>> implements TreeDecomposer<T> {
+public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDecomposition<T>> implements TreeDecomposer<T> {
 
     /** Jdrasils Logger */
     private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
@@ -59,17 +56,14 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
     /** Minimum number of vertices the graph has to have in order to be decomposed, otherwise we directly solve it. */
     private final int FORK_THRESHOLD = 10;
 
-    /** If the graph has less then <value> vertices, then the instance may be solved by a game of Cops and Robber. */
-    private final int COPS_VERTICES_THRESHOLD = 25;
-
-    /** If the graph has a treewidth of less then <value>, then the instance may be solved by a game of Cops and Robber. */
-    private final int COPS_TW_THRESHOLD = 8;
-
     /** Connectivity of the graph that is currently processed */
     private Connectivity mode;
 
     /** We may wish to separate only up to a certain point (i.g., only biconnected components) */
     private Connectivity targetConnectivity;
+
+    /** A Java function interface that is used to map atoms to tree decompositions, i.e., the tree decomposition function. */
+    private Function<Graph<T>, TreeDecomposition<T>> handleAtom;
 
     /**
      * Different connectivities that a graph may have. The connectivity mainly tells the algorithm what to do next
@@ -95,17 +89,20 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
     /**
      * Standard constructor. This will set the connectivity to DC, i.e., connected components will be computed.
      * @param graph
+     * @param handleAtom the function that computes a tree decomposition for atoms
      */
-    public SafeSeparatorDecomposer(Graph<T> graph) {
-        this(graph, Connectivity.DC, Connectivity.ATOM, 0);
+    public GraphSplitter(Graph<T> graph, Function<Graph<T>, TreeDecomposition<T>> handleAtom) {
+        this(graph, handleAtom, Connectivity.DC, Connectivity.ATOM, 0);
     }
 
     /**
      * Standard constructor with given lower bound. This will set the connectivity to DC, i.e., connected components will be computed.
      * @param graph
+     * @param handleAtom the function that computes a tree decomposition for atoms
+     * @param low a lower bound on the tree width of the graph
      */
-    public SafeSeparatorDecomposer(Graph<T> graph, int low) {
-        this(graph, Connectivity.DC, Connectivity.ATOM, low);
+    public GraphSplitter(Graph<T> graph, Function<Graph<T>, TreeDecomposition<T>> handleAtom, int low) {
+        this(graph, handleAtom, Connectivity.DC, Connectivity.ATOM, low);
     }
 
     /**
@@ -120,13 +117,16 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
      * @param graph
      * @param connectivity
      * @param separateUpTo
+     * @param handleAtom the function that computes a tree decomposition for atoms
+     * @param low a lower bound on the tree width of the graph
      */
-    public SafeSeparatorDecomposer(Graph<T> graph, Connectivity connectivity, Connectivity separateUpTo, int low) {
+    public GraphSplitter(Graph<T> graph, Function<Graph<T>, TreeDecomposition<T>> handleAtom, Connectivity connectivity, Connectivity separateUpTo, int low) {
         super();
         this.graph = graph;
         this.mode = connectivity;
         this.targetConnectivity = separateUpTo;
         this.low = low;
+        this.handleAtom = handleAtom;
     }
 
     /**
@@ -165,6 +165,13 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
     @Override
     protected TreeDecomposition<T> compute() {
 
+        // if the graph fits in a single bag we have neither to separate it further nor to handle it as atom
+        if (graph.getVertices().size() <= low+1) {
+            TreeDecomposition<T> oneBag = new TreeDecomposition<T>(graph);
+            oneBag.createBag(graph.getVertices());
+            return oneBag;
+        }
+
         // if the graph has reached the target connectivity -> solve it
         if (mode.ordinal() >= targetConnectivity.ordinal()) mode = Connectivity.ATOM;
 
@@ -179,7 +186,7 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
         // if the graph is connected, we search for biconnected components, that is, we search a separator of size 1
         // such separators are safe since they are cliques
         if (mode == Connectivity.CC) {
-            T cutVertex = getCutVertex();
+            T cutVertex = new CutVertex<>(graph).getVertex();
             if (cutVertex == null) { // graph is biconnected
                 mode = Connectivity.BCC;
                 return compute(); // recursive with new mode
@@ -197,7 +204,7 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
             for (T c1 : graph) { // guess a cut vertex
                 S.clear();
                 S.add(c1);
-                T c2 = getCutVertex(S); // find second cut vertex
+                T c2 = new CutVertex<>(graph, S).getVertex(); // find second cut vertex
                 if (c2 != null) { // found 2-vertex-separator
                     S.add(c2);
                     return forkOnSeparator(S, Connectivity.CC);
@@ -205,7 +212,7 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
             }
             // not found a cut -> graph is triconnected
             mode = Connectivity.TCC;
-            if (mode.ordinal() >= targetConnectivity.ordinal()) mode = Connectivity.ATOM;
+            return compute(); // recursive with new mode
         }
 
         // if the graph is triconnected, we may search a separator of size 3, i.e., computing 4-connected components
@@ -218,7 +225,7 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
                     S.clear();
                     S.add(c1);
                     S.add(c2);
-                    T c3 = getCutVertex(S); // compute third cut vertex
+                    T c3 = new CutVertex<>(graph,S).getVertex(); // compute third cut vertex
                     if (c3 != null) { // found 3-vertex-separator
                         S.add(c3);
 
@@ -254,16 +261,16 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
             }
             // not found a cut -> no safe separator of size 3, go on and search for minimal clique separators
             mode = Connectivity.CLIQUE;
-            if (mode.ordinal() >= targetConnectivity.ordinal()) mode = Connectivity.ATOM;
+            return compute(); // recursive with new mode
         }
 
         // We found all safe separators of size 0,1,2,3 so far. We will now search for clique minimal separators
         if (mode == Connectivity.CLIQUE) {
-            Set<T> S = getCliqueMinimalSeparator();
+            Set<T> S = new CliqueMinimalSeparator<>(graph).getSeparator();
             if (S != null) return forkOnSeparator(S, Connectivity.CC);
             // if we do not found one, we may search for almost clique minimal separators
             mode = Connectivity.ACLIQUE;
-            if (mode.ordinal() >= targetConnectivity.ordinal()) mode = Connectivity.ATOM;
+            return compute(); // recursive with new mode
         }
 
         // we found all clique minimal separators, we may now search for almost clique minimal separators
@@ -272,7 +279,7 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
             for (T c1 : graph) { // guess first cut vertex (the "almost" part of the almost clique
                 S.clear();
                 S.add(c1);
-                Set<T> clique = getCliqueMinimalSeparator(S);
+                Set<T> clique = new CliqueMinimalSeparator<>(graph, S).getSeparator();
                 if (clique == null) continue; // v is not part of an almost clique separator
                 // if we found a clique separator in G\{v}, the clique + {v} is an almost clique separator
                 clique.add(c1);
@@ -280,11 +287,11 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
             }
             // if we do not found one, we may search for almost clique minimal separators
             mode = Connectivity.ATOM;
-            if (mode.ordinal() >= targetConnectivity.ordinal()) mode = Connectivity.ATOM;
+            return compute(); // recursive with new mode
         }
 
-        // no further separation possible -> decompose the atom
-        return handleAtom();
+        // no further separation possible -> decompose the atom using the provided function
+        return handleAtom.apply(graph);
     }
 
     //MARK: Decomposition methods
@@ -327,7 +334,7 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
         // 3. fork on the obtained components and recursively compute tree decompositions for them
         List<RecursiveTask<TreeDecomposition<T>>> tasks = new ArrayList<>();
         for (Graph C : components) {
-            SafeSeparatorDecomposer<T> task = new SafeSeparatorDecomposer<>(C, connectivity, targetConnectivity, low);
+            GraphSplitter<T> task = new GraphSplitter<>(C, handleAtom, connectivity, targetConnectivity, low);
             tasks.add(task);
             if (JdrasilProperties.containsKey("parallel")) { // either handle children parallel or sequential
                 task.fork();
@@ -372,276 +379,4 @@ public class SafeSeparatorDecomposer<T extends Comparable<T>> extends RecursiveT
         // done
         return finalDecomposition;
     }
-
-    //MARK: Hopcroft-Tarjan for computing biconnected components
-
-    // helper variable for the DFS of Hopcroft and Tarjan
-    private int count;
-
-    /**
-     * This method computes a cut vertex (aka articulation point) of the given graph using the algorithm of
-     * Hopcroft and Tarjan. This implementation uses \(O(V+E)\) time, but will not output all components, but just
-     * the first cut vertex it finds.
-     *
-     * The given set of vertices will be ignored during the search (i.e., as if they are deleted).
-     *
-     * @return a cut vertex if there is one
-     */
-    private T getCutVertex(Set<T> forbidden) {
-        // search an arbitrary start vertex that is not forbidden
-        T s = null;
-        for (T v : graph.getVertices()) {
-            if (!forbidden.contains(v)) s = v;
-        }
-        if (s == null) return null; // empty graph
-
-        // start algorithm
-        count = 0;
-        return getCutVertex(s, s, new HashMap<T, Integer>(), new HashMap<T, Integer>(), forbidden);
-    }
-
-    /**
-     * @see SafeSeparatorDecomposer#getCutVertex(Set<T>) without forbidden vertices
-     * @return
-     */
-    private T getCutVertex() {
-        return getCutVertex(new HashSet<T>());
-    }
-
-    /**
-     * @see SafeSeparatorDecomposer#getCutVertex(Set<T>)
-     *
-     * @param u
-     * @param v
-     * @param low
-     * @param depth
-     * @param forbidden
-     * @return
-     */
-    private T getCutVertex(T u, T v, Map<T, Integer> low, Map<T, Integer> depth, Set<T> forbidden) {
-
-        // previsit
-        count++;
-        int nChildren = 0;
-        low.put(v, count);
-        depth.put(v, count);
-
-        // traversal
-        for (T w : graph.getNeighborhood(v)) {
-            if (forbidden.contains(w)) continue; // ignore forbidden vertices
-            if (!depth.containsKey(w)) { // unvisited
-                nChildren++;
-                T tmp = getCutVertex(v, w, low, depth, forbidden);
-                if (tmp != null) return tmp; // already found one
-                low.put(v, Math.min(low.get(v), low.get(w)));
-                if (low.get(w) >= depth.get(v) && u != v) return v; // we found a cut vertex
-            } else if (w != u && depth.get(w) < depth.get(v)) { // if we w is not the parent, update low
-                low.put(v, Math.min(low.get(v), depth.get(w)));
-            }
-        }
-
-        // root of getCutVertex tree is only cut vertices if it has more then 1 child
-        if (u == v && nChildren > 1) return v;
-
-        // not cut vertex found
-        return null;
-    }
-
-    //MARK: compute clique minimal separator
-
-    /**
-     * Computes a clique minimal separator of the graph, that is, a set \(S\subseteq V\) such that \(G[S]\) is a clique,
-     * \(G[V\setminus S]\) as more components then G, and such that \(S\) is a minimal separator for some vertices \(a,b\in V\).
-     *
-     * This method takes \(O(nm)\) time and implements the algorithm described in "An Introduction to Clique Minimal Separator Decomposition"
-     * by Berry et al.
-     * In short, it does the following:
-     * a) compute a minimal triangulation of the graph
-     * b) find minimal separators of the triangulation
-     * c) check which of these separators are cliques in the graph
-     *
-     * @return
-     */
-    private Set<T> getCliqueMinimalSeparator() {
-        return getCliqueMinimalSeparator(new HashSet<T>());
-    }
-
-    /**
-     * Implementation of @see jdrasil.algorithms.SafeSeparatorDecomposer#getCliqueMinimalSeparator() but with a
-     * forbidden set of vertices. The forbidden vertices can be seen "as deleted" in the graph.
-     * @param forbidden
-     * @return
-     */
-    private Set<T> getCliqueMinimalSeparator(Set<T> forbidden) {
-
-        // create a copy of the graph (will be modifed)
-        Graph<T> G = GraphFactory.copy(graph);
-        for (T v : forbidden) G.removeVertex(v);
-        // triangulation of G
-        Graph<T> H = GraphFactory.copy(graph);
-
-        // minimal elimination order
-        List<T> alpha = new ArrayList<T>(graph.getVertices().size());
-
-        // set of generators of minimal separators in H
-        Set<T> X = new HashSet<T>();
-
-        // initialize labels for all vertices
-        Map<T, Integer> label = new HashMap<T, Integer>();
-        for (T v : G) label.put(v, 0);
-        int s = -1;
-
-        // compute the elimination order
-        for (int n = graph.getVertices().size()-forbidden.size(), i = 0; i < n; i++) {
-            // choose a vertex with minimal label
-            T x = G.getVertices().stream().max( (a,b) -> Integer.compare(label.get(a), label.get(b))).get();
-            Set<T> Y = new HashSet<T>(G.getNeighborhood(x));
-
-            // may add x to the generators
-            if (label.get(x) <= s) {
-                X.add(x);
-            }
-            s = label.get(x);
-
-            // mark x as reached and all other vertices as unreached
-            Set<T> reached = new HashSet<T>();
-            reached.add(x);
-            Map<Integer, Set<T>> reach = new HashMap<>();
-            for (int j = 0; j < n; j++) reach.put(j, new HashSet<T>());
-
-            // reach N(x) in G'
-            for (T y : G.getNeighborhood(x)) {
-                reached.add(y);
-                reach.get(label.get(y)).add(y);
-            }
-
-            // compute reached vertices
-            for (int j = 0; j < n; j++) {
-                while (!reach.get(j).isEmpty()) {
-                    // remove a vertex from reach(j)
-                    T y = reach.get(j).iterator().next();
-                    reach.get(j).remove(y);
-                    for (T z : G.getNeighborhood(y)) {
-                        if (reached.contains(z)) continue; // only consider unreached vertices
-                        reached.add(z);
-                        if (label.get(z) > j) {
-                            Y.add(z);
-                            reach.get(label.get(z)).add(z);
-                        } else {
-                            reach.get(j).add(z);
-                        }
-                    }
-                }
-            }
-
-            // add triangulation edges to H
-            for (T y : Y) {
-                H.addEdge(x, y);
-                label.put(y, label.get(y) + 1);
-            }
-
-            // update elimination order
-            alpha.add(0, x);
-            G.removeVertex(x);
-        }
-
-        /* H now stores a triangulation of the graph and alpha a minimal elimination order.
-         * Furthermore, X stores the set of vertices which generate a minimal separator of H.
-         * We can, finally, use this data to find a clique minimal separator in the original graph
-         */
-        for (T x : alpha) {
-            // x is in X it is a minimal separator in H and it may be a clique minimal separator in G
-            if (X.contains(x)) {
-                // separator in H
-                Set<T> S = new HashSet<T>(H.getNeighborhood(x));
-                // check if it is a clique in G
-                boolean isClique = true;
-                testClique: for (T a : S) {
-                    for (T b : S) {
-                        if (a.compareTo(b) >= 0) continue;
-                        if (!graph.isAdjacent(a,b)) {
-                            isClique = false;
-                            break testClique;
-                        }
-                    }
-                }
-                // if S is a clique in G, it is a clique minimal separator in G -> return it
-                if (isClique) return S;
-            }
-            // remove the vertex from H
-            H.removeVertex(x);
-        }
-
-        // no clique minimal separator found
-        return null;
-    }
-
-    //MARK: handle atoms
-
-    /**
-     * Computes the tree decomposition of the graph by reducing it and then calling
-     * @see SafeSeparatorDecomposer#handleAtom(jdrasil.graph.Graph)
-     * @return
-     */
-    private TreeDecomposition<T> handleAtom() {
-        LOG.info("handle atom of size " + graph.getVertices().size());
-        GraphReducer<T> reducer = new GraphReducer<T>(graph);
-        for (Graph<T> H : reducer) {
-            LOG.info("reduced atom to size " + H.getVertices().size());
-            reducer.addbackTreeDecomposition(handleAtom(H));
-        }
-        return reducer.getTreeDecomposition();
-    }
-
-    /**
-     * Directly computes a tree decomposition for the given graph.
-     * @return
-     */
-    private TreeDecomposition<T> handleAtom(Graph H) {
-
-        // if the atom is smaller then the lower bound, just put it in a single bag
-        if (H.getVertices().size() <= low + 1) {
-            LOG.info("atom fits in a single bag");
-            TreeDecomposition<T> onebag = new TreeDecomposition<T>(H);
-            onebag.createBag(H.getVertices());
-            return onebag;
-        }
-
-        // otherwise decompose it
-        try {
-            // first compute lower and upper bound
-            int lb = new MinorMinWidthLowerbound<>(H).call();
-            if (low < lb) lb = low;
-            LOG.info("Computed lower bound: " + lb);
-            TreeDecomposition<T> ubDecomposition = new StochasticGreedyPermutationDecomposer<T>(H).call();
-            int ub = ubDecomposition.getWidth();
-            LOG.info("Computed upper bound: " + ub);
-
-            // if they match, we are done
-            if (lb >= ub) {
-                LOG.info("The bounds match, extract decomposition");
-                return ubDecomposition;
-            }
-
-            // we we have no SAT solver, or the graph is small enough for Cops and Robber
-            if (!Formula.canRegisterSATSolver() || (H.getVertices().size() <= COPS_VERTICES_THRESHOLD && ub <= COPS_TW_THRESHOLD)) {
-                LOG.info("Solve with a game of Cops and Robbers");
-                TreeDecomposition<T> decomposition = new CopsAndRobber<>(H).call();
-                return decomposition;
-            }
-
-            // otherwise use a SAT solver
-            LOG.info("Solve with a SAT solver [" + Formula.getExpectedSignature() + "]");
-            TreeDecomposition<T> decomposition = new SATDecomposer<>(H, SATDecomposer.Encoding.IMPROVED, lb, ub).call();
-            return decomposition;
-
-        } catch (Exception e) { // if something went wrong, we will at least create a valid decomposition
-            // create trivial tree decomposition
-            LOG.warning("Something went wrong during the computation of the decomposition: fall back to trival decomposition");
-            TreeDecomposition<T> trivial = new TreeDecomposition<T>(H);
-            trivial.createBag(H.getVertices());
-            return trivial;
-        }
-    }
-
 }

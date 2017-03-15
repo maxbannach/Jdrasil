@@ -77,33 +77,29 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 	 * @see jdrasil.algorithms.preprocessing.Preprocessor#computeGraphs()
 	 */
 	@Override
-	protected Set<Graph<T>> computeGraphs() {
+	protected Graph<T> preprocessGraph() {
 		
 		// init data structures
 		this.bags = new Stack<>();
 		this.low = 0;
 		this.treeDecomposition = new TreeDecomposition<>(graph);
-		
-		// set of graphs we will produce, this will contain at most one graph (the reduced one), or none,
-		// if the graph is fully reduced
-		Set<Graph<T>> result = new HashSet<Graph<T>>();
-		
+
 		// the reduced graph we will produce
 		Graph<T> reduced = GraphFactory.copy(graph);
 				
 		// input was empty graph – nothing to do
-		if (reduced.getVertices().size() == 0) return result;
+		if (reduced.getVertices().size() == 0) return GraphFactory.emptyGraph();
 		
 		// handle easy cases: vertices of degree 0 and 1
 		eliminateLowDegreeNodes(reduced, 0);
 		eliminateLowDegreeNodes(reduced, 1);
 		
 		// input was a tree
-		if (reduced.getVertices().size() == 0) { glueBags(); return result; }	
+		if (reduced.getVertices().size() == 0) { return GraphFactory.emptyGraph(); }
 		
 		// no tree, eliminate degree 2 vertices
 		eliminateLowDegreeNodes(reduced, 2);
-		if (reduced.getVertices().size() == 0) { glueBags(); return result; }	
+		if (reduced.getVertices().size() == 0) { return GraphFactory.emptyGraph(); }
 		
 		// apply classic reduction rules until exhaustion 
 		boolean fixPointReached = false;
@@ -123,21 +119,20 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 				bags.push(bag);
 			}
 		}
-		if (reduced.getVertices().size() == 0) { glueBags(); return result; }	
+		if (reduced.getVertices().size() == 0) { return GraphFactory.emptyGraph(); }
 		
 		// done
-		result.add(reduced);
-		return result;
+		return reduced;
 	}
 
 	/* (non-Javadoc)
 	 * @see jdrasil.algorithms.preprocessing.Preprocessor#glueDecompositions()
 	 */
 	@Override
-	protected TreeDecomposition<T> glueDecompositions() {
+	protected TreeDecomposition<T> computeTreeDecomposition() {
 
 		// we have only one decomposition, use it
-		this.treeDecomposition = this.treeDecompositions.iterator().next();
+		this.treeDecomposition = processedTreeDecomposition;
 		this.treeDecomposition.setGraph(graph);
 		
 		// add the reduced bags
