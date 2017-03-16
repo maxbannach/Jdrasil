@@ -35,7 +35,7 @@ import java.util.Set;
  *
  * @author Max Bannach
  */
-public class CutVertex<T extends Comparable<T>> extends Invariant<T, Boolean, Boolean> {
+public class CutVertex<T extends Comparable<T>> extends Invariant<T, T, Boolean> {
 
     /** Helper variable for the DFS */
     private int count;
@@ -43,22 +43,26 @@ public class CutVertex<T extends Comparable<T>> extends Invariant<T, Boolean, Bo
     /** The cut vertex to be computed. */
     private T cutVertex;
 
+    /** A set of forbidden vertices, i.e., vertices that will neither be a cut vertex nor be in any biconnected component. */
+    private Set<T> forbidden;
+
     /**
      * Standard constructor just gets the graph in which the cut vertex is searched.
      * @param graph
      */
     public CutVertex(Graph<T> graph) {
         super(graph);
+        this.forbidden = new HashSet<T>();
     }
 
     /**
      * We may specify a set of forbidden vertices (the first set, if one is given). These vertices are considered as
      * deleted in the graph, they will not be a cutVertex and not be in any biconnected component.
      * @param graph
-     * @param X
      */
-    public CutVertex(Graph<T> graph, Set<T>... X) {
-        super(graph, X);
+    public CutVertex(Graph<T> graph, Set<T> forbidden) {
+        super(graph);
+        this.forbidden = forbidden;
     }
 
     /**
@@ -66,12 +70,9 @@ public class CutVertex<T extends Comparable<T>> extends Invariant<T, Boolean, Bo
      * Hopcroft and Tarjan. This implementation uses \(O(V+E)\) time, but will not output all components, but just
      * the first cut vertex it finds.
      *
-     * The given set of vertices will be ignored during the search (i.e., as if they are deleted).
-     *
-     * @param forbidden
      * @return
      */
-    private T getCutVertex(Set<T> forbidden) {
+    private T getCutVertex() {
         // search an arbitrary start vertex that is not forbidden
         T s = null;
         for (T v : graph.getVertices()) {
@@ -81,7 +82,7 @@ public class CutVertex<T extends Comparable<T>> extends Invariant<T, Boolean, Bo
 
         // start algorithm
         count = 0;
-        return getCutVertex(s, s, new HashMap<T, Integer>(), new HashMap<T, Integer>(), forbidden);
+        return getCutVertex(s, s, new HashMap<T, Integer>(), new HashMap<T, Integer>());
     }
 
     /**
@@ -90,10 +91,9 @@ public class CutVertex<T extends Comparable<T>> extends Invariant<T, Boolean, Bo
      * @param v
      * @param low
      * @param depth
-     * @param forbidden
      * @return
      */
-    private T getCutVertex(T u, T v, Map<T, Integer> low, Map<T, Integer> depth, Set<T> forbidden) {
+    private T getCutVertex(T u, T v, Map<T, Integer> low, Map<T, Integer> depth) {
 
         // previsit
         count++;
@@ -106,7 +106,7 @@ public class CutVertex<T extends Comparable<T>> extends Invariant<T, Boolean, Bo
             if (forbidden.contains(w)) continue; // ignore forbidden vertices
             if (!depth.containsKey(w)) { // unvisited
                 nChildren++;
-                T tmp = getCutVertex(v, w, low, depth, forbidden);
+                T tmp = getCutVertex(v, w, low, depth);
                 if (tmp != null) return tmp; // already found one
                 low.put(v, Math.min(low.get(v), low.get(w)));
                 if (low.get(w) >= depth.get(v) && u != v) return v; // we found a cut vertex
@@ -123,26 +123,19 @@ public class CutVertex<T extends Comparable<T>> extends Invariant<T, Boolean, Bo
     }
 
     @Override
-    protected Map<T, Boolean> computeModel(Set<T>[] X) {
-        Set<T> forbidden = X.length > 0 ? X[0] : new HashSet<T>();
+    protected Map<T, Boolean> computeModel() {
         Map<T, Boolean> model = new HashMap<T, Boolean>();
-        cutVertex = getCutVertex(forbidden);
+        cutVertex = getCutVertex();
         if (cutVertex != null) model.put(cutVertex, true);
         return model;
     }
 
     @Override
-    protected Boolean computeValue() {
-        return cutVertex != null;
+    protected T computeValue() {
+        return cutVertex;
     }
 
     @Override
     public boolean isExact() { return true; }
-
-    /**
-     * Returns the cut vertex.
-     * @return
-     */
-    public T getVertex() { return cutVertex; }
 
 }

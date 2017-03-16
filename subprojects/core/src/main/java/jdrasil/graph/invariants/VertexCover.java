@@ -43,6 +43,7 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 	 */
 	public VertexCover(Graph<T> graph) {
 		super(graph);
+		this.minimal = false;
 	}
 	
 	/**
@@ -100,7 +101,7 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, Boolean> computeModel(Set<T>... X) {
+	protected Map<T, Boolean> computeModel() {
 		Map<T, Boolean> vertexCover = null;
 		
 		// if we have a SAT solver, solve the problem exactly
@@ -139,9 +140,7 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 	 * @see jdrasil.graph.invariants.Invariant#isExact()
 	 */
 	@Override
-	public boolean isExact() {
-		return minimal;
-	}
+	public boolean isExact() { return minimal; }
 	
 	/**
 	 * Compute a set representation of the model. I.e., a set containing all vertices in the vertex-cover.

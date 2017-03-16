@@ -47,7 +47,7 @@ public class Matching<T extends Comparable<T>> extends Invariant<T, Integer, T> 
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, T> computeModel(Set<T>... X) {
+	protected Map<T, T> computeModel() {
 		Map<T, T> matching = new HashMap<>();
 		
 		// greedy match vertices

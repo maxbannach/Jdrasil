@@ -52,7 +52,7 @@ public class MinimalSeparator<T extends Comparable<T>> extends Invariant<T, Inte
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, Boolean> computeModel(Set<T>... X) {
+	protected Map<T, Boolean> computeModel() {
 		int n = graph.getVertices().size();
 		// we need a mapping between the nodes of the graph and their indices
 		HashMap<T, Integer> mapTI = new HashMap<>();
@@ -145,6 +145,7 @@ public class MinimalSeparator<T extends Comparable<T>> extends Invariant<T, Inte
 	 * @return
 	 */
 	public Set<T> getSeperator() {
+		if (getValue() == 0) return null;
 		return seperator;
 	}
 

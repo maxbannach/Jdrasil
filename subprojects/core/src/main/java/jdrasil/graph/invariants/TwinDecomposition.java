@@ -48,7 +48,7 @@ public class TwinDecomposition<T extends Comparable<T>> extends Invariant<T, Int
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, Set<T>> computeModel(Set<T>... X) {
+	protected Map<T, Set<T>> computeModel() {
 		Map<T, Set<T>> trueTwins = getTwinDecomposition(true);
 		Map<T, Set<T>> falseTwins = getTwinDecomposition(false);
 		Map<T, Set<T>> twins = new HashMap<T, Set<T>>();
@@ -90,7 +90,7 @@ public class TwinDecomposition<T extends Comparable<T>> extends Invariant<T, Int
 	 * This method can be used to compute both kinds of twins, regulated with the given boolean parameter.
 	 * 
 	 */
-	public Map<T, Set<T>> getTwinDecomposition(boolean trueTwins) {
+	private Map<T, Set<T>> getTwinDecomposition(boolean trueTwins) {
 		PartitionRefinement<T> P = new PartitionRefinement<>(graph.getVertices());
 		for (T v : graph) {
 			Set<T> Nv = new HashSet<T>(graph.getNeighborhood(v)); 

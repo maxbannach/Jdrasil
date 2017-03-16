@@ -48,22 +48,18 @@ public abstract class Invariant<T extends Comparable<T>, Value, Image> {
 	
 	/** A corresponding model, i.e., a function that maps vertices to values of type @see Image. */
 	private Map<T, Image> model;
-	
+
 	/**
 	 * The constructor of the invariant for a fixed graph G.
-	 * This method will invoke the computation of the invariant. In order to do so,
-	 * it will call (in this order) the methods @see computeModel() and @see computeValue().
+	 * This method will just initialize some data structures, the computation happens the first time @see getModel()
+	 * or @see getValue() is called.
 	 *
-	 * Optionally an array of sets of vertices can be provides. This array will be piped to the computeModel method
-	 * which may use it. For instances, this could be a set of forbidden vertices in the computation of connected components.
-	 * 
 	 * @param graph
-	 * @param X
 	 */
-	public Invariant(Graph<T> graph, Set<T>... X) {
+	public Invariant(Graph<T> graph) {
 		this.graph = graph;
-		this.model = computeModel(X);
-		this.value = computeValue();
+		this.model = null;
+		this.value = null;
 	}
 	
 	/**
@@ -75,7 +71,7 @@ public abstract class Invariant<T extends Comparable<T>, Value, Image> {
 	 * 
 	 * @return
 	 */
-	protected abstract Map<T, Image> computeModel(Set<T>... X);
+	protected abstract Map<T, Image> computeModel();
 	
 	/**
 	 * Compute the value of the invariant, i.e., "the invariant".
@@ -91,19 +87,29 @@ public abstract class Invariant<T extends Comparable<T>, Value, Image> {
 	
 	/**
 	 * Returns the value of the invariant (computed by @see computeValue()).
-	 * This method is just a getter and works in O(1).
+	 * If the model was not computed yet, i.e., if this is the first query, @see computeModel() and @see computeValue()
+	 * will be invoked.
 	 * @return
 	 */
 	public Value getValue() {
+		if (this.model == null) {
+			this.model = computeModel();
+			this.value = computeValue();
+		}
 		return this.value;
 	}
 	
 	/**
 	 * Returns a model of the invariant (computed by @see computeModel()).
-	 * This method is just a getter and works in O(1).
+	 * If the model was not computed yet, i.e., if this is the first query, @see computeModel() and @see computeValue()
+	 * will be invoked.
 	 * @return
 	 */
 	public Map<T, Image> getModel() {
+		if (this.model == null) {
+			this.model = computeModel();
+			this.value = computeValue();
+		}
 		return this.model;
 	}
 	

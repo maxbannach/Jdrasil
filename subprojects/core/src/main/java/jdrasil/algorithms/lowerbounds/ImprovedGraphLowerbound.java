@@ -89,7 +89,7 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
 
     /**
      * Computes the k-neighbor-improved-graph of the given graph, that is, the graph that contains a new edge between
-     * each pari of non adjacent vertices with at least k common neighbors. This method will modify the input graph.
+     * each pair of non adjacent vertices with at least k common neighbors. This method will modify the input graph.
      * @param G
      * @param k
      * @return the k-neighbors-imrpoved graph of G

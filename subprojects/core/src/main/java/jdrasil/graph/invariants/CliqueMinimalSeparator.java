@@ -45,31 +45,33 @@ public class CliqueMinimalSeparator<T extends Comparable<T>> extends Invariant<T
     /** The clique minimal separator we wish to compute */
     private Set<T> cliqueMinimalSeparator;
 
+    /** Set of forbidden vertices, i.e., vertices which are ignored in the graph. */
+    private Set<T> forbidden;
+
     /**
      * Standard constructor just gets the graph in which the separator is searched.
      * @param graph
      */
     public CliqueMinimalSeparator(Graph<T> graph) {
         super(graph);
+        this.forbidden = new HashSet<T>();
     }
 
     /**
      * We may specify a set of forbidden vertices (the first set, if one is given). These vertices are considered as
      * deleted in the graph, they will not be part of the separator nor in any component.
      * @param graph
-     * @param X
      */
-    public CliqueMinimalSeparator(Graph<T> graph, Set<T>... X) {
-        super(graph, X);
+    public CliqueMinimalSeparator(Graph<T> graph, Set<T> forbidden) {
+        super(graph);
+        this.forbidden = forbidden;
     }
 
     /**
      * Implementation of the algorithm described in Berry et al.
-     * The forbidden vertices can be seen "as deleted" in the graph.
-     * @param forbidden
      * @return
      */
-    private Set<T> getCliqueMinimalSeparator(Set<T> forbidden) {
+    private Set<T> getCliqueMinimalSeparator() {
 
         // create a copy of the graph (will be modifed)
         Graph<T> G = GraphFactory.copy(graph);
@@ -174,10 +176,9 @@ public class CliqueMinimalSeparator<T extends Comparable<T>> extends Invariant<T
     }
 
     @Override
-    protected Map<T, Boolean> computeModel(Set<T>[] X) {
-        Set<T> forbidden = X.length > 0 ? X[0] : new HashSet<T>();
+    protected Map<T, Boolean> computeModel() {
         Map<T, Boolean> model = new HashMap<T, Boolean>();
-        cliqueMinimalSeparator = getCliqueMinimalSeparator(forbidden);
+        cliqueMinimalSeparator = getCliqueMinimalSeparator();
         for (T v : graph) model.put(v, (cliqueMinimalSeparator != null && cliqueMinimalSeparator.contains(v)) );
         return model;
     }
@@ -194,5 +195,8 @@ public class CliqueMinimalSeparator<T extends Comparable<T>> extends Invariant<T
      * Getter for the actual clique minimal separator.
      * @return
      */
-    public Set<T> getSeparator() { return cliqueMinimalSeparator; }
+    public Set<T> getSeparator() {
+        if (getValue() == 0) return null; // also invokes eventual computation
+        return cliqueMinimalSeparator;
+    }
 }

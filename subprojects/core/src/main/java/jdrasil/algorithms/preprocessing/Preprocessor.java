@@ -54,14 +54,13 @@ public abstract class Preprocessor<T extends Comparable<T>> {
 	protected TreeDecomposition<T> treeDecomposition;
 	
 	/**
-	 * The constructor of an Preprocessor will invoke the computation of the preprocessing (i.e., it may be time expensive).
-	 * After the construction did finish, one can access the smaller graph over the methods implemented by this class.
-	 * @param graph that should be preproccessed
+	 * The constructor just initialize some internal data structures and stores the graph that should be preprocessed.
+	 * @param graph that should be preprocessed
 	 */
 	public Preprocessor(Graph<T> graph) {
 		this.graph = graph;
 		this.treeDecomposition = new TreeDecomposition<T>(graph);
-		this.processedGraph = preprocessGraph();
+		this.processedGraph = null;
 	}
 	
 	/**
@@ -82,10 +81,12 @@ public abstract class Preprocessor<T extends Comparable<T>> {
 	protected abstract TreeDecomposition<T> computeTreeDecomposition();
 
 	/**
-	 * Get the preprocessed graph.
+	 * Get the preprocessed graph. If the graph was not computed yet, this method will invoke the preprocessing algorithm,
+	 * i.e., @see jdrasil.algorithms.preprocessing.Preprocessor#preprocessGraph()
 	 * @return
 	 */
 	public Graph<T> getProcessedGraph() {
+		if (this.processedGraph == null) this.processedGraph = preprocessGraph();
 		return processedGraph;
 	}
 

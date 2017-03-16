@@ -36,21 +36,30 @@ public class ConnectedComponents<T extends Comparable<T>> extends Invariant<T, I
 	private Set<T> forbidden;
 
 	/**
+	 * Standard constructor that just takes the graph in which we search connected components.
 	 * @param graph
 	 */
 	public ConnectedComponents(Graph<T> graph) {
 		super(graph);
+		this.forbidden = new HashSet<T>();
 	}
-	public ConnectedComponents(Graph<T> graph, Set<T>... X) {
-		super(graph, X);
+
+	/**
+	 * This constructor addionaly defines a set of forbidden vertices which can be seen as deleted in the graph, they
+	 * will not be in any connected component. For instances, they can be used as a separator.
+	 * @param graph
+	 * @param forbidden
+	 */
+	public ConnectedComponents(Graph<T> graph, Set<T> forbidden) {
+		super(graph);
+		this.forbidden = forbidden;
 	}
 
 	/* (non-Javadoc)
 	 * @see jdrasil.graph.invariants.Invariant#computeModel()
 	 */
 	@Override
-	protected Map<T, Integer> computeModel(Set<T>... X) {
-		Set<T> forbidden = X.length > 0 ? X[0] : new HashSet<T>();
+	protected Map<T, Integer> computeModel() {
 		Map<T, Integer> components = new HashMap<>();
 		Stack<T> S = new Stack<>();
 		int currentComponent = 0;

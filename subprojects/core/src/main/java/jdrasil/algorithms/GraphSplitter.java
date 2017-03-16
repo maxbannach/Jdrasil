@@ -187,7 +187,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         // if the graph is connected, we search for biconnected components, that is, we search a separator of size 1
         // such separators are safe since they are cliques
         if (mode == Connectivity.CC) {
-            T cutVertex = new CutVertex<>(graph).getVertex();
+            T cutVertex = new CutVertex<>(graph).getValue();
             if (cutVertex == null) { // graph is biconnected
                 mode = Connectivity.BCC;
                 return compute(); // recursive with new mode
@@ -205,7 +205,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
             for (T c1 : graph) { // guess a cut vertex
                 S.clear();
                 S.add(c1);
-                T c2 = new CutVertex<>(graph, S).getVertex(); // find second cut vertex
+                T c2 = new CutVertex<>(graph, S).getValue(); // find second cut vertex
                 if (c2 != null) { // found 2-vertex-separator
                     S.add(c2);
                     return forkOnSeparator(S, Connectivity.CC);
@@ -226,7 +226,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
                     S.clear();
                     S.add(c1);
                     S.add(c2);
-                    T c3 = new CutVertex<>(graph,S).getVertex(); // compute third cut vertex
+                    T c3 = new CutVertex<>(graph,S).getValue(); // compute third cut vertex
                     if (c3 != null) { // found 3-vertex-separator
                         S.add(c3);
 
