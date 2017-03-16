@@ -20,6 +20,7 @@ package jdrasil.algorithms.approximation;
 
 import com.sun.net.httpserver.Authenticator;
 import jdrasil.graph.*;
+import jdrasil.graph.invariants.MinimalVertexSeparator;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.util.*;
@@ -158,7 +159,7 @@ public class RobertsonSeymourDecomposer<T extends Comparable<T>> implements Tree
                 }
 
                 // try to find a separator
-                BitSet separator = getSeparator(W, SA, SB, k);
+                BitSet separator = new MinimalVertexSeparator<T>(graph, vertexToInt, intToVertex, W, SA, SB, k+1).getSeparatorAsBitSet();
                 if (separator == null) continue;
 
                 // found a separator, we can stop searching
@@ -189,156 +190,6 @@ public class RobertsonSeymourDecomposer<T extends Comparable<T>> implements Tree
 
         // done
         return rootBag;
-    }
-
-    /**
-     * This method tries to compute a separator that disconnected \(S_A\) and \(S_B\) in \(G[w]\)
-     * and has size at most \(k+1\). If a separator if this size is found, it is returned, other wise
-     * this method will return null.
-     *
-     * In detail, this method implements a restricted version of ford-folkerson with running time
-     * \(O(k\cdot(n+m))=O(k^2n)\).
-     *
-     * @param W the subgraph in which we search the separator
-     * @param SA first vertex set we wish to separate
-     * @param SB second vertex set we wish to separate
-     * @return a separator separating \(S_A\) and \(S_B\) in \(G[W]\) or null, if non of size \(k+1\) exists
-     */
-    private BitSet getSeparator(BitSet W, BitSet SA, BitSet SB, int k) {
-
-        // redisual graph of ford-fulkerson
-        Map<Integer, Map<Integer, Integer>> weights = new HashMap<>();
-        Graph<Integer> residual = constructResidualGraph(W, weights);
-        int flow = 0; // the flow we compute
-
-        // store the separation of the graph
-        HashSet<Integer> visited = new HashSet<>();
-        HashMap<Integer, Integer> prev = new HashMap<>();
-
-        // ford-fulkerson
-        while (true) {
-            // find a path from X to Y with BFS
-            Queue<Integer> Q = new LinkedList<>();
-            visited.clear();
-            prev.clear();
-            Integer p = null; // end point of the path
-
-            // initialize bfs queue
-            for (int v = SA.nextSetBit(0); v >= 0; v = SA.nextSetBit(v+1)) {
-                Q.offer(v);
-                visited.add(v);
-                prev.put(v, v);
-            }
-
-            // search graph until path to Y is found (or graph is exhausted)
-            bfs: while (!Q.isEmpty()) {
-                Integer v = Q.poll();
-                for (Integer w : residual.getNeighborhood(v)) {
-                    if (visited.contains(w)) continue; // vertex already used
-                    visited.add(w);
-                    Q.offer(w);
-                    prev.put(w, v);
-                    if (SB.get(w)) {
-                        p = w;
-                        break bfs;
-                    }
-                }
-            }
-
-            // no augmenting path left, exit
-            if (p == null) break;
-
-            // augmenting path found, update flow
-            flow = flow + 1;
-
-            // if the flow exceeds k+1, the size of the separator does so as well -> we can cancel
-            if (flow == k + 2) return null;
-
-            // update residual graph
-            while (!prev.get(p).equals(p)) {
-
-                // decrease flow by one
-                weights.get(prev.get(p)).put(p, weights.get(prev.get(p)).get(p)-1);
-                if (weights.get(prev.get(p)).get(p) == 0) {
-                    residual.removeDirectedEdge(prev.get(p), p);
-                }
-
-                // increase flow
-                if (!weights.get(p).containsKey(prev.get(p))) {
-                    weights.get(p).put(prev.get(p), 0);
-                }
-                weights.get(p).put(prev.get(p), weights.get(p).get(prev.get(p))+1);
-                if (weights.get(p).get(prev.get(p)) == 1) {
-                    residual.addDirectedEdge(p, prev.get(p));
-                }
-
-                // walk the path
-                p = prev.get(p);
-            }
-        }
-
-        /*
-         * If we reach this point, the vertex-flow between SA and SB is at most k+1 and the residual graph
-         * represents a corresponding partition of the graph.
-         * We can now extract the separator from it.
-         */
-
-        // the separator that separates the two sets
-        BitSet separator = new BitSet();
-
-        // go through the visited vertices, that are the vertices reachable by augmenting paths
-        for (Integer v : visited) {
-           if (v < n && visited.contains(v+n)) continue;
-           if (v >= n && visited.contains(v-n)) continue;
-           separator.set(v < n ? v : v-n);
-        }
-
-        // done
-        return separator;
-    }
-
-    /**
-     * Construct a residual graph for a minimum vertex-cut. Thils will create a (Integer) graph of the given subgraph,
-     * in which each vertex \(v\) is replaced by \(v_{in}\rightarrow v_{out}\), i.e., the standard construction for
-     * computing vertex-disjoint paths.
-     * @param W the subgraph that we are looking at
-     * @param weights a reference to a hashmap, which will later contain the weights of the residual graph
-     * @return residual graph that can be used to find vertex-disjoint paths
-     */
-    private Graph<Integer> constructResidualGraph(BitSet W, Map<Integer, Map<Integer, Integer>> weights) {
-
-        // the residual graph in construction, and its edge weights
-        Graph<Integer> residual = GraphFactory.emptyGraph();
-        weights.clear();
-
-        // copy vertices that are needed
-        for (T v : graph) {
-            int id = vertexToInt.get(v);
-            if (!W.get(id)) continue; // just copy vertices of the subgraph
-            residual.addVertex(id); // in-vertex
-            residual.addVertex(n + id); // out-vertex
-            residual.addDirectedEdge(id, n + id);
-            weights.put(id, new HashMap<>());
-            weights.put(n + id, new HashMap<>());
-            weights.get(id).put(n+id, 1); // the edge as unit wight
-        }
-
-        // copy edges
-        for (T v : graph) {
-            if (!W.get(vertexToInt.get(v))) continue;
-            for (T w : graph.getNeighborhood(v)) {
-                if (!W.get(vertexToInt.get(w))) continue;
-                int vid = vertexToInt.get(v);
-                int wid = vertexToInt.get(w);
-
-                // edge from v_out to w_in
-                residual.addDirectedEdge(vid+n, wid);
-                weights.get(vid+n).put(wid, Integer.MAX_VALUE/2); // somewhat infinity
-            }
-        }
-
-        // done
-        return residual;
     }
 
     /**

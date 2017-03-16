@@ -702,6 +702,16 @@ Berry et al.\, In short, it does the following:
  minimal separator \(S\), then \(S\cup\{v\}\) is an almost clique
  minimal separator.
 
+\section{Minimal Vertex Separator}
+The class \JClass{MinimalVertexSeparator} implements an algorithm to compute a minimal vertex
+separator between two sets \(S_A\), \(S_B\) in a given subgraph
+\(G[W]\). The size of the separator can be bounded by a variable
+\(k\), i.e., we will find the smallest separator less or equal to
+\(k\) or report that no such separator exists.
+ 
+In detail, this class implements a bounded version of the
+Ford-Fulkerson algorithm running in time \(O(k(n+m))\).
+
 \chapter{Tree Decompositions}\label{chapter:treedecompositions}
 Since \Jdrasil{} is a library for computing tree decompositions, a
 well thought through representation of such decompositions is
