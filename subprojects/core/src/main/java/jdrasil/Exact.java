@@ -21,6 +21,7 @@ package jdrasil;
 import jdrasil.algorithms.ExactDecomposer;
 import jdrasil.algorithms.GraphSplitter;
 import jdrasil.algorithms.exact.CopsAndRobber;
+import jdrasil.algorithms.lowerbounds.ImprovedGraphLowerbound;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.graph.Graph;

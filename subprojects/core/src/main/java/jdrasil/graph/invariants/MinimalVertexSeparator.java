@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
  * separator less or equal to \(k\) or report that no such separator exists.
  *
  * In detail, this class implements a bounded version of the Ford-Fulkerson algorithm running in time \(O(k(n+m))\).
+ *
+ * @author Max Bannach
  */
 public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T, Integer, Boolean>  {
 

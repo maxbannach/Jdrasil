@@ -873,6 +873,19 @@ not optimal) tree decomposition of the input graph. Furthermore, if
 the decomposition of the minor has width \(k\), the width of the final
 decomposition is at most \(2k+1\).
   
+\section{Computing Improved Graphs}
+The $k$-$\{\text{neighbor, path}\}$-improved graph of $G$ is the graph
+that is obtained by repeatedly adding edges between non-adjacent
+vertex $u,v$ that have at least $k$ $\{$common neighbors, vertex
+  disjoint paths between them$\}$. If $k-1$ is a lower bound on the
+tree width of $G$, then these operations are safe with respect to tree
+width~\cite{bodleanderK2011}.
+
+The improved graphs are useful, as adding edges improves the quality
+of lower bound algorithms and may also boost the pruning potential of
+exact algorithms. In \Jdrasil{} they can be computed by the classes
+\JClass{NeighborImprovedGraph} and \JClass{PathImprovedGraph}, respectively. 
+
 \chapter{Splitting up the Graph}
 When we compute the tree width of a graph, it is often not necessary
 to compute the tree width of the whole graph at once. In stead, it is
