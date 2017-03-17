@@ -57,6 +57,9 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
     /** The algorithm can be combined with contraction, this flag indicates if we do so. */
     private boolean contraction;
 
+    /** The algorithm can use the path-improved graph instead of the neighbor improved graph, this flag indicates if we do so. */
+    private boolean path;
+
     /**
      * Standard constructor, just with the graph that should be decomposed.
      * This will set the used algorithm to MinorMinWidth.
@@ -66,6 +69,7 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
         this.graph = graph;
         setToRun(Algorithm.MinorMinWidth);
         setContraction(false);
+        setPath(false);
         this.low = 0;
     }
 
@@ -97,7 +101,11 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
         // try to improve the lower bound via improved graphs
         Graph<T> H = GraphFactory.copy(graph);
         while (true) {
-            H = new NeighborImprovedGraph<T>(graph, low+1).getProcessedGraph();
+            if (path) { // compute path-improved graph
+                H = new PathImprovedGraph<>(graph, low + 1).getProcessedGraph();
+            } else { // compute neighbor-improved graph
+                H = new NeighborImprovedGraph<T>(graph, low + 1).getProcessedGraph();
+            }
             tmp = getLowerbound(H);
 
             // contract a safe minor, as in the minor-min-width heuristic
@@ -108,6 +116,7 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
                     List<T> nextV = new LinkedList<>();
                     for (T v : H) {
                         int deg = H.getNeighborhood(v).size();
+                        if (deg == 0) continue; // cant work with isolated vertex
                         if (deg < min) {
                             min = deg;
                             nextV.clear();
@@ -134,7 +143,7 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
                             nextU.add(u);
                         }
                     }
-                    T u = nextV.size() > 0 ? nextU.get(RandomNumberGenerator.nextInt(nextU.size())) : null;
+                    T u = nextU.size() > 0 ? nextU.get(RandomNumberGenerator.nextInt(nextU.size())) : null;
 
                     // contract and update lower bound
                     H.contract(v, u);
@@ -169,9 +178,13 @@ public class ImprovedGraphLowerbound<T extends Comparable<T>> implements Lowerbo
     public Algorithm getToRun(Algorithm toRun) { return this.toRun; }
 
     /**
-     * The algorithm can alternate between the heuristic and contraction. Set this to true to enable contraction.
+     * The algorithm can use the path-improved graph instead of the neighbor-improved graph. Set this to true to enable
+     * the path-improved graph. Attention: computing a path-improved graph is much more time consuming then computing a
+     * neighbor-improved graph.
      * (Default: false)
      * @param contraction
      */
     public void setContraction(boolean contraction) { this.contraction = contraction; }
+
+    public void setPath(boolean path) { this.path = path; }
 }

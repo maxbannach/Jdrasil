@@ -11,7 +11,8 @@ import java.util.Set;
  * Computes the k-neighbor-improved-graph of the given graph, that is, the graph that is obtained by repeatedly adding
  * edges between paris of non-adjacent vertices that have at least \(k\) common neighbors.
  *
- * Note that this will not change the tree width, if \(k-1\) is a known lower bound on the tree width of the graph.
+ * Note that this operation is not necessarily safe. We have, however, \(\mathrm{tw}(G)\leq k\Leftrightarrow\mathrm{tw}(H)\leq k\)
+ * where \(H\) is the \((k+1)\)-improved graph of \(G\).
  * See "Treewidth computations II. Lower bounds" by Bodlaender and Koster for details.
  */
 public class NeighborImprovedGraph<T extends Comparable<T>> extends Preprocessor<T> {
@@ -42,7 +43,7 @@ public class NeighborImprovedGraph<T extends Comparable<T>> extends Preprocessor
             // consider all pairs of vertices
             for (T v : improved) {
                 for (T w : improved) {
-                    if (v.compareTo(w) <= 0) continue;    // consider edges just onece
+                    if (v.compareTo(w) >= 0) continue;    // consider edges just onece
                     if (improved.isAdjacent(v, w)) continue; // if the edge exisits we cant improve
 
                     // compute common neighbors

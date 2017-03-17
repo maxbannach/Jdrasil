@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
  * subgraph \(G[W]\). The size of the separator can be bounded by a variable \(k\), i.e., we will find the smallest
  * separator less or equal to \(k\) or report that no such separator exists.
  *
+ * Their is a special case when the separator is empty as this could mean that there is no separator or that there is actually
+ * a separator of size 0. To distinguish these cases, getValue will return -1 if no separator was found.
+ *
  * In detail, this class implements a bounded version of the Ford-Fulkerson algorithm running in time \(O(k(n+m))\).
  *
  * @author Max Bannach
@@ -23,7 +26,7 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
     /** The first vertex set */
     private BitSet SA;
 
-    /** The secon vertex, i.e., the one which we want to separate A */
+    /** The second vertex, i.e., the one which we want to separate A */
     private BitSet SB;
 
     /** The maximal size of a separator we search */
@@ -31,6 +34,17 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
 
     /** The separator we try to compute */
     private BitSet separator;
+
+    /** Indicates if the model is actually a separator. */
+    private boolean isSeparator;
+
+    /** Indicates whether or not the found separator is disjoint to SA and SB or not. */
+    public void setDisjointToS(boolean disjointToS) {
+        this.disjointToS = disjointToS;
+    }
+
+    /** Indicates whether or not the found separator is disjoint to SA and SB or not. */
+    private boolean disjointToS;
 
     /** Bijection from V to {0,...,n-1} */
     private final Map<T, Integer> vertexToInt;
@@ -66,6 +80,8 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
         BitSet Bb = new BitSet(i);
         for (T v : SB) Bb.set(vertexToInt.get(v));
         this.SB = Bb;
+        this.k = k;
+        setDisjointToS(false);
     }
 
     /**
@@ -86,6 +102,8 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
         this.W = W;
         this.SA = SA;
         this.SB = SB;
+        this.k = k;
+        setDisjointToS(false);
     }
 
     //Mark: Invariant interface
@@ -93,13 +111,17 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
     @Override
     protected Map<T, Boolean> computeModel() {
         separator = getSeparator(W, SA, SB, k);
+        isSeparator = separator != null ? true : false;
         Map<T, Boolean> model = new HashMap<T, Boolean>();
         for (T v : graph) model.put(v, separator != null && separator.get(vertexToInt.get(v)));
         return model;
     }
 
     @Override
-    protected Integer computeValue() { return (int) getModel().entrySet().stream().filter( x -> x.getValue() ).count(); }
+    protected Integer computeValue() {
+        if (!isSeparator) return -1;
+        return (int) getModel().entrySet().stream().filter( x -> x.getValue() ).count();
+    }
 
     @Override
     public boolean isExact() { return true; }
@@ -109,7 +131,7 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
      * @return
      */
     public BitSet getSeparatorAsBitSet() {
-        if (getValue() == 0) return null;
+        if (getValue() == -1) return null;
         return separator;
     }
 
@@ -118,6 +140,7 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
      * @return
      */
     public Set<T> getSeparatorAsSet() {
+        if (getValue() == -1) return null;
         return getModel().entrySet().stream().filter( x -> x.getValue() ).map( x -> x.getKey()).collect(Collectors.toSet());
     }
 
@@ -211,7 +234,7 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
         }
 
         /*
-         * If we reach this point, the vertex-flow between SA and SB is at most k+1 and the residual graph
+         * If we reach this point, the vertex-flow between SA and SB is at most k and the residual graph
          * represents a corresponding partition of the graph.
          * We can now extract the separator from it.
          */
@@ -254,7 +277,12 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
             residual.addDirectedEdge(id, n + id);
             weights.put(id, new HashMap<>());
             weights.put(n + id, new HashMap<>());
-            weights.get(id).put(n+id, 1); // the edge as unit wight
+
+            if (disjointToS && (SA.get(id) || SB.get(id)) ) { // if SA / SB should not be part of the separator weight them with "infinity"
+                weights.get(id).put(n + id, Integer.MAX_VALUE/2);
+            } else { // other edges just have unit weights
+                weights.get(id).put(n + id, 1);
+            }
         }
 
         // copy edges
