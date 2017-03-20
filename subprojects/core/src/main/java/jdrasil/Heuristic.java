@@ -160,6 +160,7 @@ public class Heuristic implements sun.misc.SignalHandler {
     private synchronized void printSolution(TreeDecomposition<Integer> td) {
         if (reducer.getProcessedGraph().getVertices().size() != 0) reducer.addbackTreeDecomposition(td);
         this.decomposition = reducer.getTreeDecomposition();
+        this.decomposition.connectComponents();
         tend = System.nanoTime();
         System.out.println(this.decomposition);
         LOG.info("");
