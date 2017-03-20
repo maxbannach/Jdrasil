@@ -16,27 +16,47 @@ import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 public class GreedyPathDecomposer <T extends Comparable<T>> implements TreeDecomposer<T>{
 
 	private Graph<T> graph;
+	private int tries;
 	
 	public GreedyPathDecomposer(Graph<T> graph) {
 		this.graph=graph;
+		this.tries=0;
+	}
+	
+	public GreedyPathDecomposer(Graph<T> graph,int tries) {
+		this.graph=graph;
+		this.tries=tries;
 	}
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		int tries=50;
-		int minTw=Integer.MAX_VALUE;
-		TreeDecomposition<T> minTd=null;
-		for (int i=0;i<tries;i++) {
-			TreeDecomposition<T> td=singleCall();
+		TreeDecomposition<T> minTd=singleCall(null);
+		int minTw=minTd.getWidth();
+		
+		for (int i=1;i<tries;i++) {
+			TreeDecomposition<T> td=singleCall(null);
 			if (td.getWidth()<minTw) {
 				minTw=td.getWidth();
 				minTd=td;
+			}
+			
+		}
+		// If tries==0, then start once at every vertex that is not isolated.
+		if (tries==0) {
+			for (T v : graph) {
+			   	if (!graph.getNeighborhood(v).isEmpty()) {
+					TreeDecomposition<T> td=singleCall(v);
+					if (td.getWidth()<minTw) {
+						minTw=td.getWidth();
+						minTd=td;
+					}
+			   	}
 			}
 		}
 		return minTd;
 	}
 	
-	private TreeDecomposition<T> singleCall() throws Exception {
+	private TreeDecomposition<T> singleCall(T firstChoice) throws Exception {
 		TreeDecomposition<T> td=new TreeDecomposition<T>(graph);
 		Set<T> currentSet=new HashSet<T>();
 		Bag<T> bPrev=null;
@@ -61,7 +81,10 @@ public class GreedyPathDecomposer <T extends Comparable<T>> implements TreeDecom
 	    while (!unchosenV.isEmpty()) {
 	        // If currentSet is empty, choose an arbitrary vertex.
 	        if (currentSet.isEmpty() && degZero.isEmpty()) {
-	            T v = choice(unchosenV);
+	        	T v = firstChoice;
+	        	if (firstChoice==null) {
+	        		v = choice(unchosenV);
+	        	}
 	            addVertex(v, graph, unchosenV, currentSet, deg, degZero);
 	        }
 	        

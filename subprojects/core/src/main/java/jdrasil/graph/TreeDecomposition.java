@@ -494,20 +494,57 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	public void setCreatedFromPermutation(boolean createdFromPermutation) {
 		this.createdFromPermutation = createdFromPermutation;
 	}
+
+	// Contract adjacent bags with same content.
+	public void contractDuplicateBags() {
+		Set<Bag<T>> visited=new HashSet<>();
+		Stack<Bag<T>> S = new Stack<>();
+
+		Bag<T> root=tree.iterator().next();
+		S.push(root);
+		visited.add(root);
+		while (!S.isEmpty()) {
+			Bag<T> parent = S.pop();
+			boolean modified=true;
+			while (modified) {
+				modified=false;
+				for (Bag<T> child : tree.getNeighborhood(parent)) {
+					if (!visited.contains(child)) {
+						// TODO contraction is inconsequent!
+						if (child.vertices.equals(parent.vertices)
+								|| (parent.vertices.containsAll(child.vertices) && (tree.getNeighborhood(child).size()<=2)) ) {
+							tree.contract(parent, child);
+							modified=true;
+							break;
+						} else {
+							S.push(child);
+							visited.add(child);
+						}
+					}
+				}
+			}
+		}
+		
+		numberOfBags=tree.getVertices().size();
+		int id=1;
+		for (Bag<T> v : tree) {
+			v.id=id++;
+		}
+	}
 	
-	// Create a nice tree decomposition. The root and each leaf is an empty bag.
+	// Make the tree decomposition nice. The root and each leaf is an empty bag.
 	// Each inner bag has either two copies of itself as child or a single child,
 	// which differs in exactly one vertex.
 	// Path decompositions remain paths.
-	public TreeDecomposition<T> makeNice() {
-		TreeDecomposition<T> niceTd=new TreeDecomposition<T>(graph);
+	public void makeNice() {
+		contractDuplicateBags();		
+		
 		if (numberOfBags==0) {
-			return niceTd;
+			return;
 		}
 		
 		Set<Bag<T>> visited=new HashSet<>();
 		Stack<Bag<T>> S = new Stack<>();
-		Map<Bag<T>,Bag<T>> newName=new HashMap<>();
 
 		// find a leaf as root, so that path decompositions remain paths
 		Bag<T> root=null;
@@ -517,20 +554,22 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 				break;
 			}
 		}
-		
-		// from empty bag to root bag one by one
-		Set<T> currentRootSet=new HashSet<>();
-		Bag<T> newRoot=niceTd.createBag(new HashSet<T>());
-		for (T v : root.vertices) {
-			currentRootSet.add(v);
-			Bag<T> newRootChild=niceTd.createBag(new HashSet<T>(currentRootSet));
-			niceTd.addTreeEdge(newRoot, newRootChild);
-			newRoot=newRootChild;
-		}
-		
 		S.push(root);
 		visited.add(root);
-		newName.put(root, newRoot);
+		
+		// Add bags: from root bag to empty bag one by one
+		if (root.vertices.size()>0) {
+			Set<T> currentRootSet=new HashSet<>(root.vertices);
+			Bag<T> prevRoot=root;
+			for (T v : root.vertices) {
+				currentRootSet.remove(v);
+				Bag<T> b=createBag(new HashSet<T>(currentRootSet));
+				addTreeEdge(b, prevRoot);
+				prevRoot=b;
+				visited.add(b); // these nodes are already nice
+			}
+		}
+		
 		while (!S.isEmpty()) {
 			Bag<T> parent = S.pop();
 			Set<Bag<T>> childs=new HashSet<>();
@@ -539,62 +578,85 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 					childs.add(v);
 				}
 			}
-			Bag<T> newParent=newName.get(parent);
 			int childsToCome=childs.size();
-			// if leaf, then remove vertices one by one
+			// if leaf, then add bags: remove vertices one by one
 			if (childsToCome==0) {
 				Set<T> currentSet=new HashSet<>(parent.vertices);
+				Bag<T> prevParent=parent;
 				for (T v : parent.vertices) {
 					currentSet.remove(v);
-					Bag<T> newParentChild=niceTd.createBag(new HashSet<T>(currentSet));
-					niceTd.addTreeEdge(newParent, newParentChild);
-					newParent=newParentChild;
+					Bag<T> b=createBag(new HashSet<T>(currentSet));
+					addTreeEdge(prevParent, b);
+					prevParent=b;
+					//visited.add(b); not needed
 				}
 			}
 			// else iterate over childs
 			for (Bag<T> child : childs) {
-				S.push(child);
-				visited.add(child);
-				
-				Bag<T> leftNewParent=newParent;
-				Bag<T> rightNewParent=null;
+				// remove edges; we probably will create new nodes in between.
+				tree.removeEdge(parent, child);
+				//if (child.vertices.equals(parent.vertices)) {
+				//	System.out.println("error on " + parent);
+				//}
+			}
+			for (Bag<T> child : childs) {				
+				Bag<T> leftParent=parent;
+				Bag<T> rightParent=null;
 				// if there is more than one child left, make the node a join node
 				if (childsToCome>1) {
-					leftNewParent=niceTd.createBag(new HashSet<T>(parent.vertices));
-					niceTd.addTreeEdge(newParent, leftNewParent);
-					rightNewParent=niceTd.createBag(new HashSet<T>(parent.vertices));
-					niceTd.addTreeEdge(newParent, rightNewParent);
+					leftParent=createBag(new HashSet<T>(parent.vertices));
+					addTreeEdge(parent, leftParent);
+					visited.add(leftParent);
+					rightParent=createBag(new HashSet<T>(parent.vertices));
+					addTreeEdge(parent, rightParent);
+					visited.add(rightParent);
 				}
 
 				// Append the child (to the left parent, if join node; otherwise, 
-				// leftNewParent is the right parent from the iteration before).
+				// leftParent is the right parent from the iteration before).
 				// Do this nicely, so remove or add one vertex at a time.
+				
 				Set<T> removedVertices=new HashSet<>(parent.vertices);
 				removedVertices.removeAll(child.vertices);
 				Set<T> addedVertices=new HashSet<>(child.vertices);
 				addedVertices.removeAll(parent.vertices);
+				int diffSize=removedVertices.size()+addedVertices.size();
 				
 				Set<T> currentSet=new HashSet<>(parent.vertices);
-				Bag<T> newChild=leftNewParent; // if there are no changes, the old child bag will point to the leftNewParent
+				// in the following, at least one for loop will be executed once.
+				Bag<T> newChild=null;
 				for (T v : removedVertices) {
 					currentSet.remove(v);
-					newChild=niceTd.createBag(new HashSet<T>(currentSet));
-					niceTd.addTreeEdge(leftNewParent, newChild);
-					leftNewParent=newChild;
+					diffSize--;
+					if (diffSize==0) {
+						newChild=child;
+					} else {
+						newChild=createBag(new HashSet<T>(currentSet));
+						visited.add(newChild);
+					}
+					addTreeEdge(leftParent, newChild);
+					leftParent=newChild;
 				}
 				for (T v : addedVertices) {
 					currentSet.add(v);
-					newChild=niceTd.createBag(new HashSet<T>(currentSet));
-					niceTd.addTreeEdge(leftNewParent, newChild);
-					leftNewParent=newChild;
+					diffSize--;
+					if (diffSize==0) {
+						newChild=child;
+					} else {
+						newChild=createBag(new HashSet<T>(currentSet));
+						visited.add(newChild);
+					}
+					addTreeEdge(leftParent, newChild);
+					leftParent=newChild;
 				}
-				// the last created bag will be the parent for further vertices
-				newName.put(child, newChild);
+
+				// In the following, newChild is the same as child.
+				S.push(newChild);
+				visited.add(newChild);
 				
-				newParent=rightNewParent;
+				parent=rightParent;
 				childsToCome--;
 			}
 		}
-		return niceTd;
 	}
 }

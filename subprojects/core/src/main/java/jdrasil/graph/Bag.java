@@ -35,7 +35,7 @@ public class Bag<T extends Comparable<T>> implements Comparable<Bag<T>>, Seriali
 	public Set<T> vertices;
 	
 	/** Each bag has an id in its tree-decomposition. */
-	public final int id;
+	public int id;
 	
 	/**
 	 * A bag is just constructed with corresponding vertices.
