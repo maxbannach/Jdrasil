@@ -497,6 +497,9 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 
 	// Contract adjacent bags with same content.
 	public void contractDuplicateBags() {
+		if (numberOfBags==0) {
+			return;
+		}
 		Set<Bag<T>> visited=new HashSet<>();
 		Stack<Bag<T>> S = new Stack<>();
 
@@ -537,12 +540,11 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	// which differs in exactly one vertex.
 	// Path decompositions remain paths.
 	public void makeNice() {
-		contractDuplicateBags();		
-		
 		if (numberOfBags==0) {
 			return;
 		}
-		
+		contractDuplicateBags();
+
 		Set<Bag<T>> visited=new HashSet<>();
 		Stack<Bag<T>> S = new Stack<>();
 
