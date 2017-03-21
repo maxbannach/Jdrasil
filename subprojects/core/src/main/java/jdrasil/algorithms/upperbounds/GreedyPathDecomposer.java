@@ -84,6 +84,8 @@ public class GreedyPathDecomposer <T extends Comparable<T>> implements TreeDecom
 	        	T v = firstChoice;
 	        	if (firstChoice==null) {
 	        		v = choice(unchosenV);
+	        	} else {
+	        		firstChoice=null;
 	        	}
 	            addVertex(v, graph, unchosenV, currentSet, deg, degZero);
 	        }
