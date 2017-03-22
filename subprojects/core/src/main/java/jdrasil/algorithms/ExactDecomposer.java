@@ -125,8 +125,12 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 
 		/* If everything above does not work, we solve the problem using a SAT-encoding */
 		LOG.info("Solve with a SAT solver [" + Formula.getExpectedSignature() + "]");
-		TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub).call();
-		reducer.addbackTreeDecomposition(decomposition);
+		TreeDecomposition<T> decomposition = new SATDecomposer<>(reduced, Encoding.IMPROVED, lb, ub-1).call();
+		if (decomposition.getWidth() >= ub) { // SAT solver did not improve the ub
+			reducer.addbackTreeDecomposition(ubDecomposition);
+		} else { // SAT solver did improve the ub
+			reducer.addbackTreeDecomposition(decomposition);
+		}
 		return reducer.getTreeDecomposition();
 	}
 

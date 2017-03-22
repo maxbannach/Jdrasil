@@ -124,7 +124,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 			LOG.warning("Failed to register the SAT solver");
 		}
 		
-		// starting at the ub, this will for sure give us one solution
+		// starting at the ub
 		int k = ub;
 
 		// as long as we can improve, improve
