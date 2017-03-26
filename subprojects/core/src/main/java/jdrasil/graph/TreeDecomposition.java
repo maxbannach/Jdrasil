@@ -195,6 +195,12 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	public Graph<T> getGraph() {
 		return graph;
 	}
+
+	/**
+	 * Getter for the underlying tree of the decomposition.
+	 * @return
+	 */
+	public Graph<Bag<T>> getTree() { return tree; };
 	
 	/**
 	 * Print the tree-decomposition.
