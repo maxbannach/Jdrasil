@@ -165,7 +165,7 @@ public class BitSetTrie {
         }
     }
 
-    //Mark: Iterator
+    //Mark: Subset Iterator
 
     /**
      * Returns an iterator over the subsets of the given set s that are stored in the trie.
@@ -243,7 +243,87 @@ public class BitSetTrie {
         }
     }
 
-    //MARK: Super Sets
+    //MARK: Maximal SubSet Iterator
+
+    /**
+     * Returns an iterator over the inclusion maximal subsets of the given set s that are stored in the trie.
+     * If the given set is stored in the trie, the iterator will iterate over it as well.
+     * @param s
+     * @return
+     */
+    public Iterable<BitSet> getMaxSubSets(BitSet s) {
+        return new Iterable<BitSet>() {
+            @Override
+            public Iterator<BitSet> iterator() {
+                return new MaxSubSetIterator(s);
+            }
+        };
+    }
+
+    /**
+     * An iterator over inclusion maximal subsets stored in the trie (including s).
+     * The iterator traverses the trie in pre-order and outputs the bitsets for marked nodes that have no more children. While doing so,
+     * the iterator uses only edges set in the given set. The running time is \(O(|T|*|U|\) where \(T\) is the the trie
+     * and \(U\) is the universe.
+     */
+    class MaxSubSetIterator implements Iterator<BitSet> {
+
+        private Stack<Node> stack;
+        private BitSet s;
+        private BitSet next;
+        private boolean returnedEmptySet;
+
+        public MaxSubSetIterator(BitSet s) {
+            this.s = s;
+            this.stack = new Stack<>();
+            this.stack.push(root);
+            this.returnedEmptySet = false;
+            this.next = successor();
+        }
+
+        private BitSet successor() {
+            // handle empty set
+            if (containsEmptySet && !returnedEmptySet) {
+                returnedEmptySet = true;
+                return new BitSet();
+            }
+            // traverse the trie
+            while (!stack.isEmpty()) {
+                Node v = stack.pop();
+                boolean noChildren = true;
+                for (int i = s.length(); (i = s.previousSetBit(i - 1)) > v.label; ) {
+                    if (v.children.containsKey(i)){
+                        stack.push(v.children.get(i));
+                        noChildren = false;
+                    }
+                }
+                if (v.marked && noChildren) { // construct found bitset
+                    BitSet nextSet = new BitSet();
+                    while (v.label >= 0) {
+                        nextSet.set(v.label);
+                        v = v.parent;
+                    }
+                    return nextSet;
+                }
+            }
+            // trie search done
+            return null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        @Override
+        public BitSet next() {
+            BitSet tmp = next;
+            next = successor();
+            return tmp;
+        }
+    }
+
+    //MARK: Superset Iterator
 
     /**
      * Returns an iterator over supersets of the given set s.
