@@ -134,6 +134,17 @@ public class BitSetGraph<T extends Comparable<T>> {
     }
 
     /**
+     * Computes a corresponding BitSet to a "real" vertex set.
+     * @param vertexSet
+     * @return
+     */
+    public BitSet getBitSet(Set<T> vertexSet) {
+        BitSet S = new BitSet();
+        for (T v : vertexSet) S.set(vToInt.get(v));
+        return S;
+    }
+
+    /**
      * Gets the interior border of S, i.e., all vertices v in S that have at least one neighbor outside of S.
      * @param S
      * @return
@@ -162,6 +173,19 @@ public class BitSetGraph<T extends Comparable<T>> {
         }
         border.andNot(S);
         return border;
+    }
+
+    /**
+     * Saturate the subgraph S by adding all vertices v of V\S that have all neighbors in S.
+     * @param S
+     */
+    public void saturate(BitSet S) {
+        BitSet delta = exteriorBorder(S);
+        for (int v = delta.nextSetBit(0); v >= 0; v = delta.nextSetBit(v+1)) {
+            BitSet tmp = (BitSet) bitSetGraph[v].clone();
+            tmp.andNot(S);
+            if (tmp.cardinality() == 0) S.set(v);
+        }
     }
 
     /**
