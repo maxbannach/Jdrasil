@@ -27,11 +27,12 @@ import java.util.Set;
  * Partition Refinement is a data structure to represent a partition of a set
  * that allows to refine this set.
  * 
- * Let S be a set and P={S_1,...,S_n} be a partition of S. Let, furthermore, X be a subset of S.
- * The refinement of P with respect to X is defined as:
- *   refinement(P,X) = {S_1 cap X, S_1 minus X, ..., S_n cap X, S_n minus X}.
+ * Let \(S\) be a set and \(P={S_1,...,S_n}\) be a partition of \(S\). Let, furthermore, \(X\) be a subset of \(S\).
+ * The refinement of \(P\) with respect to \(X\) is defined as:
+ *   refinement\((P,X) = {S_1 \cap X, S_1 \setminus X, ..., S_n \cap X, S_n \setminus X}\) where elements that do not
+ *   intersect \(X\) are leaved unchanged.
  * 
- * This operation can be computed in time O(|X|) independently of |S| and n.
+ * This operation can be computed in time \(O(|X|)\) independently of \(|S|\) and \(n\).
  * See Qinna Wang – Partition Refinement: a meaningful technique for Graphs
  * 
  * @param <T>
