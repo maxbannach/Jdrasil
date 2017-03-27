@@ -1,10 +1,27 @@
+/*
+ * Copyright (c) 2016-present, Max Bannach, Sebastian Berndt, Thorsten Ehlers
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+ * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package jdrasil.algorithms.upperbounds;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import jdrasil.graph.Bag;
@@ -12,10 +29,19 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.utilities.RandomNumberGenerator;
 
+/**
+ * Computes greedily a path decomposition by adding vertices to the current bag that allow to quickly remove
+ * vertices from the bag again.
+ *
+ * @author Martin Schuster
+ * @param <T>
+ */
 public class GreedyPathDecomposer <T extends Comparable<T>> implements TreeDecomposer<T>{
 
 	private Graph<T> graph;
+	private TreeDecomposition<T> minTd;
 	private int tries;
 	
 	public GreedyPathDecomposer(Graph<T> graph) {
@@ -30,7 +56,7 @@ public class GreedyPathDecomposer <T extends Comparable<T>> implements TreeDecom
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		TreeDecomposition<T> minTd=singleCall(null);
+		minTd=singleCall(null);
 		int minTw=minTd.getWidth();
 		
 		for (int i=1;i<tries;i++) {
@@ -161,7 +187,7 @@ public class GreedyPathDecomposer <T extends Comparable<T>> implements TreeDecom
 	}
 
 	private T choice(Set<T> mySet) {
-		int item=new Random().nextInt(mySet.size());
+		int item=RandomNumberGenerator.nextInt(mySet.size());
 		int i=0;
 		for (T elem : mySet) {
 			if (i==item) {
@@ -173,7 +199,7 @@ public class GreedyPathDecomposer <T extends Comparable<T>> implements TreeDecom
 	}
 
 	private T choice(ArrayList<T> myList) {
-		int item=new Random().nextInt(myList.size());
+		int item=RandomNumberGenerator.nextInt(myList.size());
 		return myList.get(item);
 	}
 	    
@@ -191,14 +217,12 @@ public class GreedyPathDecomposer <T extends Comparable<T>> implements TreeDecom
 	    
 	@Override
 	public TreeDecomposition<T> getCurrentSolution() {
-		// TODO Auto-generated method stub
-		return null;
+		return minTd;
 	}
 
 	@Override
 	public TreeDecompositionQuality decompositionQuality() {
-		// TODO Auto-generated method stub
-		return null;
+		return TreeDecompositionQuality.Heuristic;
 	}
 
 }
