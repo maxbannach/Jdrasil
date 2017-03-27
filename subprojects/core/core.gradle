@@ -19,6 +19,16 @@
 
 apply plugin: 'java'
 
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  testCompile "junit:junit:4.11"
+}
+
+
 buildDir = new File(rootProject.projectDir, "build/")
 ext {
   jarDir = new File("${buildDir}/jars")

@@ -16,7 +16,7 @@ Jdrasil uses [Gradle](https://gradle.org) as build tool. Thanks to the gradle wr
 To build Jdrasil, simply invoke the gradle build script:
 ```
 cd Jdrasil
-./gradlew build
+./gradlew assemble
 ```
 There is also a bat-file for windows systems. After the script is finished, an executable jar will be placed in: 
 ```

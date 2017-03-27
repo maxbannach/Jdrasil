@@ -199,9 +199,12 @@ In the rest of the manual, we will use the syntax for an Unix
 system. But everything can be done in the same way on a Windows machine.
 
 \subsection{Build the Executable and Library}
-To compile the core source code of \Jdrasil\ we use the following
-command:
+To compile the core source code of \Jdrasil\ we use one of the following
+commands:
 \begin{lstlisting}[language=bash]
+  # just build
+  ./gradlew assemble
+  # or build and test
   ./gradlew build
 \end{lstlisting}
 This will create a directory \texttt{build}, containing the

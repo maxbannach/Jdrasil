@@ -25,7 +25,7 @@ apply plugin: 'idea'
  * it with Gucose as SAT solver and will install the start scripts tw-exact and tw-heuristic.
  */
 task pace() {
-  dependsOn('core:build')
+  dependsOn('core:assemble')
   dependsOn('upgrades:upgrade_glucose')
   dependsOn('core:exact')
   dependsOn('core:heuristic')

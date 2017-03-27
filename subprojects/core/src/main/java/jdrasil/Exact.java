@@ -18,15 +18,12 @@
 
 package jdrasil;
 
-import jdrasil.algorithms.ExactDecomposer;
 import jdrasil.algorithms.GraphSplitter;
-import jdrasil.algorithms.exact.CopsAndRobber;
-import jdrasil.algorithms.lowerbounds.ImprovedGraphLowerbound;
+import jdrasil.algorithms.exact.CleanAndGlue;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
-import jdrasil.graph.GraphWriter;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.utilities.JdrasilProperties;
 import jdrasil.utilities.logging.JdrasilLogger;
@@ -83,15 +80,26 @@ public class Exact {
 
                 // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
                 GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
-                    TreeDecomposition<Integer> td;
-                    try { // use ExactDecomposer to handle atoms
-                        td = new ExactDecomposer<>(atom).call();
-                    } catch (Exception e) { // something went wrong, provide trivial decomposition
-                        LOG.warning("Error while handling atom: " + e);
-                        td = new TreeDecomposition<>(atom);
-                        td.createBag(atom.getVertices());
+//                    CopsAndRobber<Integer> CAR = new CopsAndRobber<>(atom);
+//                    CopsAndRobber2<Integer> CAR = new CopsAndRobber2<>(atom);
+                    CleanAndGlue<Integer> CAR = new CleanAndGlue<>(atom);
+                    try {
+                        return CAR.call();
+                    } catch (Exception e) {
+                        System.out.println("######################");
+                        System.out.println(e);
+                        System.out.println("######################");
+                        return null;
                     }
-                    return td;
+//                    TreeDecomposition<Integer> td;
+//                    try { // use ExactDecomposer to handle atoms
+//                        td = new ExactDecomposer<>(atom).call();
+//                    } catch (Exception e) { // something went wrong, provide trivial decomposition
+//                        LOG.warning("Error while handling atom: " + e);
+//                        td = new TreeDecomposition<>(atom);
+//                        td.createBag(atom.getVertices());
+//                    }
+//                    return td;
                 }, 0);
                 splitter.setTargetConnectivity(GraphSplitter.Connectivity.ATOM);
 
