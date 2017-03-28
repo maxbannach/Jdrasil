@@ -188,6 +188,17 @@ public class BitSetGraph<T extends Comparable<T>> {
         }
     }
 
+    public int absorbable(BitSet S) {
+        BitSet neighbors = exteriorBorder(S);
+        BitSet outside = (BitSet) S.clone();
+        outside.or(neighbors);
+        outside.flip(0,n);
+        for (int v = neighbors.nextSetBit(0); v >= 0; v = neighbors.nextSetBit(v+1)) {
+            if (!bitSetGraph[v].intersects(outside)) return v;
+        }
+        return -1;
+    }
+
     /**
      * Compute the connected components of G[V\S], S will not be included in any of these components.
      * @param S

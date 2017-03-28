@@ -18,7 +18,6 @@
  */
 package jdrasil.algorithms.exact;
 
-import jdrasil.algorithms.upperbounds.StochasticGreedyPermutationDecomposer;
 import jdrasil.graph.*;
 import jdrasil.utilities.BitSetTrie;
 import jdrasil.utilities.logging.JdrasilLogger;
@@ -49,9 +48,6 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     /** Memorization of subgraphs that where already added to the queue. */
     private Set<BitSet> memory;
 
-    /** Also store elements added to the queue in a trie to make supersets queries. */
-    private BitSetTrie memoryTrie;
-
     /** For each vertex we store a collection of subgraphs that has v as neighbor. */
     private Map<Integer, BitSetTrie> tries;
 
@@ -67,7 +63,6 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         this.n          = this.graph.getN();
         this.queue      = new PriorityQueue<>( (a,b) -> Integer.compare(b.cardinality(), a.cardinality()) );
         this.memory     = new HashSet<>();
-        this.memoryTrie = new BitSetTrie();
         this.from       = new HashMap<>();
         this.tries      = new HashMap<>();
     }
@@ -92,7 +87,6 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
      */
     private boolean offer(BitSet S, int k, BitSet... from) {
         if (memory.contains(S)) return false; // already handled
-//        if (memoryTrie.getSuperSets(S).iterator().hasNext()) return false;
         BitSet neighbors = graph.exteriorBorder(S);
         BitSet delta = (BitSet) S.clone();
         for (BitSet f : from) delta.andNot(f);
@@ -115,7 +109,6 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         // register new cleaned subgraph
         queue.offer(S);
         memory.add(S);
-        memoryTrie.insert(S);
 
         // done, but have to decompose further
         return false;
@@ -137,7 +130,6 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         // init data structures
         queue.clear();
         memory.clear();
-        memoryTrie = new BitSetTrie();
         from.clear();
         tries.clear();
         for (int v = 0; v < n; v++) tries.put(v, new BitSetTrie());
@@ -169,25 +161,53 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
                 if (offer(newS, k, S)) return true;
 
                 // 3. try to glue S to other cleaned subgraphs
-                BitSet mask = (BitSet) S.clone();
-                mask.flip(0, n); // search in V\S
-                mask.andNot(delta);
-                for (BitSet toGlue : tries.get(v).getMaxSubSets(mask)) {
-                    newS = (BitSet) toGlue.clone();
-                    BitSet glueDelta = graph.exteriorBorder(newS);
-                    glueDelta.or(delta);
-                    if (glueDelta.cardinality() > k+1) continue; // not enough searchers to glue
-                    // glue with S
-                    newS.or(S);
-                    graph.saturate(newS);
-                    if (offer(newS, k, S, toGlue)) return true;
-
-                    // glue with S and add v
-                    newS = (BitSet) newS.clone();
-                    newS.set(v);
-                    graph.saturate(newS);
-                    if (offer(newS, k, S, toGlue)) return true;
+                Stack<BitSet> stack = new Stack<>();
+                stack.push(S);
+                while (!stack.isEmpty()) {
+                    BitSet current = (BitSet) stack.pop().clone();
+                    BitSet currentNeighbors = graph.exteriorBorder(current);
+                    BitSet mask = (BitSet) current.clone();
+                    mask.or(currentNeighbors);
+                    mask.flip(0,n);
+                    for (BitSet toGlue : tries.get(v).getSubSets(mask)) {
+                        BitSet glueNeighbors = graph.exteriorBorder(toGlue);
+                        glueNeighbors.or(currentNeighbors);
+                        if (glueNeighbors.cardinality() > k+1) continue; // not enough cops
+                        newS = (BitSet) current.clone();
+                        newS.or(toGlue);
+                        int freeCop = graph.absorbable(newS);
+                        if (freeCop < 0 || freeCop == v) {
+                            BitSet tmp = (BitSet) newS.clone();
+                            tmp.set(v);
+                            graph.saturate(tmp);
+                            if (offer(tmp, k, current, toGlue)) return true;
+                        }
+                        if (freeCop < 0) {
+                            from.put(newS, new BitSet[]{current, toGlue});
+                            stack.push(newS);
+                        }
+                    }
                 }
+
+//                BitSet mask = (BitSet) S.clone();
+//                mask.flip(0, n); // search in V\S
+//                mask.andNot(delta);
+//                for (BitSet toGlue : tries.get(v).getSubSets(mask)) {
+//                    newS = (BitSet) toGlue.clone();
+//                    BitSet glueDelta = graph.exteriorBorder(newS);
+//                    glueDelta.or(delta);
+//                    if (glueDelta.cardinality() > k+1) continue; // not enough searchers to glue
+//                    // glue with S
+//                    newS.or(S);
+//                    graph.saturate(newS);
+//                    if (offer(newS, k, S, toGlue)) return true;
+//
+//                    // glue with S and add v
+//                    newS = (BitSet) newS.clone();
+//                    newS.set(v);
+//                    graph.saturate(newS);
+//                    if (offer(newS, k, S, toGlue)) return true;
+//                }
             }
         }
 
