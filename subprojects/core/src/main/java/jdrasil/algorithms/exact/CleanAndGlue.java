@@ -47,12 +47,16 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
 
     /** Memorization of subgraphs that where already added to the queue. */
     private Set<BitSet> memory;
+    private BitSetTrie memoryTrie;
 
     /** For each vertex we store a collection of subgraphs that has v as neighbor. */
     private Map<Integer, BitSetTrie> tries;
 
     /** Each element added to the queue is glued from one or more previous cleaned subgraphs  */
     private Map<BitSet, BitSet[]> from;
+
+    /** Number of subgraphs processed during the run (for debugging) */
+    private int processedSubgraphs;
 
     /**
      * Initialize data structures and transform the graph into a BitSetGraph.
@@ -63,6 +67,7 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         this.n          = this.graph.getN();
         this.queue      = new PriorityQueue<>( (a,b) -> Integer.compare(b.cardinality(), a.cardinality()) );
         this.memory     = new HashSet<>();
+        this.memoryTrie = new BitSetTrie();
         this.from       = new HashMap<>();
         this.tries      = new HashMap<>();
     }
@@ -92,6 +97,28 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         for (BitSet f : from) delta.andNot(f);
         if (neighbors.cardinality() + delta.cardinality() > k + 1) return false; // not enough searchers
 
+        memory.add(S);
+        // 1. try to cut this set
+        BitSet mask = (BitSet) S.clone();
+        mask.or(neighbors);
+        if (memoryTrie.getSuperSets(mask).iterator().hasNext()) {
+//            LOG.info("### cutting ### " + S);
+            return false;
+        }
+        // 2. try to cut this set
+        for (BitSet Sprime : memoryTrie.getSuperSets(S)) {
+            BitSet neighborsPrime = graph.exteriorBorder(Sprime); // if N(S) subset N(S') we can cut
+            boolean cut = true;
+            for (int v = neighborsPrime.nextSetBit(0); v >= 0; v = neighborsPrime.nextSetBit(v+1)) {
+                if (!neighbors.get(v)) { cut = false; break; }
+            }
+            if (cut) {
+//                LOG.info("+++ cutting +++ " + S);
+                return false;
+            }
+        }
+
+
         // we will add S, store how we have glued it
         this.from.put(S, from);
 
@@ -108,7 +135,7 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
 
         // register new cleaned subgraph
         queue.offer(S);
-        memory.add(S);
+        memoryTrie.insert(S);
 
         // done, but have to decompose further
         return false;
@@ -130,9 +157,11 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         // init data structures
         queue.clear();
         memory.clear();
+        memoryTrie.clear();
         from.clear();
         tries.clear();
         for (int v = 0; v < n; v++) tries.put(v, new BitSetTrie());
+        processedSubgraphs = 0;
 
         // pre-fill the queue with subgraphs that can be cleaned trivially
         for (int v = 0; v < n; v++) {
@@ -144,6 +173,7 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
 
         // handle the queue
         while (!queue.isEmpty()) {
+            processedSubgraphs++;
             // get currently largest cleaned graph
             BitSet S = queue.poll();
             BitSet delta = graph.exteriorBorder(S);
@@ -175,17 +205,36 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
                         if (glueNeighbors.cardinality() > k+1) continue; // not enough cops
                         newS = (BitSet) current.clone();
                         newS.or(toGlue);
-                        int freeCop = graph.absorbable(newS);
-                        if (freeCop < 0 || freeCop == v) {
+
+                        // check if v is adorable with respect to the glued set
+                        BitSet neighbors = graph.exteriorBorder(newS);
+                        BitSet outside = (BitSet) newS.clone();
+                        outside.or(neighbors);
+                        outside.flip(0,n);
+                        boolean isAbsorbable = !graph.getBitSetGraph()[v].intersects(outside);
+
+                        if (isAbsorbable) { // if it is, we have found our parent
                             BitSet tmp = (BitSet) newS.clone();
-                            tmp.set(v);
+                            tmp.set(v); // may prevent us from offering
                             graph.saturate(tmp);
                             if (offer(tmp, k, current, toGlue)) return true;
-                        }
-                        if (freeCop < 0) {
+                        } else { // otherwise keep gluing
                             from.put(newS, new BitSet[]{current, toGlue});
                             stack.push(newS);
                         }
+
+//                        int freeCop = graph.absorbable(newS);
+//                        if (freeCop < 0 || freeCop == v) {
+//                            BitSet tmp = (BitSet) newS.clone();
+//                            tmp.set(v); // may prevent us from offering
+//                            graph.saturate(tmp);
+//                            if (offer(tmp, k, current, toGlue)) return true;
+//                        }
+//                        if (freeCop < 0) {
+//                            from.put(newS, new BitSet[]{current, toGlue});
+//                            stack.push(newS);
+//                        }
+
                     }
                 }
 
@@ -203,11 +252,12 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
 //                    if (offer(newS, k, S, toGlue)) return true;
 //
 //                    // glue with S and add v
-//                    newS = (BitSet) newS.clone();
-//                    newS.set(v);
-//                    graph.saturate(newS);
-//                    if (offer(newS, k, S, toGlue)) return true;
+////                    newS = (BitSet) newS.clone();
+////                    newS.set(v);
+////                    graph.saturate(newS);
+////                    if (offer(newS, k, S, toGlue)) return true;
 //                }
+
             }
         }
 
@@ -244,10 +294,10 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
 
         int k = 1;
         while (!decompose(k)) {
-            LOG.info("tree width >= " + k);
+            LOG.info(String.format("tree width >= %2d ( %4d subgraphs )", k, processedSubgraphs));
             k++;
         }
-        LOG.info("tree width == " + k);
+        LOG.info(String.format("tree width == %2d ( %4d subgraphs )", k, processedSubgraphs));
 
         // extract constructed tree decomposition
         TreeDecomposition<T> td = new TreeDecomposition<T>(graph.getGraph());

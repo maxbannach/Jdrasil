@@ -62,9 +62,17 @@ public class BitSetTrie {
      * automatically updated if bigger sets are inserted).
      */
     public BitSetTrie(int universeSize) {
+        this.universeSize = universeSize;
+        this.clear();
+    }
+
+    /**
+     * Clears the BitSetTrie, that is, removes all elements stored in the trie.
+     * This method will just delete a pointer and, thus, runs in constant time independent of the size of the trie.
+     */
+    public void clear() {
         root = new Node(null, -1);
         containsEmptySet = false;
-        this.universeSize = universeSize;
     }
 
     /**
