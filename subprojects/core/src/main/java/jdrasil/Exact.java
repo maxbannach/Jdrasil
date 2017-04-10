@@ -20,6 +20,7 @@ package jdrasil;
 
 import jdrasil.algorithms.GraphSplitter;
 import jdrasil.algorithms.exact.CleanAndGlue;
+import jdrasil.algorithms.exact.LimitedGraphSearch;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.graph.Graph;
@@ -80,27 +81,14 @@ public class Exact {
 
                 // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
                 GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
-//                    CopsAndRobber<Integer> CAR = new CopsAndRobber<>(atom);
-//                    CopsAndRobber2<Integer> CAR = new CopsAndRobber2<>(atom);
-                    CleanAndGlue<Integer> CAR = new CleanAndGlue<>(atom);
+                    CleanAndGlue<Integer> cleanAndGlue = new CleanAndGlue<>(atom);
                     try {
-                        return CAR.call();
+                        return cleanAndGlue.call();
                     } catch (Exception e) {
-                        System.out.println("######################");
-                        System.out.println(e);
-                        System.out.println("######################");
+                        LOG.warning(e.getMessage());
                         return null;
                     }
-//                    TreeDecomposition<Integer> td;
-//                    try { // use ExactDecomposer to handle atoms
-//                        td = new ExactDecomposer<>(atom).call();
-//                    } catch (Exception e) { // something went wrong, provide trivial decomposition
-//                        LOG.warning("Error while handling atom: " + e);
-//                        td = new TreeDecomposition<>(atom);
-//                        td.createBag(atom.getVertices());
-//                    }
-//                    return td;
-                }, 0);
+                }, lb);
                 splitter.setTargetConnectivity(GraphSplitter.Connectivity.ATOM);
 
                 // glue to final decomposition
