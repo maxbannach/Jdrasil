@@ -26,7 +26,30 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
- * Created by bannach on 23.03.17.
+ * Tree width has nice game theoretic characterisations, one of which is the node-search game played by a set of searchers and
+ * a fugitive. The variant of the game that corresponds to tree width is the one with a visible fugitive of unbounded speed
+ * (also known as the helicopter cops and robber game, defined by Robertson and Seymour).
+ *
+ * This class computes a winning strategy for the searchers (from which a tree decomposition can be deduced) in a bottom-up fashion.
+ * In order to do so, a queue of win-configurations is maintained which is pre-filled with trivial win-configurations.
+ * Then predecessor configurations (with respect to a winning strategy of the searchers) are computed for the configurations
+ * in the queue, and if these configurations are win-configurations as well, they are added back to queue.
+ * As larger win-configurations are "better" in the sense that we wish to find a win-configuration for the whole graph,
+ * a priority queue is used that orders configurations by size.
+ *
+ * Computing predecessor configurations is straighted forward if the searchers move does not disconnect the graph
+ * (i.e. a simple existential "fly"-move), however, it is difficult if a universal "split"-move is reconstructed
+ * (i.e., if the current configuration of the game originated from a searchers move that has disconnected the graph and
+ * from a corresponding fugitive move whom has chosen a connected component). In this scenario multiple win-configurations
+ * (which we may or may not already have discovered) have to be glued together. These configurations correspond to branch
+ * nodes in the tree decomposition.
+ *
+ * The "glue"-part of the algorithm is inspired by the work of Hisao Tamaki for the PACE 2016. He used this strategy
+ * to implement a bottom-up version of the algorithm of Arnborg et al., which is based on similar ideas as the node-search
+ * game.
+ *
+ * @author Max Bannach
+ * @author Sebastian Berndt
  */
 public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> {
 
@@ -48,9 +71,11 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
      */
     private PriorityQueue<BitSet> queue;
 
-    /** Memorization of subgraphs that where already added to the queue. */
-    private Set<BitSet> memory;
-    private BitSetTrie memoryTrie;
+    /** Number of configurations processed during the run (i.e. configurations that where added to the queue) */
+    private int configurations;
+
+    /** Memorization of win-configurations that we have already considered. */
+    private BitSetTrie memory;
 
     /** For each vertex \(v\) we store a collection of subgraphs that have \(v\) as neighbor. */
     private Map<Integer, BitSetTrie> tries;
@@ -58,21 +83,17 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     /** Each element added to the queue is glued from one or more previous winning configurations. */
     private Map<BitSet, BitSet[]> from;
 
-    /** Number of configurations processed during the run (for debugging) */
-    private int configurations;
-
     /**
      * Initialize data structures and transform the graph into a BitSetGraph.
      * @param graph
      */
     public CleanAndGlue(Graph<T> graph) {
-        this.graph      = new BitSetGraph(graph);
-        this.n          = this.graph.getN();
-        this.queue      = new PriorityQueue<>( (a,b) -> Integer.compare(b.cardinality(), a.cardinality()) );
-        this.memory     = new HashSet<>();
-        this.memoryTrie = new BitSetTrie();
-        this.from       = new HashMap<>();
-        this.tries      = new HashMap<>();
+        this.graph  = new BitSetGraph(graph);
+        this.n      = this.graph.getN();
+        this.queue  = new PriorityQueue<>( (a,b) -> Integer.compare(b.cardinality(), a.cardinality()) );
+        this.memory = new BitSetTrie();
+        this.from   = new HashMap<>();
+        this.tries  = new HashMap<>();
     }
 
     /**
@@ -106,25 +127,20 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         for (BitSet f : from) delta.andNot(f);
         if (neighbors.cardinality() + delta.cardinality() > k + 1) return false; // not enough searchers
 
-        // we can only add S to the memory _after_ Prune 2, as this rule depends on the next configuration as well
-        memory.add(S);
-
-
         // Prune 3: if we have handled a superset of S and N(S), we can prune S
         BitSet mask = (BitSet) S.clone();
         mask.or(neighbors);
-        if (memoryTrie.getSuperSets(mask).iterator().hasNext()) return false;
+        if (memory.getSuperSets(mask).iterator().hasNext()) { memory.insert(S); return false; }
 
         // Prune 4: if we have handled a superset S' of S such that N(S') is a subset of N(S) we can prune
-        for (BitSet Sprime : memoryTrie.getSuperSets(S)) {
+        for (BitSet Sprime : memory.getSuperSets(S)) {
             BitSet neighborsPrime = graph.exteriorBorder(Sprime);
             boolean cut = true;
             for (int v = neighborsPrime.nextSetBit(0); v >= 0; v = neighborsPrime.nextSetBit(v+1)) {
                 if (!neighbors.get(v)) { cut = false; break; }
             }
-            if (cut) return false;
+            if (cut) { memory.insert(S); return false; }
         }
-
 
         // we will add S to the queue, store how we have glued it
         this.from.put(S, from);
@@ -143,7 +159,7 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
 
         // Store the new win-configuration in the priority queue.
         queue.offer(S);
-        memoryTrie.insert(S);
+        memory.insert(S);
 
         // done, but have to decompose further
         return false;
@@ -172,7 +188,6 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         // init data structures
         queue.clear();
         memory.clear();
-        memoryTrie.clear();
         from.clear();
         tries.clear();
         for (int v = 0; v < n; v++) tries.put(v, new BitSetTrie());
