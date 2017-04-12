@@ -176,18 +176,26 @@ public class BitSetGraph<T extends Comparable<T>> {
     }
 
     /**
-     * Saturate the subgraph S by adding all vertices v of V\S that have all neighbors in S.
+     * Saturates the subgraph \(S\) by adding all vertices \(v\in N(S)\) of \(V\setminus S\) that have all neighbors in \(S\) or \(N(S)\).
      * @param S
      */
     public void saturate(BitSet S) {
-        BitSet delta = exteriorBorder(S);
-        for (int v = delta.nextSetBit(0); v >= 0; v = delta.nextSetBit(v+1)) {
+        BitSet neighbors = exteriorBorder(S);
+        BitSet Sprime = (BitSet) S.clone();
+        Sprime.or(neighbors);
+        for (int v = neighbors.nextSetBit(0); v >= 0; v = neighbors.nextSetBit(v+1)) {
             BitSet tmp = (BitSet) bitSetGraph[v].clone();
-            tmp.andNot(S);
+            tmp.andNot(Sprime);
             if (tmp.cardinality() == 0) S.set(v);
         }
     }
 
+    /**
+     * Finds and returns an arbitrary vertex \(v\in N(S)\) that has only neighbors in \(S\) or \(N(S)\). Returns -1 if no such
+     * vertex exists.
+     * @param S
+     * @return
+     */
     public int absorbable(BitSet S) {
         BitSet neighbors = exteriorBorder(S);
         BitSet outside = (BitSet) S.clone();
