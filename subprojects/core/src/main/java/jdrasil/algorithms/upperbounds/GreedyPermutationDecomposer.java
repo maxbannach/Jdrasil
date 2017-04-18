@@ -19,10 +19,13 @@
 package jdrasil.algorithms.upperbounds;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 
-
+import jdrasil.Datastructures.UpdatablePriorityQueue;
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
@@ -30,6 +33,7 @@ import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.utilities.RandomNumberGenerator;
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * This class implements greedy permutation heuristics to compute a tree-decomposition. The heuristic eliminates
@@ -42,6 +46,12 @@ import jdrasil.utilities.RandomNumberGenerator;
  */
 public class GreedyPermutationDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
 
+	
+
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
+	
+	
 	private static final long serialVersionUID = 1L;
 
 	/** The graph to be decomposed. */
@@ -203,12 +213,38 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		List<T> permutation = new LinkedList<T>();
 		Graph<T> workingCopy = GraphFactory.copy(graph);
 
+		UpdatablePriorityQueue<T, Integer> q = new UpdatablePriorityQueue<T, Integer>();
+		LOG.info("initialising the heap...");
+		for(T v : graph.getVertices()){
+			VertexValue vv = getValue(graph, v);
+			q.insert(vv.vertex, vv.value);
+		}
+			
+		LOG.info("Heap is done, now running! ");
 		// compute the permutation
 		for (int i = 0; i < graph.getVertices().size(); i++) {
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
-
+			if((i % 1000) == 999){
+				LOG.info("i=" + i + " checking the heap!");
+				q.checkIsHeap();
+			}
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice
-			T v = nextVertex(workingCopy, this.k).vertex;
+			int lowestPrio = q.getMinPrio();
+			T vv = q.removeMinRandom();
+			Set<T> tmp = new HashSet<>();
+			T v = vv; // nextVertex(working, this.k);
+			for(T v1 : workingCopy.getNeighborhood(v)){
+				tmp.add(v1);
+				for(T v2 : workingCopy.getNeighborhood(v1)){
+					tmp.add(v2);
+				}
+			}
+			
+			//LOG.info("Eliminating node " + v + " with prio " + lowestPrio);
+			if(getValue(workingCopy, v).value != lowestPrio)
+				throw new RuntimeException("Prio in heap was " + lowestPrio + " but recomputation gave " + getValue(workingCopy, v).value);
+			
+			//T v = nextVertex(workingCopy, this.k).vertex;
 			if(workingCopy.getNeighborhood(v).size() >= upper_bound){
 				// Okay, this creates a clique of size >= upper_bound + 1, I can abort!
 				return null;
@@ -217,6 +253,17 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			// add it to the permutation and eliminate it in the current subgraph
 			permutation.add(v);
 			workingCopy.eliminateVertex(v);
+			for(T v_n : tmp){
+				if(v_n != v && v.compareTo(v_n) != 0){
+					//LOG.info("updating value of node " + v_n + ", v=" + v + ", compare yields" + v.compareTo(v_n));
+					VertexValue v_update = getValue(workingCopy, v_n);
+					if(v_update == null){
+						LOG.info("v_update was null");
+					}
+					
+					q.updateValue(v_n, getValue(workingCopy, v_n).value);
+				}
+			}
 		}
 
 		// done
