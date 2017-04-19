@@ -79,9 +79,21 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 	
 	public Graph(Graph<T> original){
-		adjacencyList = new HashMap<>(original.adjacencyList);
-		adjacencies = new HashMap<>(original.adjacencies);
-		edgesInNeighborhood = new HashMap<>(original.edgesInNeighborhood);
+		adjacencyList = new HashMap<>();
+		for(T v : original.adjacencyList.keySet()){
+			adjacencyList.put(v,  new ArrayList<>());
+			adjacencyList.get(v).addAll(original.adjacencyList.get(v));
+		}
+		
+		adjacencies = new HashMap<>();
+		for(T v : original.adjacencies.keySet()){
+			adjacencies.put(v, new HashSet<>());
+			adjacencies.get(v).addAll(original.adjacencies.get(v));
+		}
+		edgesInNeighborhood = new HashMap<>();
+		for(T v : original.edgesInNeighborhood.keySet()){
+			edgesInNeighborhood.put(v,  original.edgesInNeighborhood.get(v));
+		}
 		m = original.m;
 	}
 	
