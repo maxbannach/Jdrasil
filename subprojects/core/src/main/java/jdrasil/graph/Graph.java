@@ -78,6 +78,13 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		edgesInNeighborhood = new HashMap<>();
 	}
 	
+	public Graph(Graph<T> original){
+		adjacencyList = new HashMap<>(original.adjacencyList);
+		adjacencies = new HashMap<>(original.adjacencies);
+		edgesInNeighborhood = new HashMap<>(original.edgesInNeighborhood);
+		m = original.m;
+	}
+	
 	/**
 	 * Returns the vertices set of this graph. This is actually a Java set of
 	 * the generic vertex type.
