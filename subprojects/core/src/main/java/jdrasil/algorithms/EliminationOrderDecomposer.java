@@ -107,6 +107,8 @@ public class EliminationOrderDecomposer<T extends Comparable<T>> implements Tree
 			int next_index = perm.size();
 			T nextElimNode = null;
 			for(T u : eliminatedVertexToBag.get(v).vertices){
+				if(!elimOrder.containsKey(v))
+					throw new RuntimeException("Did not find this fucking node! ");
 				int positionInPermutation = elimOrder.get(u);
 				if(positionInPermutation < elimOrder.get(v))
 					throw new RuntimeException("Invalid index found! ");
@@ -122,7 +124,8 @@ public class EliminationOrderDecomposer<T extends Comparable<T>> implements Tree
 				decomposition.addTreeEdge(eliminatedVertexToBag.get(v), eliminatedVertexToBag.get(nextElimNode));
 			}
 		}
-		LOG.info("Have " + edgesAdded + " edges for " + perm.size() + " nodes?");
+		if(edgesAdded + 1 != perm.size())
+			LOG.info("Have " + edgesAdded + " edges for " + perm.size() + " nodes?");
 		
 //		// end of recursion is a single back
 //		if (perm.size() == 1) {

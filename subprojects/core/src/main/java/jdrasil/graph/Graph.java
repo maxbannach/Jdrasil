@@ -562,6 +562,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		}
 		return res;
 	}
-	
+	public int getNumVertices(){
+		return adjacencyList.keySet().size();
+	}
 	
 }

@@ -19,6 +19,7 @@
 package jdrasil.algorithms.upperbounds;
 
 import java.io.Serializable;
+import java.security.GeneralSecurityException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -107,7 +108,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		// fill-in value and degree of the vertex
 		int phi = G.getFillInValue(v);
 		int delta = G.getNeighborhood(v).size();
-		int n = G.getVertices().size();
+		int n = G.getNumVertices();
 
 		// compute the value of the vertex with respect to the current algorithm
 		int value = 0;
@@ -162,7 +163,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 
 			// eliminate vertex and look for further value
 			if (k > 1 && G.getVertices().size() > 1) {
-				System.out.println("test");
+//				System.out.println("test");
 				Graph.EliminationInformation info = G.eliminateVertex(v);
 				VertexValue next = nextVertex(G, k - 1);
 				G.deEliminateVertex(info);
@@ -212,22 +213,17 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		// the permutation that we wish to compute and a copy of the graph, which will be modified
 		List<T> permutation = new LinkedList<T>();
 		Graph<T> workingCopy = GraphFactory.copy(graph);
-
+		
 		UpdatablePriorityQueue<T, Integer> q = new UpdatablePriorityQueue<T, Integer>();
-		LOG.info("initialising the heap...");
 		for(T v : graph.getVertices()){
 			VertexValue vv = getValue(graph, v);
 			q.insert(vv.vertex, vv.value);
 		}
 			
-		LOG.info("Heap is done, now running! ");
 		// compute the permutation
 		for (int i = 0; i < graph.getVertices().size(); i++) {
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
-			if((i % 1000) == 999){
-				LOG.info("i=" + i + " checking the heap!");
-				q.checkIsHeap();
-			}
+			
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice
 			int lowestPrio = q.getMinPrio();
 			T vv = q.removeMinRandom();
@@ -241,9 +237,9 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			}
 			
 			//LOG.info("Eliminating node " + v + " with prio " + lowestPrio);
-			if(getValue(workingCopy, v).value != lowestPrio)
-				throw new RuntimeException("Prio in heap was " + lowestPrio + " but recomputation gave " + getValue(workingCopy, v).value);
-			
+//			if(getValue(workingCopy, v).value != lowestPrio)
+//				throw new RuntimeException("Prio in heap was " + lowestPrio + " but recomputation gave " + getValue(workingCopy, v).value);
+//			
 			//T v = nextVertex(workingCopy, this.k).vertex;
 			if(workingCopy.getNeighborhood(v).size() >= upper_bound){
 				// Okay, this creates a clique of size >= upper_bound + 1, I can abort!
