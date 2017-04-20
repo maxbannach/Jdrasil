@@ -18,8 +18,11 @@
  */
 package jdrasil.algorithms.exact;
 
+import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
+import jdrasil.algorithms.upperbounds.GreedyPermutationDecomposer;
 import jdrasil.graph.*;
 import jdrasil.utilities.BitSetTrie;
+import jdrasil.utilities.RandomNumberGenerator;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.util.*;
@@ -126,6 +129,11 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         BitSet delta = (BitSet) S.clone();
         for (BitSet f : from) delta.andNot(f);
         if (neighbors.cardinality() + delta.cardinality() > k + 1) return false; // not enough searchers
+
+        // Prune if S is not a potential maximal clique
+        BitSet omega = (BitSet) neighbors.clone();
+        omega.or(delta);
+        if (!graph.isPotentialMaximalClique(omega)) return false;
 
         // Prune 3: if we have handled a superset of S and N(S), we can prune S
         BitSet mask = (BitSet) S.clone();
@@ -285,18 +293,32 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     @Override
     public TreeDecomposition<T> call() throws Exception {
 
-        int k = 1;
-        while (!decompose(k)) {
-            LOG.info(String.format("tree width >= %2d ( %4d configurations )", k, configurations));
-            k++;
-        }
-        LOG.info(String.format("tree width == %2d ( %4d configurations )", k, configurations));
-
-        // extract constructed tree decomposition
-        TreeDecomposition<T> td = new TreeDecomposition<T>(graph.getGraph());
+        TreeDecomposition<T> td = new GreedyPermutationDecomposer<T>(graph.getGraph()).call();
         BitSet all = new BitSet();
         all.set(0,n);
-        extractTreeDecomposition(all, td);
+
+        int k = td.getWidth() - 1;
+        while (decompose(k)) {
+            LOG.info(String.format("tree width <= %2d ( %4d configurations )", k, configurations));
+            td = new TreeDecomposition<>(graph.getGraph());
+            extractTreeDecomposition(all, td);
+            k = k - 1;
+        }
+        LOG.info(String.format("tree width > %3d ( %4d configurations )", k, configurations));
+
+
+//        int k = 1;
+//        while (!decompose(k)) {
+//            LOG.info(String.format("tree width > %2d ( %4d configurations )", k, configurations));
+//            k++;
+//        }
+//        LOG.info(String.format("tree width = %2d ( %4d configurations )", k, configurations));
+//
+//        // extract constructed tree decomposition
+//        TreeDecomposition<T> td = new TreeDecomposition<T>(graph.getGraph());
+//        BitSet all = new BitSet();
+//        all.set(0,n);
+//        extractTreeDecomposition(all, td);
 
         // done
         return td;

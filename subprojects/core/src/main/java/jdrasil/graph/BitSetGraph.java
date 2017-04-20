@@ -242,4 +242,38 @@ public class BitSetGraph<T extends Comparable<T>> {
         return components;
     }
 
+    /**
+     * Test if the given set of vertices is a potential maximal clique, i.e., a maximal clique in some minimal triangulation
+     * of the graph.
+     * This method uses the local characterisation of potential maximal cliques found by Bouchitte and Todinca "Treewidth
+     * and Minimum Fill-In: Grouping th Minimal Separators".
+     * @param S
+     * @return
+     */
+    public boolean isPotentialMaximalClique(BitSet S) {
+        List<BitSet> components = separate(S);
+
+        // Test 1: S can not be maximal potential clique, if there is a component C with N(C)=S
+        for (BitSet C : components) {
+            if (exteriorBorder(C).cardinality() == S.cardinality()) return false; // |N(C)|=|S| vs N(C)=S
+        }
+
+        // Test 2: for every non-edge {u,v} in S, there must be a component C adjacent to both, u and v
+        for (int v = S.nextSetBit(0); v >= 0; v = S.nextSetBit(v+1)) {
+            for (int w = S.nextSetBit(v+1); w >= 0; w = S.nextSetBit(w+1)) {
+                if (bitSetGraph[v].get(w)) continue;
+                boolean completeable = false;
+                for (BitSet C : components) {
+                    if (C.intersects(bitSetGraph[v]) && C.intersects(bitSetGraph[w])) {
+                        completeable = true;
+                        break;
+                    }
+                }
+                if (!completeable) return false;
+            }
+        }
+
+        return true;
+    }
+
 }
