@@ -155,7 +155,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	 * @param s
 	 * @return
 	 */
-	public List<Bag<T>> getNeighborhood(Bag<T> s) {
+	public Set<Bag<T>> getNeighborhood(Bag<T> s) {
 		return tree.getNeighborhood(s);
 	}
 	
@@ -377,7 +377,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
  * @param b the bag to improve
  */
 	public void improveBag(Bag<T> b){
-		List<Bag<T>> neighbours = tree.getNeighborhood(b);
+		Set<Bag<T>> neighbours = tree.getNeighborhood(b);
 		Graph<T> g = toGraph(b);
 		
 		// compute a minimal separator

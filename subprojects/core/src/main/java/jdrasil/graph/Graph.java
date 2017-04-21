@@ -28,6 +28,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.logging.Logger;
+
+import javax.management.RuntimeErrorException;
+
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * This class represents a generic directed graph and provides basic methods to modify it.
@@ -47,13 +52,16 @@ import java.util.Stack;
  */
 public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable {
 	
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
+	
 	private static final long serialVersionUID = -6506030235954373541L;
 	
 	/**
 	 * The graph is stored as adjacency list, i.e., for every vertex of the graph
 	 * there is one entry in the map that points to a list of neighbors.
 	 */
-	private Map<T, List<T>> adjacencyList;
+//	private Map<T, List<T>> adjacencyList;
 	
 	/**
 	 * We also store edges in HashSets to get O(1) adjacency tests.
@@ -77,19 +85,19 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * Package private constructor, only initialize data structures.
 	 */
 	Graph() {
-		adjacencyList = new HashMap<>();	
+//		adjacencyList = new HashMap<>();	
 		adjacencies = new HashMap<>();
 		edgesInNeighborhood = new HashMap<>();
 		setLogEdgesInNeighbourhood(true);
 	}
 	
 	public Graph(Graph<T> original){
-		adjacencyList = new HashMap<>();
+//		adjacencyList = new HashMap<>();
 		setLogEdgesInNeighbourhood(original.isLogEdgesInNeighbourhood());
-		for(T v : original.adjacencyList.keySet()){
-			adjacencyList.put(v,  new ArrayList<>());
-			adjacencyList.get(v).addAll(original.adjacencyList.get(v));
-		}
+//		for(T v : original.adjacencyList.keySet()){
+//			adjacencyList.put(v,  new ArrayList<>());
+//			adjacencyList.get(v).addAll(original.adjacencyList.get(v));
+//		}
 		
 		adjacencies = new HashMap<>();
 		for(T v : original.adjacencies.keySet()){
@@ -109,11 +117,11 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * @return Set the vertices of the represented graph
 	 */
 	public Set<T> getCopyOfVertices() {
-		return new HashSet<T>(adjacencyList.keySet());
+		return new HashSet<T>(adjacencies.keySet());
 	}
 	
 	public boolean containsNode(T v){
-		return adjacencyList.containsKey(v);
+		return adjacencies.containsKey(v);
 	}
 	
 	/**
@@ -135,10 +143,14 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * @param v the requested vertex  
 	 * @return List the neighborhood of v
 	 */
-	public List<T> getNeighborhood(T v) {
-		return adjacencyList.get(v);
+	public Set<T> getNeighborhood(T v) {
+		return adjacencies.get(v);
 	}
 	
+	
+	public List<T> getNeighbourhoodAsList(T v){
+		return new ArrayList(adjacencies.get(v));
+	}
 	/**
 	 * Check if two vertices are adjacent
 	 * @param u first vertex
@@ -156,8 +168,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * @param v - the vertex to bed added
 	 */
 	public void addVertex(T v) {
-		if (adjacencyList.get(v) == null) {
-			adjacencyList.put(v, new ArrayList<T>());
+		if (adjacencies.get(v) == null) {
+//			adjacencyList.put(v, new ArrayList<T>());
 			adjacencies.put(v, new HashSet<>());
 			edgesInNeighborhood.put(v, 0);
 		}
@@ -173,9 +185,9 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	public void addDirectedEdge(T u, T v) {
 		addVertex(u);
 		addVertex(v);
-		if (adjacencyList.get(u).contains(v)) return;
+		if (adjacencies.get(u).contains(v)) return;
 		m++;
-		adjacencyList.get(u).add(v);
+//		adjacencyList.get(u).add(v);
 		adjacencies.get(u).add(v);		
 	}
 	
@@ -214,7 +226,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 */
 	public void removeDirectedEdge(T u, T v) {
 		m--;
-		adjacencyList.get(u).remove(v);
+//		adjacencyList.get(u).remove(v);
 		adjacencies.get(u).remove(v);
 	}
 	
@@ -270,7 +282,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		}
 				
 		// actually remove the vertex
-		adjacencyList.remove(v);
+//		adjacencyList.remove(v);
 		adjacencies.remove(v);
 		edgesInNeighborhood.remove(v);
 	}
@@ -350,7 +362,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	public EliminationInformation eliminateVertex(T v) {
 
 		EliminationInformation info = new EliminationInformation(v);
-		
+		if(!logEdgesInNeighbourhood)
+			throw new RuntimeException("bla");
 		// make the neighborhood of v a clique
 		for (T u : getNeighborhood(v)) {
 			info.addNeighbors(u);
@@ -367,6 +380,289 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		
 		return info;
 	}
+	private int getSizeOfIntersection(Set<T> s1, Set<T> s2){
+		if(s1.size() > s2.size())
+			return getSizeOfIntersection(s2, s1);
+		int ret = 0;
+		for(T v : s1)
+			if(s2.contains(v))
+				ret++;
+		return ret;
+	}
+	
+	private int getSizeOfIntersectionIfLarger(Set<T> s1, Set<T> s2, T threshold){
+		if(s1.size() > s2.size())
+			return getSizeOfIntersectionIfLarger(s2, s1, threshold);
+		int ret = 0;
+		for(T v : s1){
+			if(v.compareTo(threshold) > 0 && s2.contains(v))
+				ret++;
+		}
+		return ret;
+	}
+	
+	private Set<T> intersect(Set<T> s1, Set<T> s2){
+		if(s1.size() > s2.size())
+			return intersect(s2, s1);
+		Set<T> ret = new HashSet<>();
+		for(T v : s1)
+			if(s2.contains(v))
+				ret.add(v);
+		return ret;
+	}
+	
+	/**
+	 * Get nodes which have distance 1 and 2, respectively, from node v
+	 * TODO: Make this faster :) 
+	 * @param v
+	 * @param dist1
+	 * @param dist2
+	 */
+	private void getNodes(T v, Set<T> dist1, Set<T> dist2){
+		dist1.addAll(getNeighborhood(v));
+		for(T u : getNeighborhood(v))
+			for(T w : getNeighborhood(u))
+				if(w.compareTo(v) != 0 && !dist1.contains(w))
+					dist2.add(w);
+		
+	}
+	
+	
+	private void checkFillValues(){
+		for(T v : getCopyOfVertices()){
+			int tmp = 0;
+			for(T u1 : getNeighborhood(v))
+				for(T u2 : getNeighborhood(v))
+					if(u1.compareTo(u2) < 0 && isAdjacent(u1, u2))
+						tmp++;
+			if(edgesInNeighborhood.get(v) != tmp)
+				throw new RuntimeException("Edges in neighbourhood were not counted correctly! ");
+		}
+	}
+	public EliminationInformation eliminateVertex(T v, boolean updateFillValues){
+		boolean runOldWay = true;
+		if(runOldWay){
+			setLogEdgesInNeighbourhood(true);
+			return eliminateVertex(v);
+		}
+		
+		
+		setLogEdgesInNeighbourhood(true);
+		checkFillValues();
+		if(!updateFillValues)
+			return eliminateVertex(v);
+		Map<T, Integer> predicedValues = new HashMap<>();
+		boolean debugThis = true;
+		if(getFillInValue(v) == 0){
+			setLogEdgesInNeighbourhood(false);
+			Set<T> neighbourhood = getNeighborhood(v);
+			for(T u : neighbourhood)
+				edgesInNeighborhood.put(u, edgesInNeighborhood.get(u)-(neighbourhood.size()-1));	
+			EliminationInformation ret = eliminateVertex(v);
+			checkFillValues();
+			return ret;
+		}
+		else{
+			logEdgesInNeighbourhood = true;
+			// Divide the set of neighbours of "v" and "u" in three disjoint sets: 
+			// N_a contains nodes that are neighbours of v, bot not u (Additional neighbours: Will become neighbours when eliminating v)
+			// N_e contains the neighbours of both u and v (Existing neighbours)
+			// N_u contains the neighbours of u which are not neighbours of v (Unaffected)
+			Set<T> dist1 = new HashSet<>();
+			Set<T> dist2 = new HashSet<>();
+			getNodes(v, dist1, dist2);
+			Map<T, Set<T> > N_u = new HashMap<>();
+			Map<T, Set<T> > N_e = new HashMap<>();
+			Map<T, Set<T> > N_a = new HashMap<>();
+			for(T u : getNeighborhood(v)){
+				N_u.put(u, new HashSet<>());
+				N_e.put(u, new HashSet<>());
+				N_a.put(u, new HashSet<>());
+			}
+			for(T u : getNeighborhood(v)){
+				for(T w : getNeighborhood(u)){
+					
+					if(getNeighborhood(v).contains(w)) // w is both a neighbour of v and u (Existing)
+						N_e.get(u).add(w);
+					else if(w.compareTo(v) != 0)
+						N_u.get(u).add(w);				// W is a neighbour of u, but not w (Unaffected)
+						
+				}
+				for(T u2 : getNeighborhood(v)){			// Other neighbours of v: If there's no edge to u, they are additional neighbours
+					if(u2.compareTo(u) != 0 && !getNeighborhood(u).contains(u2))
+						N_a.get(u).add(u2);
+				}
+			}
+			/**********************
+			 * Some debugging
+			 */
+			if(debugThis){
+				// Check that everything is correct!!!
+				for(T u : getNeighborhood(v)){
+					// Nodes from N_u are not connected to v
+					for(T w : N_u.get(u)){
+						if(isAdjacent(v, w) || !isAdjacent(u, w))
+							throw new RuntimeException("N_u looks weird! ");
+					}
+					if(N_u.get(u).contains(v) || N_a.get(u).contains(v) || N_e.get(u).contains(v))
+						throw new RuntimeException("V occured in set! ");
+					// The set of neighbours is {v} + N_u + N_e
+					for(T w : getNeighborhood(u))
+						if(w.compareTo(v) != 0){
+							int s = 0;
+							if(N_u.get(u).contains(w)) s++;
+							if(N_a.get(u).contains(w)) s++;
+							if(N_e.get(u).contains(w)) s++;
+							if(s != 1)
+								throw new RuntimeException();
+						}
+//					StringBuilder sb = new StringBuilder();
+//					sb.append("Node " + u + ": ");
+//					sb.append("N_u=" ); for(T w : N_u.get(u)) sb.append(w + " ");
+//					sb.append("N_e: "); for(T w : N_e.get(u)) sb.append(w + " ");
+//					sb.append("N_a: "); for(T w : N_a.get(u)) sb.append(w + " ");
+//					LOG.info(sb.toString());
+				}
+				
+				
+			}
+			/**
+			 * Actually update the fill-values. Distinguish 3 cases: 
+			 */
+			for(T u : getNeighborhood(v)){
+				if(N_u.get(u).size() > 0){
+					if(N_a.get(u).size() > 0){
+						/**
+						 * N_u and N_a are non-empty. 
+						 */
+						// Count the number of edges between nodes in N_a and N_u. All of them will appear newly in the neighbourhood of u!
+//						LOG.info("Node " + u + ": degree " + getNeighborhood(u).size() + "old fill: " + getFillInValue(u) + " old number n-edges: " + edgesInNeighborhood.get(u));
+						int newNumberEdges = edgesInNeighborhood.get(u);
+						newNumberEdges -= N_a.get(u).size(); 	// For each node in N_a, one edge will be deleted --- the one to v
+						int newFill = getFillInValue(u) + (N_a.get(u).size()-1)*N_u.get(u).size();
+//						LOG.info("Increasing by (" + N_a.get(u).size() + "-1)*" + N_u.get(u).size());
+						for(T w : N_a.get(u)){
+							newFill -= getSizeOfIntersection(N_u.get(u), N_u.get(w));
+						}
+//						LOG.info("After subtraction the intersections: " + newFill);
+						// Are there edges between nodes in N_e? They have to be considered as well! 
+						if(N_e.get(u).size() > 1){
+							int missing = ((N_e.get(u).size()-1) * N_e.get(u).size())/2;
+							ArrayList<T> nodeList = new ArrayList<>();
+							nodeList.addAll(N_e.get(u));
+							for(int i = 0 ; i < nodeList.size();i++){
+								for(int j = i+1 ; j < nodeList.size();j++)
+									if(isAdjacent(nodeList.get(i), nodeList.get(j)))
+										missing--;
+							}
+//							LOG.info("Decreasing fill value by " + missing);
+							newFill -= missing;
+						}
+						// Now store the new fill-value: 
+						int n = N_a.get(u).size() + N_u.get(u).size() + N_e.get(u).size();
+						n = (n * (n-1))/2;
+//						LOG.info("Now have a new fill value of " + newFill + ", changing number edges from " + edgesInNeighborhood.get(u) + " to " + (n-newFill));
+						predicedValues.put(u, n-newFill);
+					}
+					else{
+						/**
+						 * N_a is empty. 
+						 * This is, u will not get any new neighbours. 
+						 */
+						// N_u non-empty, but N_a is. 
+						int newFill = getFillInValue(u) - N_u.get(u).size(); // Fill-value is decreased by the number of non-missing edges between v and nodes from N_u
+						for(T w : N_e.get(u)){
+							newFill -= getSizeOfIntersectionIfLarger(N_e.get(u), N_a.get(w), w);
+						}
+						int n = N_a.get(u).size() + N_u.get(u).size() + N_e.get(u).size();
+						n = (n * (n-1))/2;
+						predicedValues.put(u, n-newFill);
+					}
+				}
+				else{
+					/**
+					 * There are no unaffected neighbours. This is, after eliminating v, the neighbours of u will form a clique, thus, the new fill value will equal zero! 
+					 */
+					int n = N_e.get(u).size() + N_a.get(u).size();
+					int newNumberOfEdges = (n * (n-1))/2;
+					predicedValues.put(u, newNumberOfEdges);
+				}
+			}
+			// Now nodes with distance 2: 
+			for(T u : dist2){
+				Set<T> commonNeighbours = intersect(getNeighborhood(v), getNeighborhood(u));
+				// These neighbours will become part of a clique. Thus, every missing edge between them will added, and thus reduce the fill-value accordingly. 
+				int fillDecrease = 0;
+				for(T u1 : commonNeighbours)
+					for(T u2 : commonNeighbours)
+						if(u1.compareTo(u2) < 0)
+							if(!isAdjacent(u1, u2))
+								fillDecrease++;
+				predicedValues.put(u, edgesInNeighborhood.get(u) + fillDecrease);
+			}
+			int numEdgesBefore = getNumberOfEdges();
+			int predictedFill = getFillInValue(v);
+			int deg = getNeighborhood(v).size();
+			EliminationInformation ret = eliminateVertex(v);
+			if(getNumberOfEdges() != numEdgesBefore + predictedFill - deg)
+				throw new RuntimeException("Something was wrong. Eliminated the node, but the number of added edges was different from what it should be like! ");
+			// Do some debug stuff
+			
+			if(debugThis){
+				if(containsNode(v))
+					throw new RuntimeException("v was not eliminated! ");
+//				LOG.info("Checking " + dist2.size() + " nodes with distance 2: ");
+				for(T u : dist2){
+					int tmp = 0;
+					
+					for(T x1 : getNeighborhood(u)){
+						for(T x2 : getNeighborhood(u)){
+							if(x1.compareTo(x2) < 0 && isAdjacent(x1, x2))
+								tmp++;
+						}
+					}
+					if(tmp != edgesInNeighborhood.get(u) ){
+						
+						throw new RuntimeException("Miss-predicted fill value: Dist 2,  Predicted " + edgesInNeighborhood.get(u) + ", was " + tmp);
+					}
+				}
+//				LOG.info("Checking " + dist1.size() + " nodes with distance 1: ");
+				for(T u : dist1){
+					// Count number of edges in neighbourhood: 
+					int tmp = 0;
+					for(T x1 : getNeighborhood(u)){
+						for(T x2 : getNeighborhood(u)){
+							if(x1.compareTo(x2) < 0 && isAdjacent(x1, x2))
+								tmp++;
+						}
+					}
+					if((tmp != edgesInNeighborhood.get(u).intValue()) || (predicedValues.get(u) != edgesInNeighborhood.get(u).intValue())){
+						
+						LOG.info("This is weird. ");
+						LOG.info("I counted " + tmp + " edges in the neighbourhood, predicted value was " + predicedValues.get(u) + ", graph says " + edgesInNeighborhood.get(u));
+						LOG.info("" + ((tmp != edgesInNeighborhood.get(u)) || (predicedValues.get(u) != edgesInNeighborhood.get(u))));
+						LOG.info("" + ( (predicedValues.get(u) != edgesInNeighborhood.get(u))));
+						LOG.info("" + ((tmp != edgesInNeighborhood.get(u)) ));
+						LOG.info("Miss-predicted fill value for node " + u + ": Dist 1, N_u.size()=" + N_u.get(u).size()  + ", N_e.size()=" + N_e.get(u).size() + ", and N_a.size()=" + N_a.get(u).size());
+						LOG.info("Predicted " + predicedValues.get(u) + ", now is " + getFillInValue(u));
+						LOG.info("New degree is " + getNeighborhood(u).size());
+						StringBuilder nbSb = new StringBuilder("Neighbours are");
+						for(T w : getNeighborhood(u))
+							nbSb.append(w + " ");
+						LOG.info(nbSb.toString());
+						checkFillValues();
+						throw new RuntimeException("\n Predicted " + predicedValues.get(u) + ", was " + tmp + "\n. FillValue=" + getFillInValue(u));
+					}
+//					else
+//						LOG.info("Everything was fine: N_u.size()=" + N_u.get(u).size()  + ", N_e.size()=" + N_e.get(u).size() + ", and N_a.size()=" + N_a.get(u).size() );
+				}
+			}
+			return ret;
+		}
+		
+//		return eliminateVertex(v);
+	}
+	
 	
 	/**
 	 * Undo the elimination of a vertex.
@@ -468,6 +764,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		int delta = getNeighborhood(v).size();
 		return (delta*delta-delta)/2 - edgesInNeighborhood.get(v);
 	}
+	
+	
 	
 	/**
 	 * Returns an arbitrary simplicial vertex of the graph.
@@ -573,14 +871,14 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		return res;
 	}
 	public int getNumVertices(){
-		return adjacencyList.keySet().size();
+		return adjacencies.keySet().size();
 	}
 
-	private boolean isLogEdgesInNeighbourhood() {
+	public boolean isLogEdgesInNeighbourhood() {
 		return logEdgesInNeighbourhood;
 	}
 
-	private void setLogEdgesInNeighbourhood(boolean logEdgesInNeighbourhood) {
+	public void setLogEdgesInNeighbourhood(boolean logEdgesInNeighbourhood) {
 		this.logEdgesInNeighbourhood = logEdgesInNeighbourhood;
 	}
 	

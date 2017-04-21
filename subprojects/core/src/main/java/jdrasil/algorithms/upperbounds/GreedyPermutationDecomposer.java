@@ -195,9 +195,11 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		return call(graph.getCopyOfVertices().size()+1);
+		return call(graph.getNumVertices()+1);
 	}
 
+	
+	
 	/**
 	 * If the algorithm is used with a good upper bound, it can aboard whenever the width of the greedily constructed permutation
 	 * becomes to big.
@@ -213,7 +215,9 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		// the permutation that we wish to compute and a copy of the graph, which will be modified
 		List<T> permutation = new LinkedList<T>();
 		Graph<T> workingCopy = GraphFactory.copy(graph);
-		
+		if(toRun == Algorithm.Degree){
+			workingCopy.setLogEdgesInNeighbourhood(false);
+		}
 		UpdatablePriorityQueue<T, Integer> q = new UpdatablePriorityQueue<T, Integer>();
 		for(T v : graph.getCopyOfVertices()){
 			VertexValue vv = getValue(graph, v);
@@ -235,7 +239,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 					tmp.add(v2);
 				}
 			}
-			
+			int predictionNewNumberEdges = workingCopy.getNumberOfEdges() + workingCopy.getFillInValue(v) - workingCopy.getNeighborhood(v).size();
 			//LOG.info("Eliminating node " + v + " with prio " + lowestPrio);
 //			if(getValue(workingCopy, v).value != lowestPrio)
 //				throw new RuntimeException("Prio in heap was " + lowestPrio + " but recomputation gave " + getValue(workingCopy, v).value);
@@ -248,7 +252,10 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 
 			// add it to the permutation and eliminate it in the current subgraph
 			permutation.add(v);
-			workingCopy.eliminateVertex(v);
+			workingCopy.eliminateVertex(v, toRun != Algorithm.Degree);
+			if(toRun != Algorithm.Degree &&  workingCopy.getNumberOfEdges() != predictionNewNumberEdges){
+				throw new RuntimeException("Miss-predicted fill values!");
+			}
 			for(T v_n : tmp){
 				if(v_n != v && v.compareTo(v_n) != 0){
 					//LOG.info("updating value of node " + v_n + ", v=" + v + ", compare yields" + v.compareTo(v_n));

@@ -263,7 +263,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 			if (work.getNeighborhood(v).size() == 1) {
 				Set<T> set = new HashSet<>();
 				set.add(v);
-				set.add(work.getNeighborhood(v).get(0));
+				set.addAll(work.getNeighborhood(v));
 				work.removeVertex(v);
 				low = Math.max(low, 2);
 				return set;
@@ -306,9 +306,11 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		low = Math.max(low, 4);
 		for (T v : work) {
 			if (work.getNeighborhood(v).size() != 3) continue;
-			T x = work.getNeighborhood(v).get(0);
-			T y = work.getNeighborhood(v).get(1);
-			T z = work.getNeighborhood(v).get(2);
+			ArrayList<T> neighbours = new ArrayList<>();
+			neighbours.addAll(work.getNeighborhood(v));
+			T x = neighbours.get(0);
+			T y = neighbours.get(1);
+			T z = neighbours.get(2);
 			if (work.isAdjacent(x, y) || work.isAdjacent(x, z) || work.isAdjacent(y, z)) {
 				Set<T> set = new HashSet<>();
 				set.add(v);
@@ -359,47 +361,59 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 	 * @return
 	 */
 	private Set<T> cubeRule(Graph<T> work) {
-		for (T v : work) {
-			if (work.getNeighborhood(v).size() != 3) continue;
-			T x = work.getNeighborhood(v).get(0);
-			if (work.getNeighborhood(x).size() != 3) continue;
-			T y = work.getNeighborhood(v).get(1);
-			if (work.getNeighborhood(y).size() != 3) continue;
-			T z = work.getNeighborhood(v).get(2);
-			if (work.getNeighborhood(z).size() != 3) continue;
-			
-			// v is center of cube with neighbors x,y,z, compute other corners a,b,c
-			T a = work.getNeighborhood(x).get(0);
-			if (a.compareTo(v) == 0) a = work.getNeighborhood(x).get(2); 
-			T b = work.getNeighborhood(x).get(1);
-			if (b.compareTo(v) == 0) b = work.getNeighborhood(x).get(2);
-			
-			if ( !(work.isAdjacent(y, a) && work.isAdjacent(z, b)) ) {
-				T tmp = a;
-				a = b;
-				b = tmp;
-			}
-			if ( !(work.isAdjacent(y, a) && work.isAdjacent(z, b)) ) continue;
-			
-			T c = null;
-			for (T tmp : work.getNeighborhood(y)) {
-				if (tmp.compareTo(v) != 0 && work.isAdjacent(z, tmp)) c = tmp;
-			}			
-			if (c == null) continue;
-			
-			Set<T> set = new HashSet<>();
-			set.add(z);
-			set.add(b);
-			set.add(c);
-			set.add(v);
-			work.removeVertex(z);
-			if (!work.isAdjacent(a, b)) work.addEdge(a, b);
-			if (!work.isAdjacent(a, c)) work.addEdge(a, c);
-			if (!work.isAdjacent(a, v)) work.addEdge(a, v);
-			if (!work.isAdjacent(b, c)) work.addEdge(b, c);
-			if (!work.isAdjacent(b, v)) work.addEdge(b, v);
-			if (!work.isAdjacent(c, v)) work.addEdge(c, v);
-			return set;
+		boolean fixedThis = false;
+		if(!fixedThis)
+			return null;
+		else{
+			// TODO: CHECK THIS. To which rule does this correlate? Bodlaender suggests to remove v, x, y, z?
+//			for (T v : work) {
+//				if (work.getNeighborhood(v).size() != 3) continue;
+//				ArrayList<T> neighboursOfV = new ArrayList<>();
+//				neighboursOfV.addAll(work.getNeighborhood(v));
+//				for(T x : neighboursOfV)
+//					if(work.getNeighborhood(x).size() != 3)
+//						continue;
+//				
+//	//			T x = work.getNeighborhood(v).get(0);
+//	//			if (work.getNeighborhood(x).size() != 3) continue;
+//	//			T y = work.getNeighborhood(v).get(1);
+//	//			if (work.getNeighborhood(y).size() != 3) continue;
+//	//			T z = work.getNeighborhood(v).get(2);
+//	//			if (work.getNeighborhood(z).size() != 3) continue;
+//	//			
+//				// v is center of cube with neighbors x,y,z, compute other corners a,b,c
+//				T a = work.getNeighborhood(x).get(0);
+//				if (a.compareTo(v) == 0) a = work.getNeighborhood(x).get(2); 
+//				T b = work.getNeighborhood(x).get(1);
+//				if (b.compareTo(v) == 0) b = work.getNeighborhood(x).get(2);
+//				
+//				if ( !(work.isAdjacent(y, a) && work.isAdjacent(z, b)) ) {
+//					T tmp = a;
+//					a = b;
+//					b = tmp;
+//				}
+//				if ( !(work.isAdjacent(y, a) && work.isAdjacent(z, b)) ) continue;
+//				
+//				T c = null;
+//				for (T tmp : work.getNeighborhood(y)) {
+//					if (tmp.compareTo(v) != 0 && work.isAdjacent(z, tmp)) c = tmp;
+//				}			
+//				if (c == null) continue;
+//				
+//				Set<T> set = new HashSet<>();
+//				set.add(z);
+//				set.add(b);
+//				set.add(c);
+//				set.add(v);
+//				work.removeVertex(z);
+//				if (!work.isAdjacent(a, b)) work.addEdge(a, b);
+//				if (!work.isAdjacent(a, c)) work.addEdge(a, c);
+//				if (!work.isAdjacent(a, v)) work.addEdge(a, v);
+//				if (!work.isAdjacent(b, c)) work.addEdge(b, c);
+//				if (!work.isAdjacent(b, v)) work.addEdge(b, v);
+//				if (!work.isAdjacent(c, v)) work.addEdge(c, v);
+//				return set;
+//			}
 		}
 		
 		// done
