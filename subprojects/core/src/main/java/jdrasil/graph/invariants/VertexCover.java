@@ -71,7 +71,7 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 		}
 
 		// solve the formula
-		int k = graph.getVertices().size();
+		int k = graph.getCopyOfVertices().size();
 		phi.addCardinalityConstraint(0, k, intToVert.keySet());
 
 		try {

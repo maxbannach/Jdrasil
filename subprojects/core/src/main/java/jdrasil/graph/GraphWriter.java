@@ -44,8 +44,8 @@ public class GraphWriter {
 	 */
 	public static <T extends Comparable<T>> String graphToString(Graph<T> graph) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("p tw " + graph.getVertices().size() + " " + graph.getNumberOfEdges() + "\n");
-		for (T v : graph.getVertices()) {
+		sb.append("p tw " + graph.getCopyOfVertices().size() + " " + graph.getNumberOfEdges() + "\n");
+		for (T v : graph.getCopyOfVertices()) {
 			for (T w : graph.getNeighborhood(v)) {
 				if (v.compareTo(w) > 0) continue;
 				sb.append(v + " " + w + "\n");
@@ -61,8 +61,8 @@ public class GraphWriter {
 	 */
 	public static <T extends Comparable<T>> String directedGraphToString(Graph<T> graph) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("p tw " + graph.getVertices().size() + " " + graph.getNumberOfEdges() + "\n");
-		for (T v : graph.getVertices()) {
+		sb.append("p tw " + graph.getCopyOfVertices().size() + " " + graph.getNumberOfEdges() + "\n");
+		for (T v : graph.getCopyOfVertices()) {
 			for (T w : graph.getNeighborhood(v)) {
 				sb.append(v + " " + w + "\n");
 			}
@@ -158,16 +158,16 @@ public class GraphWriter {
 		// compute the bijection
 		int index = 1;
 		Map<T, Integer> phi = new HashMap<T, Integer>();
-		for (T v : graph.getVertices()) {
+		for (T v : graph.getCopyOfVertices()) {
 			phi.put(v, index);
 			index = index + 1;
 		}
 
 		// compute the string using a string builder
 		StringBuilder sb = new StringBuilder();
-		sb.append("p tw " + graph.getVertices().size() + " "
+		sb.append("p tw " + graph.getCopyOfVertices().size() + " "
 				+ graph.getNumberOfEdges() + "\n");
-		for (T v : graph.getVertices()) {
+		for (T v : graph.getCopyOfVertices()) {
 			for (T w : graph.getNeighborhood(v)) {
 				if (v.compareTo(w) > 0)
 					continue;
@@ -209,9 +209,9 @@ public class GraphWriter {
 	public static <T extends Comparable<T>> String graphToTikZ(Graph<T> graph) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("\\tikz\\graph[spring electrical layout] {\n");
-		for (T v : graph.getVertices()) sb.append(v+";");
+		for (T v : graph.getCopyOfVertices()) sb.append(v+";");
 		sb.append("\n");
-		for (T v : graph.getVertices()) {
+		for (T v : graph.getCopyOfVertices()) {
 			for (T w : graph.getNeighborhood(v)) {
 				if (v.compareTo(w) < 0) {
 					sb.append(v + " -- " + w + ";\n");

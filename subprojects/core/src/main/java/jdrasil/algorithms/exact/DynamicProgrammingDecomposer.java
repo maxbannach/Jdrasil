@@ -99,7 +99,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 	 */
 	public DynamicProgrammingDecomposer(Graph<T> graph, int ub, Set<T> clique, Mode mode) {
 		this.graph = graph;
-		this.n = graph.getVertices().size();
+		this.n = graph.getCopyOfVertices().size();
 		this.vertexToInt = new HashMap<>();
 		this.intToVertex = new HashMap<>();
 		int i = 0;
@@ -125,7 +125,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 	 * @param graph
 	 */
 	public DynamicProgrammingDecomposer(Graph<T> graph) {
-		this(graph, graph.getVertices().size()-1, new HashSet<T>(), Mode.TWDP);
+		this(graph, graph.getCopyOfVertices().size()-1, new HashSet<T>(), Mode.TWDP);
 	}
 	
 	/**
@@ -143,7 +143,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 	 * @param graph
 	 */
 	public DynamicProgrammingDecomposer(Graph<T> graph, Set<T> clique) {
-		this(graph, graph.getVertices().size()-1, clique, Mode.TWDP);
+		this(graph, graph.getCopyOfVertices().size()-1, clique, Mode.TWDP);
 	}
 	
 	/**
@@ -153,7 +153,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 	 * @param graph
 	 */
 	public DynamicProgrammingDecomposer(Graph<T> graph, Mode mode) {
-		this(graph, graph.getVertices().size()-1, new HashSet<T>(), mode);
+		this(graph, graph.getCopyOfVertices().size()-1, new HashSet<T>(), mode);
 	}
 	
 	/**
@@ -195,7 +195,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 		}
 				
 		// test all w in V\S\{v}
-		for (T vertex : graph.getVertices()) {
+		for (T vertex : graph.getCopyOfVertices()) {
 			int w = vertexToInt.get(vertex);
 			if (w != v && !S.get(w)) { // not v and not in S 
 				for (T neighbor : graph.getNeighborhood(vertex)) { // check the neighbors -> is one in the component in S?
@@ -269,7 +269,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 		Queue<BitSet> Q = new LinkedList<BitSet>();
 		
 		// initialize queue with |S|=1
-		for (T vertex : graph.getVertices()) {
+		for (T vertex : graph.getCopyOfVertices()) {
 			BitSet S = new BitSet();
 			S.set(vertexToInt.get(vertex));
 			Q.offer(S);
@@ -305,7 +305,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 			if (S.cardinality() == n) return result;
 			
 			// add next layer to Queue (i.e. S' with |S'|=|S|+1)
-			for (T vertex : graph.getVertices()) {
+			for (T vertex : graph.getCopyOfVertices()) {
 				int v = vertexToInt.get(vertex);
 				if (!S.get(v)) {
 					BitSet next = (BitSet) S.clone();
@@ -342,7 +342,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 				int r = TWi.get(i-1).get(S); 
 				
 				// iterate over vertices x in V \ S
-				for (T vertex : graph.getVertices()) {
+				for (T vertex : graph.getCopyOfVertices()) {
 					int x = vertexToInt.get(vertex);
 					if (S.get(x)) continue;
 					
@@ -373,7 +373,7 @@ public class DynamicProgrammingDecomposer<T extends Comparable<T>> implements Tr
 		
 		// compute Bitset V\C
 		BitSet VC = new BitSet();
-		for (T vertex : graph.getVertices()) {
+		for (T vertex : graph.getCopyOfVertices()) {
 			int v = vertexToInt.get(vertex);
 			if (!C.get(v)) VC.set(v);
 		}

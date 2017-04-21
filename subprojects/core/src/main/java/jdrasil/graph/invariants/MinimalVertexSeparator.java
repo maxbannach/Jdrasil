@@ -165,7 +165,7 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
         Map<Integer, Map<Integer, Integer>> weights = new HashMap<>();
         Graph<Integer> residual = constructResidualGraph(W, weights);
         int flow = 0; // the flow we compute
-        int n = graph.getVertices().size();
+        int n = graph.getCopyOfVertices().size();
 
         // store the separation of the graph
         HashSet<Integer> visited = new HashSet<>();
@@ -266,7 +266,7 @@ public class MinimalVertexSeparator<T extends Comparable<T>> extends Invariant<T
         // the residual graph in construction, and its edge weights
         Graph<Integer> residual = GraphFactory.emptyGraph();
         weights.clear();
-        int n = graph.getVertices().size();
+        int n = graph.getCopyOfVertices().size();
 
         // copy vertices that are needed
         for (T v : graph) {

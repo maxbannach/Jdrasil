@@ -72,12 +72,12 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 
 		// solve the formula
 		int k = 1;
-		phi.addCardinalityConstraint(k, graph.getVertices().size(), intToVert.keySet());
+		phi.addCardinalityConstraint(k, graph.getCopyOfVertices().size(), intToVert.keySet());
 
 		try {
 			phi.registerSATSolver();
 			while (phi.isSatisfiable()) {
-				phi.addCardinalityConstraint(++k, graph.getVertices().size(), intToVert.keySet());
+				phi.addCardinalityConstraint(++k, graph.getCopyOfVertices().size(), intToVert.keySet());
 			}
 			
 			// compute the model
@@ -116,7 +116,7 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 			clique = new HashMap<T, Boolean>();
 			for (T v : graph) clique.put(v, false);
 			
-			Set<T> V = new HashSet<>(graph.getVertices()); // vertices that we can consider
+			Set<T> V = new HashSet<>(graph.getCopyOfVertices()); // vertices that we can consider
 			Map<T, Integer> d = new HashMap<T, Integer>(); // degree vector of remaining vertices
 			for (T v : graph) d.put(v, graph.getNeighborhood(v).size());
 			while (!V.isEmpty()) {

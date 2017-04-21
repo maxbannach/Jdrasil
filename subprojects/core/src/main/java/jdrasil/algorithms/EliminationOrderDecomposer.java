@@ -174,7 +174,7 @@ public class EliminationOrderDecomposer<T extends Comparable<T>> implements Tree
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		int n = graph.getVertices().size();
+		int n = graph.getCopyOfVertices().size();
 		TreeDecomposition<T> decomposition = permutationToTreeDecomposition(permutation);
 		decomposition.setN(n);
 		decomposition.setCreatedFromPermutation(true);

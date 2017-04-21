@@ -88,7 +88,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		Graph<T> reduced = GraphFactory.copy(graph);
 				
 		// input was empty graph – nothing to do
-		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
+		if (reduced.getCopyOfVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
 		// handle easy cases: vertices of degree 0 and 1
 		LOG.info("Removing unconnected nodes");
@@ -97,12 +97,12 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		eliminateLowDegreeNodes(reduced, 1);
 		
 		// input was a tree
-		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
+		if (reduced.getCopyOfVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
 		// no tree, eliminate degree 2 vertices
 		LOG.info("Removing nodes with degree <= 2");
 		eliminateLowDegreeNodes(reduced, 2);
-		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
+		if (reduced.getCopyOfVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
 		LOG.info("Running single pass trick...");
 		for(int i = 0 ; i < 10 && singlePass(reduced) ; i++) {}
@@ -125,7 +125,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 				bags.push(bag);
 			}
 		}
-		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); }
+		if (reduced.getCopyOfVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); }
 		
 		// done
 		return reduced;
@@ -328,7 +328,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 	 * @return
 	 */
 	private Set<T> buddyRule(Graph<T> work) {
-		if(work.getVertices().size() > 1000)
+		if(work.getCopyOfVertices().size() > 1000)
 			return null;
 		for (T v : work) {
 			if (work.getNeighborhood(v).size() != 3) continue;

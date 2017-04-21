@@ -75,7 +75,7 @@ public class CutVertex<T extends Comparable<T>> extends Invariant<T, T, Boolean>
     private T getCutVertex() {
         // search an arbitrary start vertex that is not forbidden
         T s = null;
-        for (T v : graph.getVertices()) {
+        for (T v : graph.getCopyOfVertices()) {
             if (!forbidden.contains(v)) s = v;
         }
         if (s == null) return null; // empty graph

@@ -156,13 +156,13 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		List<VertexValue> best = new LinkedList<>();
 
 		// search for the best vertex
-		for (T v : G.getVertices()) {
+		for (T v : G.getCopyOfVertices()) {
 
 			// the vertex-value-tuple of the current vertex
 			VertexValue tuple = getValue(G, v);
 
 			// eliminate vertex and look for further value
-			if (k > 1 && G.getVertices().size() > 1) {
+			if (k > 1 && G.getCopyOfVertices().size() > 1) {
 //				System.out.println("test");
 				Graph.EliminationInformation info = G.eliminateVertex(v);
 				VertexValue next = nextVertex(G, k - 1);
@@ -195,7 +195,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		return call(graph.getVertices().size()+1);
+		return call(graph.getCopyOfVertices().size()+1);
 	}
 
 	/**
@@ -208,20 +208,20 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 	public TreeDecomposition<T> call(int upper_bound) throws Exception {
 		
 		// catch the empty graph
-		if (graph.getVertices().size() == 0) return new TreeDecomposition<T>(graph);
+		if (graph.getCopyOfVertices().size() == 0) return new TreeDecomposition<T>(graph);
 
 		// the permutation that we wish to compute and a copy of the graph, which will be modified
 		List<T> permutation = new LinkedList<T>();
 		Graph<T> workingCopy = GraphFactory.copy(graph);
 		
 		UpdatablePriorityQueue<T, Integer> q = new UpdatablePriorityQueue<T, Integer>();
-		for(T v : graph.getVertices()){
+		for(T v : graph.getCopyOfVertices()){
 			VertexValue vv = getValue(graph, v);
 			q.insert(vv.vertex, vv.value);
 		}
 			
 		// compute the permutation
-		for (int i = 0; i < graph.getVertices().size(); i++) {
+		for (int i = 0; i < graph.getCopyOfVertices().size(); i++) {
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
 			
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice

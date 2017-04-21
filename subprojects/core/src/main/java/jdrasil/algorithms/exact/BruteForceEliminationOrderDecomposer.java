@@ -46,7 +46,7 @@ public class BruteForceEliminationOrderDecomposer<T extends Comparable<T>> imple
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		List<T> a = new ArrayList<>(graph.getVertices());
+		List<T> a = new ArrayList<>(graph.getCopyOfVertices());
 		int n = a.size();
 		
 		// we try to optimize this

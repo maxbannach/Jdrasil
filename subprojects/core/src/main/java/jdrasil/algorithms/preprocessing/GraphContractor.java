@@ -104,7 +104,7 @@ public class GraphContractor<T extends Comparable<T>> extends Preprocessor<T> {
 				}
 			}			
 		}
-		decomposition.setN(decomposition.getGraph().getVertices().size());
+		decomposition.setN(decomposition.getGraph().getCopyOfVertices().size());
 		
 		// done
 		return decomposition;

@@ -71,14 +71,14 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 	public StochasticGreedyPermutationDecomposer(Graph<T> graph) {
 		this.graph = graph;
 		this.decomposition = new TreeDecomposition<T>(graph);
-		this.decomposition.createBag(graph.getVertices());
+		this.decomposition.createBag(graph.getCopyOfVertices());
 	}
 
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
 
 		// an upper bound that will be improved during the run of the algortihm
-		int ub = graph.getVertices().size();
+		int ub = graph.getCopyOfVertices().size();
 
 		// iterating sqrt(n) times, at least 100
 		int itr = (int) Math.max(Math.sqrt(ub), 100);

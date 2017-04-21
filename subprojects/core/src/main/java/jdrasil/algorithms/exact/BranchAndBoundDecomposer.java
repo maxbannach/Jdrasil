@@ -77,7 +77,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 	public BranchAndBoundDecomposer(Graph<T> graph) {
 		this.graph = GraphFactory.copy(graph);
 		this.original = GraphFactory.copy(graph);
-		this.n = graph.getVertices().size();
+		this.n = graph.getCopyOfVertices().size();
 		this.vertexToID = new HashMap<>();
 		this.vertexToEliminate = new HashMap<>();
 		int id = 0;
@@ -157,7 +157,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 	 * @return
 	 */
 	private boolean solution(Node node) {
-		if (graph.getVertices().size() == 0) {
+		if (graph.getCopyOfVertices().size() == 0) {
 			if (node.width < ub) { // new optimum
 				List<T> tmp = getPermutation();
 				if (tmp != null) permutation = tmp;
@@ -246,7 +246,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 		// at the end, we simply eliminate the clique
 		if (children.size() == 0) {
 			for (T v : clique) {
-				if (graph.getVertices().contains(v)) {
+				if (graph.getCopyOfVertices().contains(v)) {
 					children.add(new Node(node, v));
 					break;
 				}
@@ -353,7 +353,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 
 		// recompute the permutation
 		BitSet subgraph = new BitSet();
-		while (subgraph.cardinality() < original.getVertices().size()) {
+		while (subgraph.cardinality() < original.getCopyOfVertices().size()) {
 			T v = vertexToEliminate.get(subgraph);
 			if (v == null) return null; // this happens if BB() does not improve the ub -> fast prune
 			permutation.add(v);
@@ -367,7 +367,7 @@ public class BranchAndBoundDecomposer<T extends Comparable<T>> implements TreeDe
 	public TreeDecomposition<T> call() throws Exception {		
 		
 		// catch the empty graph
-		if (graph.getVertices().size() == 0) return new TreeDecomposition<T>(graph);
+		if (graph.getCopyOfVertices().size() == 0) return new TreeDecomposition<T>(graph);
 				
 		// compute upper and lower bounds
 		GreedyPermutationDecomposer<T> MinFill = new GreedyPermutationDecomposer<T>(graph);

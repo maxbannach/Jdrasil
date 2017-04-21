@@ -69,6 +69,10 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	/** The number of edges in the graph .*/
 	private int m;
 	
+	/** Enable or disable logging of the number of edges in each vertices' neighbourhood */
+	
+	private boolean logEdgesInNeighbourhood;
+	
 	/**
 	 * Package private constructor, only initialize data structures.
 	 */
@@ -76,10 +80,12 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		adjacencyList = new HashMap<>();	
 		adjacencies = new HashMap<>();
 		edgesInNeighborhood = new HashMap<>();
+		setLogEdgesInNeighbourhood(true);
 	}
 	
 	public Graph(Graph<T> original){
 		adjacencyList = new HashMap<>();
+		setLogEdgesInNeighbourhood(original.isLogEdgesInNeighbourhood());
 		for(T v : original.adjacencyList.keySet()){
 			adjacencyList.put(v,  new ArrayList<>());
 			adjacencyList.get(v).addAll(original.adjacencyList.get(v));
@@ -102,7 +108,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * the generic vertex type.
 	 * @return Set the vertices of the represented graph
 	 */
-	public Set<T> getVertices() {
+	public Set<T> getCopyOfVertices() {
 		return new HashSet<T>(adjacencyList.keySet());
 	}
 	
@@ -189,11 +195,13 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		addDirectedEdge(v, u);
 		
 		// update number of neighbor edges value
-		for (T x : getNeighborhood(u)) {
-			if (isAdjacent(x, v)) {
-				edgesInNeighborhood.put(x, edgesInNeighborhood.get(x)+1);
-				edgesInNeighborhood.put(u, edgesInNeighborhood.get(u)+1);
-				edgesInNeighborhood.put(v, edgesInNeighborhood.get(v)+1);
+		if(logEdgesInNeighbourhood){
+			for (T x : getNeighborhood(u)) {
+				if (isAdjacent(x, v)) {
+					edgesInNeighborhood.put(x, edgesInNeighborhood.get(x)+1);
+					edgesInNeighborhood.put(u, edgesInNeighborhood.get(u)+1);
+					edgesInNeighborhood.put(v, edgesInNeighborhood.get(v)+1);
+				}
 			}
 		}
 	}
@@ -222,11 +230,13 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		removeDirectedEdge(v, u);
 		
 		// update number of neighbor edges value
-		for (T x : getNeighborhood(u)) {
-			if (isAdjacent(x, v)) {
-				edgesInNeighborhood.put(x, edgesInNeighborhood.get(x)-1);
-				edgesInNeighborhood.put(u, edgesInNeighborhood.get(u)-1);
-				edgesInNeighborhood.put(v, edgesInNeighborhood.get(v)-1);
+		if(logEdgesInNeighbourhood){
+			for (T x : getNeighborhood(u)) {
+				if (isAdjacent(x, v)) {
+					edgesInNeighborhood.put(x, edgesInNeighborhood.get(x)-1);
+					edgesInNeighborhood.put(u, edgesInNeighborhood.get(u)-1);
+					edgesInNeighborhood.put(v, edgesInNeighborhood.get(v)-1);
+				}
 			}
 		}
 	}
@@ -434,7 +444,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		private final Iterator<Z> itr;
 		
 		GraphVertexIterator(Graph<Z> G) {
-			itr = G.getVertices().iterator();
+			itr = G.getCopyOfVertices().iterator();
 		}
 		
 		@Override
@@ -553,8 +563,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 */
 	public boolean isClique(){
 		boolean res = true;
-		for(T v: getVertices()){
-			for(T u: getVertices()){
+		for(T v: getCopyOfVertices()){
+			for(T u: getCopyOfVertices()){
 				if(u != v && !isAdjacent(u,v)){
 					res = false;
 				}
@@ -564,6 +574,14 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 	public int getNumVertices(){
 		return adjacencyList.keySet().size();
+	}
+
+	private boolean isLogEdgesInNeighbourhood() {
+		return logEdgesInNeighbourhood;
+	}
+
+	private void setLogEdgesInNeighbourhood(boolean logEdgesInNeighbourhood) {
+		this.logEdgesInNeighbourhood = logEdgesInNeighbourhood;
 	}
 	
 }

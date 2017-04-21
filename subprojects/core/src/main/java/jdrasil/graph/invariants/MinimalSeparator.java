@@ -53,13 +53,13 @@ public class MinimalSeparator<T extends Comparable<T>> extends Invariant<T, Inte
 	 */
 	@Override
 	protected Map<T, Boolean> computeModel() {
-		int n = graph.getVertices().size();
+		int n = graph.getCopyOfVertices().size();
 		// we need a mapping between the nodes of the graph and their indices
 		HashMap<T, Integer> mapTI = new HashMap<>();
 		HashMap<Integer, T> mapIT = new HashMap<>();
 
 		int c = 0;
-		for (T v : graph.getVertices()) {
+		for (T v : graph.getCopyOfVertices()) {
 			mapTI.put(v, c);
 			mapIT.put(c, v);
 			c++;
@@ -68,12 +68,12 @@ public class MinimalSeparator<T extends Comparable<T>> extends Invariant<T, Inte
 		// create the temporary graph. For every original node i,
 		// it contains and input node i and an output node n+i
 		int[][] g = new int[2 * n][2 * n];
-		for (T u : graph.getVertices()) {
+		for (T u : graph.getCopyOfVertices()) {
 			int mu = mapTI.get(u);
 			// the capacities between and input node and its corresponding
 			// output node is 1
 			g[mu][mu + n] = 1;
-			for (T v : graph.getVertices()) {
+			for (T v : graph.getCopyOfVertices()) {
 				if (graph.isAdjacent(u, v)) {
 					// two adjacent vertices have unbounded edge capacity
 					int mv = mapTI.get(v);
@@ -85,7 +85,7 @@ public class MinimalSeparator<T extends Comparable<T>> extends Invariant<T, Inte
 
 		// the first separator consists of all nodes
 		HashSet<T> sep = new HashSet<>();
-		for (T u : graph.getVertices()) {
+		for (T u : graph.getCopyOfVertices()) {
 			sep.add(u);
 		}
 		// for every node i, compute a maximum flow that separates i from any

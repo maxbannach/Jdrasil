@@ -77,7 +77,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 	 */
 	public BaseEncoder(Graph<T> graph) {
 		this.graph = graph;
-		this.n = graph.getVertices().size();
+		this.n = graph.getCopyOfVertices().size();
 		this.ord = new int[n+1][n+1];
 		this.arc = new int[n+1][n+1];
 		this.cardinalitySets = new HashMap<>();
@@ -265,7 +265,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 		
 		// decide if we should use a sorting network or a sequential counter
 		int counter_factor = ub;
-		int network_factor = (int) Math.ceil(2*Math.pow(Math.log(graph.getVertices().size())/Math.log(2),2));
+		int network_factor = (int) Math.ceil(2*Math.pow(Math.log(graph.getCopyOfVertices().size())/Math.log(2),2));
 		if ( counter_factor <= network_factor ) {
 			sortingNetworks = false;
 		} else {
