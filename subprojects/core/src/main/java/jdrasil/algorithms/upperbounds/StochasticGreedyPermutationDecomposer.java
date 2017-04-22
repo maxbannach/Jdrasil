@@ -82,9 +82,10 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 
 		// iterating sqrt(n) times, at least 100
 		int itr = (int) Math.max(Math.sqrt(ub), 1000);
-
+		int iterationsPerformed = 0;
 		// each run will call the Greed-Permutation heuristic
 		while (itr --> 0) {
+			iterationsPerformed++;
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
 			GreedyPermutationDecomposer<T> greedyPermutation = new GreedyPermutationDecomposer<T>(graph);
 
@@ -113,13 +114,14 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 			if (newDec != null && newDec.getWidth() < ub) {
 				ub = newDec.getWidth();
 				LOG.info("new upper bound: " + ub);
+				LOG.info("Algorithm was " + greedyPermutation.getToRun());
 				decomposition = newDec;
 				permutation = greedyPermutation.getPermutation();
 			}
 			if(JdrasilProperties.timeout())
                           break;
 		}
-
+		LOG.info("Finished stochastic run, did " + iterationsPerformed + " iterations...");
 		// done
 		return decomposition;
 	}

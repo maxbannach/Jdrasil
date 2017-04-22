@@ -19,6 +19,7 @@
 package jdrasil.graph;
 
 import java.io.Serializable;
+import java.security.KeyStore.Entry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -362,8 +363,6 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	public EliminationInformation eliminateVertex(T v) {
 
 		EliminationInformation info = new EliminationInformation(v);
-		if(!logEdgesInNeighbourhood)
-			throw new RuntimeException("bla");
 		// make the neighborhood of v a clique
 		for (T u : getNeighborhood(v)) {
 			info.addNeighbors(u);
@@ -440,19 +439,24 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		}
 	}
 	public EliminationInformation eliminateVertex(T v, boolean updateFillValues){
-		boolean runOldWay = true;
+		boolean runOldWay = false;
 		if(runOldWay){
 			setLogEdgesInNeighbourhood(true);
 			return eliminateVertex(v);
 		}
 		
+		Map<T, Integer> oldEdgeNumbers = new HashMap<>();
+		for(T u : edgesInNeighborhood.keySet())
+			oldEdgeNumbers.put(u, edgesInNeighborhood.get(u).intValue());
+		
+		
 		
 		setLogEdgesInNeighbourhood(true);
-		checkFillValues();
+//		checkFillValues();
 		if(!updateFillValues)
 			return eliminateVertex(v);
 		Map<T, Integer> predicedValues = new HashMap<>();
-		boolean debugThis = true;
+		
 		if(getFillInValue(v) == 0){
 			setLogEdgesInNeighbourhood(false);
 			Set<T> neighbourhood = getNeighborhood(v);
@@ -493,39 +497,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 						N_a.get(u).add(u2);
 				}
 			}
-			/**********************
-			 * Some debugging
-			 */
-			if(debugThis){
-				// Check that everything is correct!!!
-				for(T u : getNeighborhood(v)){
-					// Nodes from N_u are not connected to v
-					for(T w : N_u.get(u)){
-						if(isAdjacent(v, w) || !isAdjacent(u, w))
-							throw new RuntimeException("N_u looks weird! ");
-					}
-					if(N_u.get(u).contains(v) || N_a.get(u).contains(v) || N_e.get(u).contains(v))
-						throw new RuntimeException("V occured in set! ");
-					// The set of neighbours is {v} + N_u + N_e
-					for(T w : getNeighborhood(u))
-						if(w.compareTo(v) != 0){
-							int s = 0;
-							if(N_u.get(u).contains(w)) s++;
-							if(N_a.get(u).contains(w)) s++;
-							if(N_e.get(u).contains(w)) s++;
-							if(s != 1)
-								throw new RuntimeException();
-						}
-//					StringBuilder sb = new StringBuilder();
-//					sb.append("Node " + u + ": ");
-//					sb.append("N_u=" ); for(T w : N_u.get(u)) sb.append(w + " ");
-//					sb.append("N_e: "); for(T w : N_e.get(u)) sb.append(w + " ");
-//					sb.append("N_a: "); for(T w : N_a.get(u)) sb.append(w + " ");
-//					LOG.info(sb.toString());
-				}
-				
-				
-			}
+			
 			/**
 			 * Actually update the fill-values. Distinguish 3 cases: 
 			 */
@@ -536,15 +508,10 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 						 * N_u and N_a are non-empty. 
 						 */
 						// Count the number of edges between nodes in N_a and N_u. All of them will appear newly in the neighbourhood of u!
-//						LOG.info("Node " + u + ": degree " + getNeighborhood(u).size() + "old fill: " + getFillInValue(u) + " old number n-edges: " + edgesInNeighborhood.get(u));
-						int newNumberEdges = edgesInNeighborhood.get(u);
-						newNumberEdges -= N_a.get(u).size(); 	// For each node in N_a, one edge will be deleted --- the one to v
 						int newFill = getFillInValue(u) + (N_a.get(u).size()-1)*N_u.get(u).size();
-//						LOG.info("Increasing by (" + N_a.get(u).size() + "-1)*" + N_u.get(u).size());
 						for(T w : N_a.get(u)){
 							newFill -= getSizeOfIntersection(N_u.get(u), N_u.get(w));
 						}
-//						LOG.info("After subtraction the intersections: " + newFill);
 						// Are there edges between nodes in N_e? They have to be considered as well! 
 						if(N_e.get(u).size() > 1){
 							int missing = ((N_e.get(u).size()-1) * N_e.get(u).size())/2;
@@ -555,13 +522,11 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 									if(isAdjacent(nodeList.get(i), nodeList.get(j)))
 										missing--;
 							}
-//							LOG.info("Decreasing fill value by " + missing);
 							newFill -= missing;
 						}
 						// Now store the new fill-value: 
 						int n = N_a.get(u).size() + N_u.get(u).size() + N_e.get(u).size();
 						n = (n * (n-1))/2;
-//						LOG.info("Now have a new fill value of " + newFill + ", changing number edges from " + edgesInNeighborhood.get(u) + " to " + (n-newFill));
 						predicedValues.put(u, n-newFill);
 					}
 					else{
@@ -603,58 +568,32 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 			int numEdgesBefore = getNumberOfEdges();
 			int predictedFill = getFillInValue(v);
 			int deg = getNeighborhood(v).size();
+			logEdgesInNeighbourhood = false;
 			EliminationInformation ret = eliminateVertex(v);
 			if(getNumberOfEdges() != numEdgesBefore + predictedFill - deg)
 				throw new RuntimeException("Something was wrong. Eliminated the node, but the number of added edges was different from what it should be like! ");
-			// Do some debug stuff
 			
-			if(debugThis){
-				if(containsNode(v))
-					throw new RuntimeException("v was not eliminated! ");
-//				LOG.info("Checking " + dist2.size() + " nodes with distance 2: ");
-				for(T u : dist2){
-					int tmp = 0;
-					
-					for(T x1 : getNeighborhood(u)){
-						for(T x2 : getNeighborhood(u)){
-							if(x1.compareTo(x2) < 0 && isAdjacent(x1, x2))
-								tmp++;
-						}
+			for(java.util.Map.Entry<T, Integer> e : predicedValues.entrySet()){
+				if(e.getKey().equals(v))
+					throw new RuntimeException();
+				edgesInNeighborhood.put(e.getKey(), e.getValue().intValue());
+			}
+			// DEBUG: Check that all fill values are correct! 
+//			checkFillValues();
+			
+			// DEBUG: Check that predicted values are correct
+			for(java.util.Map.Entry<T, Integer> e : predicedValues.entrySet()){
+				if(e.getValue().intValue() != edgesInNeighborhood.get(e.getKey()).intValue())
+					throw new RuntimeException();
+			}
+			
+			// DEBUG: Do I have a new fill value for every vertex for which this has changed?  
+			for(T u : oldEdgeNumbers.keySet()){
+				if(u != v){
+					if(oldEdgeNumbers.get(u).intValue() != edgesInNeighborhood.get(u).intValue()){
+						if(!predicedValues.containsKey(u))
+							throw new RuntimeException("There's a vertex with updated fill value, but no predicted value! ");
 					}
-					if(tmp != edgesInNeighborhood.get(u) ){
-						
-						throw new RuntimeException("Miss-predicted fill value: Dist 2,  Predicted " + edgesInNeighborhood.get(u) + ", was " + tmp);
-					}
-				}
-//				LOG.info("Checking " + dist1.size() + " nodes with distance 1: ");
-				for(T u : dist1){
-					// Count number of edges in neighbourhood: 
-					int tmp = 0;
-					for(T x1 : getNeighborhood(u)){
-						for(T x2 : getNeighborhood(u)){
-							if(x1.compareTo(x2) < 0 && isAdjacent(x1, x2))
-								tmp++;
-						}
-					}
-					if((tmp != edgesInNeighborhood.get(u).intValue()) || (predicedValues.get(u) != edgesInNeighborhood.get(u).intValue())){
-						
-						LOG.info("This is weird. ");
-						LOG.info("I counted " + tmp + " edges in the neighbourhood, predicted value was " + predicedValues.get(u) + ", graph says " + edgesInNeighborhood.get(u));
-						LOG.info("" + ((tmp != edgesInNeighborhood.get(u)) || (predicedValues.get(u) != edgesInNeighborhood.get(u))));
-						LOG.info("" + ( (predicedValues.get(u) != edgesInNeighborhood.get(u))));
-						LOG.info("" + ((tmp != edgesInNeighborhood.get(u)) ));
-						LOG.info("Miss-predicted fill value for node " + u + ": Dist 1, N_u.size()=" + N_u.get(u).size()  + ", N_e.size()=" + N_e.get(u).size() + ", and N_a.size()=" + N_a.get(u).size());
-						LOG.info("Predicted " + predicedValues.get(u) + ", now is " + getFillInValue(u));
-						LOG.info("New degree is " + getNeighborhood(u).size());
-						StringBuilder nbSb = new StringBuilder("Neighbours are");
-						for(T w : getNeighborhood(u))
-							nbSb.append(w + " ");
-						LOG.info(nbSb.toString());
-						checkFillValues();
-						throw new RuntimeException("\n Predicted " + predicedValues.get(u) + ", was " + tmp + "\n. FillValue=" + getFillInValue(u));
-					}
-//					else
-//						LOG.info("Everything was fine: N_u.size()=" + N_u.get(u).size()  + ", N_e.size()=" + N_e.get(u).size() + ", and N_a.size()=" + N_a.get(u).size() );
 				}
 			}
 			return ret;
