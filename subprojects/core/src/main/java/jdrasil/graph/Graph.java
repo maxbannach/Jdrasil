@@ -445,9 +445,9 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 			return eliminateVertex(v);
 		}
 		
-		Map<T, Integer> oldEdgeNumbers = new HashMap<>();
-		for(T u : edgesInNeighborhood.keySet())
-			oldEdgeNumbers.put(u, edgesInNeighborhood.get(u).intValue());
+//		Map<T, Integer> oldEdgeNumbers = new HashMap<>();
+//		for(T u : edgesInNeighborhood.keySet())
+//			oldEdgeNumbers.put(u, edgesInNeighborhood.get(u).intValue());
 		
 		
 		
@@ -463,7 +463,6 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 			for(T u : neighbourhood)
 				edgesInNeighborhood.put(u, edgesInNeighborhood.get(u)-(neighbourhood.size()-1));	
 			EliminationInformation ret = eliminateVertex(v);
-			checkFillValues();
 			return ret;
 		}
 		else{
@@ -561,7 +560,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 				for(T u1 : commonNeighbours)
 					for(T u2 : commonNeighbours)
 						if(u1.compareTo(u2) < 0)
-							if(!isAdjacent(u1, u2))
+							if(!adjacencies.get(u1).contains(u2))
 								fillDecrease++;
 				predicedValues.put(u, edgesInNeighborhood.get(u) + fillDecrease);
 			}
@@ -588,14 +587,14 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 			}
 			
 			// DEBUG: Do I have a new fill value for every vertex for which this has changed?  
-			for(T u : oldEdgeNumbers.keySet()){
-				if(u != v){
-					if(oldEdgeNumbers.get(u).intValue() != edgesInNeighborhood.get(u).intValue()){
-						if(!predicedValues.containsKey(u))
-							throw new RuntimeException("There's a vertex with updated fill value, but no predicted value! ");
-					}
-				}
-			}
+//			for(T u : oldEdgeNumbers.keySet()){
+//				if(u != v){
+//					if(oldEdgeNumbers.get(u).intValue() != edgesInNeighborhood.get(u).intValue()){
+//						if(!predicedValues.containsKey(u))
+//							throw new RuntimeException("There's a vertex with updated fill value, but no predicted value! ");
+//					}
+//				}
+//			}
 			return ret;
 		}
 		

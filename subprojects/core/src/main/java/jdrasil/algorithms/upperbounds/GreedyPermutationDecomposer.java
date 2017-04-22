@@ -126,7 +126,11 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 				value = phi - delta;
 				break;
 			case FillInDegree:
-				value = delta + (1/(n*n))*phi;
+				int m = n*n;
+				if(m > 0)
+					value = delta + (1/m) * phi;
+				else
+					value = delta;
 				break;
 			case DegreeFillIn:
 				value = phi + (1/n)*delta;

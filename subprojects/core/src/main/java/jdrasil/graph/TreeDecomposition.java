@@ -468,7 +468,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		res.n = n;
 		res.numberOfBags = numberOfBags;
 		res.width = width;
-		
+		res.createdFromPermutation = createdFromPermutation;
 		return res;
 	}
 	
