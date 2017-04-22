@@ -229,7 +229,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		}
 			
 		// compute the permutation
-		for (int i = 0; i < graph.getCopyOfVertices().size(); i++) {
+		for (int i = 0; i < graph.getNumVertices(); i++) {
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
 			
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice

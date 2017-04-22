@@ -105,7 +105,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		if (reduced.getCopyOfVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
 		LOG.info("Running single pass trick...");
-		for(int i = 0 ; i < 10 && singlePass(reduced) ; i++) {}
+		for(int i = 0 ; i < 20 && singlePass(reduced) ; i++) {}
 		// apply classic reduction rules until exhaustion 
 		LOG.info("Applying other rules...");
 		boolean fixPointReached = false;

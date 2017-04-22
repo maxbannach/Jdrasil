@@ -438,6 +438,22 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 				throw new RuntimeException("Edges in neighbourhood were not counted correctly! ");
 		}
 	}
+	
+	private void updateFillValuesDist2(T v, Set<T> nodesDistance2, Map<T, Integer> predicedValues){
+		// Now nodes with distance 2: 
+		for(T u : nodesDistance2){
+			Set<T> commonNeighbours = intersect(getNeighborhood(v), getNeighborhood(u));
+			// These neighbours will become part of a clique. Thus, every missing edge between them will added, and thus reduce the fill-value accordingly. 
+			int fillDecrease = 0;
+			for(T u1 : commonNeighbours)
+				for(T u2 : commonNeighbours)
+					if(u1.compareTo(u2) < 0)
+						if(!adjacencies.get(u1).contains(u2))
+							fillDecrease++;
+			predicedValues.put(u, edgesInNeighborhood.get(u) + fillDecrease);
+		}
+	}
+	
 	public EliminationInformation eliminateVertex(T v, boolean updateFillValues){
 		boolean runOldWay = false;
 		if(runOldWay){
@@ -460,8 +476,9 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		if(getFillInValue(v) == 0){
 			setLogEdgesInNeighbourhood(false);
 			Set<T> neighbourhood = getNeighborhood(v);
+			int reduce = neighbourhood.size()-1;
 			for(T u : neighbourhood)
-				edgesInNeighborhood.put(u, edgesInNeighborhood.get(u)-(neighbourhood.size()-1));	
+				edgesInNeighborhood.put(u, edgesInNeighborhood.get(u)-reduce);	
 			EliminationInformation ret = eliminateVertex(v);
 			return ret;
 		}
@@ -518,7 +535,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 							nodeList.addAll(N_e.get(u));
 							for(int i = 0 ; i < nodeList.size();i++){
 								for(int j = i+1 ; j < nodeList.size();j++)
-									if(isAdjacent(nodeList.get(i), nodeList.get(j)))
+									if(adjacencies.get(nodeList.get(i)).contains(nodeList.get(j)))
 										missing--;
 							}
 							newFill -= missing;
@@ -552,18 +569,19 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 					predicedValues.put(u, newNumberOfEdges);
 				}
 			}
-			// Now nodes with distance 2: 
-			for(T u : dist2){
-				Set<T> commonNeighbours = intersect(getNeighborhood(v), getNeighborhood(u));
-				// These neighbours will become part of a clique. Thus, every missing edge between them will added, and thus reduce the fill-value accordingly. 
-				int fillDecrease = 0;
-				for(T u1 : commonNeighbours)
-					for(T u2 : commonNeighbours)
-						if(u1.compareTo(u2) < 0)
-							if(!adjacencies.get(u1).contains(u2))
-								fillDecrease++;
-				predicedValues.put(u, edgesInNeighborhood.get(u) + fillDecrease);
-			}
+//			// Now nodes with distance 2: 
+			updateFillValuesDist2(v, dist2, predicedValues);
+//			for(T u : dist2){
+//				Set<T> commonNeighbours = intersect(getNeighborhood(v), getNeighborhood(u));
+//				// These neighbours will become part of a clique. Thus, every missing edge between them will added, and thus reduce the fill-value accordingly. 
+//				int fillDecrease = 0;
+//				for(T u1 : commonNeighbours)
+//					for(T u2 : commonNeighbours)
+//						if(u1.compareTo(u2) < 0)
+//							if(!adjacencies.get(u1).contains(u2))
+//								fillDecrease++;
+//				predicedValues.put(u, edgesInNeighborhood.get(u) + fillDecrease);
+//			}
 			int numEdgesBefore = getNumberOfEdges();
 			int predictedFill = getFillInValue(v);
 			int deg = getNeighborhood(v).size();
