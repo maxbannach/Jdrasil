@@ -22,6 +22,7 @@ import jdrasil.graph.*;
 import jdrasil.graph.invariants.CliqueMinimalSeparator;
 import jdrasil.graph.invariants.ConnectedComponents;
 import jdrasil.graph.invariants.CutVertex;
+import jdrasil.graph.invariants.MinorSafeSeparator;
 import jdrasil.utilities.JdrasilProperties;
 import jdrasil.utilities.logging.JdrasilLogger;
 
@@ -77,6 +78,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         TCC,     // graph is triconnected -> compute separator of size 3
         CLIQUE,  // graph is triconnected and has no safe separators of size 3 -> compute clique minimal separators
         ACLIQUE, // graph has no clique minimal separator -> search for almost clique minimal separators
+        MINOR,   // graph has non of the above separators -> search (greedy) for a seperator which is a labeled clique minor
         ATOM     // graph is an atom (not decomposable by above separators) -> compute tree decomposition
     }
 
@@ -178,6 +180,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
 
         // if connectivity is set to DC, we will only compute connected components (i.e., there is an empty separator).
         if (mode == Connectivity.DC) {
+            LOG.info("separate into connected components");
             return forkOnSeparator(new HashSet<>(), Connectivity.CC);
         }
 
@@ -187,11 +190,13 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         // if the graph is connected, we search for biconnected components, that is, we search a separator of size 1
         // such separators are safe since they are cliques
         if (mode == Connectivity.CC) {
+            LOG.info("searching a separator of size one");
             T cutVertex = new CutVertex<>(graph).getValue();
             if (cutVertex == null) { // graph is biconnected
                 mode = Connectivity.BCC;
                 return compute(); // recursive with new mode
             } else { // just fork on the cut vertex, he is a safe separator
+                LOG.info("found " + cutVertex);
                 HashSet<T> S = new HashSet<T>();
                 S.add(cutVertex);
                 return forkOnSeparator(S, Connectivity.CC);
@@ -201,6 +206,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         // if the graph is biconnected, we search triconnected components, that is, we search a separator of size 2
         // such separators are safe somce they are almost cliques
         if (mode == Connectivity.BCC) {
+            LOG.info("searching a separator of size two");
             Set<T> S = new HashSet<T>();
             for (T c1 : graph) { // guess a cut vertex
                 S.clear();
@@ -208,6 +214,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
                 T c2 = new CutVertex<>(graph, S).getValue(); // find second cut vertex
                 if (c2 != null) { // found 2-vertex-separator
                     S.add(c2);
+                    LOG.info("found " + S);
                     return forkOnSeparator(S, Connectivity.CC);
                 }
             }
@@ -217,8 +224,9 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         }
 
         // if the graph is triconnected, we may search a separator of size 3, i.e., computing 4-connected components
-        // note that these separators are safe because we assume the graph tha have tree width at least 4 (preprocessing)
+        // note that these separators are safe because we assume the graph has tree width at least 4 (preprocessing)
         if (mode == Connectivity.TCC && graph.getVertices().size() <= 200) {
+            LOG.info("searching a separator of size three");
             Set<T> S = new HashSet<T>();
             for (T c1 : graph) { // guess first cut vertex
                 for (T c2 : graph) { // guess second cut vertex
@@ -256,6 +264,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
                         }
 
                         if (!isSafe) continue; // S is no safe separator
+                        LOG.info("found " + S);
                         return forkOnSeparator(S, Connectivity.CC);
                     }
                 }
@@ -263,19 +272,26 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
             // not found a cut -> no safe separator of size 3, go on and search for minimal clique separators
             mode = Connectivity.CLIQUE;
             return compute(); // recursive with new mode
+        } else if (mode == Connectivity.TCC) {
+            mode = Connectivity.CLIQUE; // tcc is expansive, may skip directly to clique minimal separators
         }
 
         // We found all safe separators of size 0,1,2,3 so far. We will now search for clique minimal separators
         if (mode == Connectivity.CLIQUE) {
+            LOG.info("searching a clique minimal separator");
             Set<T> S = new CliqueMinimalSeparator<>(graph).getSeparator();
-            if (S != null) return forkOnSeparator(S, Connectivity.CC);
+            if (S != null) {
+                LOG.info("found: " + S);
+                return forkOnSeparator(S, Connectivity.CC);
+            }
             // if we do not found one, we may search for almost clique minimal separators
             mode = Connectivity.ACLIQUE;
             return compute(); // recursive with new mode
         }
 
         // we found all clique minimal separators, we may now search for almost clique minimal separators
-        if (mode == Connectivity.ACLIQUE) {
+        if (mode == Connectivity.ACLIQUE && graph.getVertices().size() <= 200) {
+            LOG.info("searching an almost clique minimal separator");
             Set<T> S = new HashSet<T>();
             for (T c1 : graph) { // guess first cut vertex (the "almost" part of the almost clique
                 S.clear();
@@ -284,9 +300,26 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
                 if (clique == null) continue; // v is not part of an almost clique separator
                 // if we found a clique separator in G\{v}, the clique + {v} is an almost clique separator
                 clique.add(c1);
+                LOG.info("found: " + clique);
                 return forkOnSeparator(clique, Connectivity.BCC);
             }
-            // if we do not found one, we may search for almost clique minimal separators
+            // if we do not found one, we may search for labeled-minor separators
+            mode = Connectivity.MINOR;
+            return compute(); // recursive with new mode
+        } else if (mode == Connectivity.ACLIQUE) {
+            mode = Connectivity.MINOR; // almost clique minimal separator is expansive, we may skip it
+        }
+
+        // we also have found almost minimal clique separators, we not search for more general safe separators, i.e.,
+        // separators which are clique labeled minors
+        if (mode == Connectivity.MINOR) {
+            LOG.info("searching a minor-safe separator");
+            Set<T> S = new MinorSafeSeparator<>(graph).getSeparator();
+            if (S != null) {
+                LOG.info("found: " + S);
+                return forkOnSeparator(S, Connectivity.CC);
+            }
+            // found none, done with splitting
             mode = Connectivity.ATOM;
             return compute(); // recursive with new mode
         }

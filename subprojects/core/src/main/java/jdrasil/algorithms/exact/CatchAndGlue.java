@@ -18,11 +18,11 @@
  */
 package jdrasil.algorithms.exact;
 
+import jdrasil.algorithms.lowerbounds.ImprovedGraphLowerbound;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.upperbounds.GreedyPermutationDecomposer;
 import jdrasil.graph.*;
 import jdrasil.utilities.BitSetTrie;
-import jdrasil.utilities.RandomNumberGenerator;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.util.*;
@@ -33,17 +33,18 @@ import java.util.logging.Logger;
  * a fugitive. The variant of the game that corresponds to tree width is the one with a visible fugitive of unbounded speed
  * (also known as the helicopter cops and robber game, defined by Robertson and Seymour).
  *
- * This class computes a winning strategy for the searchers (from which a tree decomposition can be deduced) in a bottom-up fashion.
- * In order to do so, a queue of win-configurations is maintained which is pre-filled with trivial win-configurations.
- * Then predecessor configurations (with respect to a winning strategy of the searchers) are computed for the configurations
+ * This class computes a winning strategy for the cops (from which a tree decomposition can be deduced) in a bottom-up fashion.
+ * In order to do so, a queue of win-configurations is maintained which is pre-filled with trivial win-configurations, i.e.,
+ * configurations in which the robber will be caught immediately.
+ * Then predecessor configurations (with respect to a winning strategy of the cops) are computed for the configurations
  * in the queue, and if these configurations are win-configurations as well, they are added back to queue.
  * As larger win-configurations are "better" in the sense that we wish to find a win-configuration for the whole graph,
  * a priority queue is used that orders configurations by size.
  *
- * Computing predecessor configurations is straighted forward if the searchers move does not disconnect the graph
+ * Computing predecessor configurations is straighted forward if the cops move does not disconnect the graph
  * (i.e. a simple existential "fly"-move), however, it is difficult if a universal "split"-move is reconstructed
- * (i.e., if the current configuration of the game originated from a searchers move that has disconnected the graph and
- * from a corresponding fugitive move whom has chosen a connected component). In this scenario multiple win-configurations
+ * (i.e., if the current configuration of the game originated from a cops move that has disconnected the graph and
+ * from a corresponding robber move whom has chosen a connected component). In this scenario multiple win-configurations
  * (which we may or may not already have discovered) have to be glued together. These configurations correspond to branch
  * nodes in the tree decomposition.
  *
@@ -54,7 +55,7 @@ import java.util.logging.Logger;
  * @author Max Bannach
  * @author Sebastian Berndt
  */
-public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> {
+public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> {
 
     /** Jdrasils Logger */
     private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
@@ -66,10 +67,10 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     private int n;
 
     /**
-     * Queue of subgraphs \(S\) that can be cleaned if the searcher stand on \(N(S)\), i.e., winning configurations
-     * for the searchers.
+     * Queue of subgraphs \(S\) on which the robber can be caught if the cops stand on \(N(S)\), i.e., winning configurations
+     * for the cops.
      *
-     * As the searcher have a winning strategy if \(V\) is a winning configuration, we will use a priority queue to
+     * As the cops have a winning strategy if \(V\) is a winning configuration, we will use a priority queue to
      * handle big subgraphs first (in the hope of reaching \(V\) faster).
      */
     private PriorityQueue<BitSet> queue;
@@ -90,7 +91,7 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
      * Initialize data structures and transform the graph into a BitSetGraph.
      * @param graph
      */
-    public CleanAndGlue(Graph<T> graph) {
+    public CatchAndGlue(Graph<T> graph) {
         this.graph  = new BitSetGraph(graph);
         this.n      = this.graph.getN();
         this.queue  = new PriorityQueue<>( (a,b) -> Integer.compare(b.cardinality(), a.cardinality()) );
@@ -101,13 +102,13 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
 
     /**
      * Checks if the given configuration S is a win-configuration under the assumption that the configurations in
-     * from are win-configurations. S is assumed to be a predecessor of from the node-search game and, thus, we have
-     * only to check if there is a valid move from S to from.
+     * "from" are win-configurations. S is assumed to be a predecessor of "from" in the node-search game and, thus, we have
+     * only to check if there is a valid move from S to "from".
      *
      * If S is a win-configuration, this method will add it to the priority queue for further processing. However, this
      * will only be done if necessary. The method applies multiply pruning rules to avoid this circumstance.
      *
-     * If S is a win-configuration for the whole graph, i.e., the start of a winning strategy of the searchers, this method
+     * If S is a win-configuration for the whole graph, i.e., the start of a winning strategy of the cops, this method
      * returns true. In this case no configurations has to be further processed, a tree decomposition of width k has been
      * found. In all other cases (i.e., independent of the fact that S is a win-configuration or not, and the fact that S
      * is added to the queue or not) this method will return false.
@@ -122,38 +123,18 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         // Prune 1: we have to handle each configuration just ones
         if (memory.contains(S)) return false;
 
-        // Prune 2: if the configuration requires to many searchers, we can prune it as well
-        // The configuration needs searchers on its border (otherwise the fugitive could escape), as well as the searchers
-        // that are used to produce the next configuration by "fly" on the new vertices (as the fugitive can move in between).
+        // Prune 2: if the configuration requires to many cops, we can prune it as well
+        // The configuration needs cops on its border (otherwise the robber could escape), as well as the cops
+        // that are used to produce the next configuration by "fly" on the new vertices (as the robber can move in between).
         BitSet neighbors = graph.exteriorBorder(S);
         BitSet delta = (BitSet) S.clone();
         for (BitSet f : from) delta.andNot(f);
-        if (neighbors.cardinality() + delta.cardinality() > k + 1) return false; // not enough searchers
+        if (neighbors.cardinality() + delta.cardinality() > k + 1) return false; // not enough cops
 
-        // Prune if S is not a potential maximal clique
-        BitSet omega = (BitSet) neighbors.clone();
-        omega.or(delta);
-        if (!graph.isPotentialMaximalClique(omega)) return false;
-
-        // Prune 3: if we have handled a superset of S and N(S), we can prune S
-        BitSet mask = (BitSet) S.clone();
-        mask.or(neighbors);
-        if (memory.getSuperSets(mask).iterator().hasNext()) { memory.insert(S); return false; }
-
-        // Prune 4: if we have handled a superset S' of S such that N(S') is a subset of N(S) we can prune
-        for (BitSet Sprime : memory.getSuperSets(S)) {
-            BitSet neighborsPrime = graph.exteriorBorder(Sprime);
-            boolean cut = true;
-            for (int v = neighborsPrime.nextSetBit(0); v >= 0; v = neighborsPrime.nextSetBit(v+1)) {
-                if (!neighbors.get(v)) { cut = false; break; }
-            }
-            if (cut) { memory.insert(S); return false; }
-        }
-
-        // we will add S to the queue, store how we have glued it
+        // we will eventually add S to the queue, store how we have glued it
         this.from.put(S, from);
 
-        // Prune 5: check if we have already a win-configuration that is actually a win-strategy for the whole graph
+        // Solution: check if we have already a win-configuration that is actually a win-strategy for the whole graph
         // In this case we have found a decomposition of width k.
         if (S.cardinality() >= n - k - 1) {
             // create extra bag for remaining vertices
@@ -163,6 +144,39 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
                 this.from.put(all, new BitSet[]{S});
             }
             return true;
+        }
+
+        if (S.cardinality() < n - 2*k) {
+
+            // Prune 3: if N(S)+delta is not a potential maximal clique we can discard it
+            BitSet omega = (BitSet) neighbors.clone();
+            omega.or(delta);
+            if (!graph.isPotentialMaximalClique(omega)) return false;
+
+            // Prune 4: if we have handled a superset of S and N(S), we can prune S
+            BitSet mask = (BitSet) S.clone();
+            mask.or(neighbors);
+            if (memory.getSuperSets(mask).iterator().hasNext()) {
+                memory.insert(S);
+                return false;
+            }
+
+            // Prune 5: if we have handled a superset S' of S such that N(S') is a subset of N(S) we can prune
+            for (BitSet Sprime : memory.getSuperSets(S)) {
+                BitSet neighborsPrime = graph.exteriorBorder(Sprime);
+                boolean cut = true;
+                for (int v = neighborsPrime.nextSetBit(0); v >= 0; v = neighborsPrime.nextSetBit(v + 1)) {
+                    if (!neighbors.get(v)) {
+                        cut = false;
+                        break;
+                    }
+                }
+                if (cut) {
+                    memory.insert(S);
+                    return false;
+                }
+            }
+
         }
 
         // Store the new win-configuration in the priority queue.
@@ -175,19 +189,10 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
 
     /**
      * Tries do decompose the given graph into a tree decomposition of width \(k\).
-     * This method will compute a winning strategy of \(k+1\) searchers in the classic node-search game for tree width (i.e.,
+     * This method will compute a winning strategy of \(k+1\) cops in the classic node-search game for tree width (i.e.,
      * helicopter cops and robber) in a bottom-up fashion: A queue with game configurations that are win-configurations
-     * for the searchers is pre-filled with trivial win-configurations; from this queue configurations are extracted and
+     * for the cops is pre-filled with trivial win-configurations; from this queue configurations are extracted and
      * predecessor configurations of the game are computed, which are in turn added to the queue if they are also win-configurations.
-     *
-     * This is straighted forward if the searchers move does not disconnect the graph (i.e. a simple existential "fly"-move),
-     * however, it is difficult if a universal "split"-move is reconstructed (i.e., if the current configuration of the game
-     * originated from a searchers move that has disconnected the graph and from a corresponding fugitive move whom has
-     * chosen a connected component). In this scenario multiple win-configurations (which we may or may not already have
-     * discovered) have to be glued together. These configurations correspond to branch nodes in the tree decomposition.
-     *
-     * Win-configurations that should be further processed are stored in a priority queue that delivers the biggest subgraph first.
-     * This increases the change that we quickly find a cleaning strategy for the whole graph.
      *
      * @param k
      * @return
@@ -222,52 +227,76 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
                 // 1. add S to the trie of v
                 tries.get(v).insert(S);
 
-                // 2. try to extend S by removing a searcher from v, i.e., find a direct predecessor configuration
+                // 2. try to extend S by removing a cop from v, i.e., find a direct predecessor configuration
                 BitSet newS = (BitSet) S.clone();
                 newS.set(v);
                 graph.saturate(newS);
                 if (offer(newS, k, S)) return true;
 
                 // 3. try to glue S to other win-configurations
-                Stack<BitSet> stack = new Stack<>();
-                stack.push(S);
-                while (!stack.isEmpty()) {
-                    BitSet current = (BitSet) stack.pop().clone();
-                    BitSet currentNeighbors = graph.exteriorBorder(current);
-                    BitSet mask = (BitSet) current.clone();
-                    mask.or(currentNeighbors);
-                    mask.flip(0,n);
-                    for (BitSet toGlue : tries.get(v).getSubSets(mask)) {
-                        BitSet glueNeighbors = graph.exteriorBorder(toGlue);
-                        glueNeighbors.or(currentNeighbors);
-                        if (glueNeighbors.cardinality() > k+1) continue; // not enough cops
-                        newS = (BitSet) current.clone();
-                        newS.or(toGlue);
+//                Stack<BitSet> stack = new Stack<>();
+//                stack.push(S);
+//                while (!stack.isEmpty()) {
+//                    BitSet current = (BitSet) stack.pop().clone();
+//                    BitSet currentNeighbors = graph.exteriorBorder(current);
+//                    BitSet mask = (BitSet) current.clone();
+//                    mask.or(currentNeighbors);
+//                    mask.flip(0,n);
+//                    for (BitSet toGlue : tries.get(v).getSubSets(mask)) {
+//                        BitSet glueNeighbors = graph.exteriorBorder(toGlue);
+//                        glueNeighbors.or(currentNeighbors);
+//                        if (glueNeighbors.cardinality() > k+1) continue; // not enough cops
+//                        newS = (BitSet) current.clone();
+//                        newS.or(toGlue);
+//
+//                        int absorbable = graph.absorbable(newS);
+//                        if (absorbable < 0 || absorbable == v) {
+//                            BitSet tmp = (BitSet) newS.clone();
+//                            tmp.set(v); // may prevent us from offering
+//                            graph.saturate(tmp);
+//                            if (offer(tmp, k, current, toGlue)) return true;
+//                        }
+//                        if (absorbable < 0) {
+//                            from.put(newS, new BitSet[]{current, toGlue});
+//                            stack.push(newS);
+//                        }
+//
+//                    }
+//                }
 
-                        int absorbable = graph.absorbable(newS);
-                        if (absorbable < 0 || absorbable == v) {
-                            BitSet tmp = (BitSet) newS.clone();
-                            tmp.set(v); // may prevent us from offering
-                            graph.saturate(tmp);
-                            if (offer(tmp, k, current, toGlue)) return true;
-                        }
-                        if (absorbable < 0) {
-                            from.put(newS, new BitSet[]{current, toGlue});
-                            stack.push(newS);
-                        }
+                BitSet mask = (BitSet) S.clone();
+                mask.flip(0, n); // search in V\S
+                mask.andNot(delta);
+                for (BitSet toGlue : tries.get(v).getSubSets(mask)) {
+                    newS = (BitSet) toGlue.clone();
+                    BitSet glueDelta = graph.exteriorBorder(newS);
+                    glueDelta.or(delta);
+                    if (glueDelta.cardinality() > k+1) continue; // not enough cops to glue
 
+                    // glue with S
+                    int size = queue.size();
+                    newS.or(S);
+                    graph.saturate(newS);
+                    if (offer(newS, k, S, toGlue)) return true;
+
+                    // glue with S and v
+                    if (queue.size() == size) {
+                        newS.set(v);
+                        graph.saturate(newS);
+                        if (offer(newS, k, S, toGlue)) return true;
                     }
                 }
+
             }
 
         }
 
-        // queue empty -> failed to clean -> tree width is larger then k
+        // queue empty -> failed to catch the robber -> tree width is larger then k
         return false;
     }
 
     /**
-     * Extract a tree decomposition from a cleaning strategy of the searchers.
+     * Extract a tree decomposition from a winning-strategy of the cops.
      * Should be called after a run of @see decompose that has returned true
      * @param S
      * @param td
@@ -293,32 +322,33 @@ public class CleanAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     @Override
     public TreeDecomposition<T> call() throws Exception {
 
-        TreeDecomposition<T> td = new GreedyPermutationDecomposer<T>(graph.getGraph()).call();
-        BitSet all = new BitSet();
-        all.set(0,n);
-
-        int k = td.getWidth() - 1;
-        while (decompose(k)) {
-            LOG.info(String.format("tree width <= %2d ( %4d configurations )", k, configurations));
-            td = new TreeDecomposition<>(graph.getGraph());
-            extractTreeDecomposition(all, td);
-            k = k - 1;
-        }
-        LOG.info(String.format("tree width > %3d ( %4d configurations )", k, configurations));
-
-
-//        int k = 1;
-//        while (!decompose(k)) {
-//            LOG.info(String.format("tree width > %2d ( %4d configurations )", k, configurations));
-//            k++;
-//        }
-//        LOG.info(String.format("tree width = %2d ( %4d configurations )", k, configurations));
-//
-//        // extract constructed tree decomposition
-//        TreeDecomposition<T> td = new TreeDecomposition<T>(graph.getGraph());
+//        TreeDecomposition<T> td = new GreedyPermutationDecomposer<T>(graph.getGraph()).call();
 //        BitSet all = new BitSet();
 //        all.set(0,n);
-//        extractTreeDecomposition(all, td);
+//
+//        int k = td.getWidth() - 1;
+//        LOG.info(String.format("tree width <= %2d ( heuristic )", k+1));
+//        while (decompose(k)) {
+//            LOG.info(String.format("tree width <= %2d ( %4d configurations )", k, configurations));
+//            td = new TreeDecomposition<>(graph.getGraph());
+//            extractTreeDecomposition(all, td);
+//            k = k - 1;
+//        }
+//        LOG.info(String.format("tree width > %3d ( %4d configurations )", k, configurations));
+
+
+        int k = 1;
+        while (!decompose(k)) {
+            LOG.info(String.format("tree width > %2d ( %4d configurations )", k, configurations));
+            k++;
+        }
+        LOG.info(String.format("tree width = %2d ( %4d configurations )", k, configurations));
+
+        // extract constructed tree decomposition
+        TreeDecomposition<T> td = new TreeDecomposition<T>(graph.getGraph());
+        BitSet all = new BitSet();
+        all.set(0,n);
+        extractTreeDecomposition(all, td);
 
         // done
         return td;

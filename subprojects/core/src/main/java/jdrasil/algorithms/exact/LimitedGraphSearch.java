@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
- * The tree width of a graph can be characterized from game theoretic point of view with the graph search game where
+ * The tree width of a graph can be characterized from a game theoretic point of view with the graph search game where
  * a team of searchers tries to catch a fugitive, who has unlimited speed. Depending on the visibility of the fugitive, a winning strategy of
  * the searchers corresponds to a path- or tree-decomposition of the graph.
  * Fomin, Fraigniaud and Nisse described a mixed version of the game in "Nondeterministic Graph Searching: From Pathwidth to Treewidth".

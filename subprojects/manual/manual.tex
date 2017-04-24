@@ -57,8 +57,9 @@ project, please cite our introduction paper:
   @inproceedings{jdrasil,
     author = {Max Bannach and Sebastian Berndt and Thorsten Ehlers},
     title = {Jdrasil: A Modular Library for Computing Tree Decompositions},
-    booktitle = {tba},
-    year = 2017
+    booktitle = {Experimental Algorithms - 16th International Symposium, {SEA} 2017,
+               London, England, June 21 -- 23, 2017, Proceedings},
+    year = {2017}
   }
 \end{lstlisting}
 \chapter{Build and Run \Jdrasil}
@@ -602,6 +603,21 @@ capabilities of Ti\emph{k}Z:
   GraphWriter.writeTreeDecompositionTikZ(decomposition);
 \end{lstlisting}
 
+\section{Storing Graphs on the Bit-Level}
+In addition to the default \JClass{Graph} class, \Jdrasil{} also offers the
+class \JClass{BitSetGraph} that stores a \JClass{Graph} (with
+arbitrary vertices) as bitwise adjacency matrix, i.\,e., as array of
+\JClass{BitSets} where the $i$'th \JClass{BitSet} corresponds to the i'th row of the
+adjacency matrix. This comes with all the advantages and disadvantages
+of an adjacency matrix.
+ 
+The crucial advantage is that the graph is compact and that many
+operations can be performed quickly on the bit level.  In particular,
+dynamic programming over subgraphs can be implemented efficiently, as
+subgraphs are also just BitSets that can efficiently be hashed. This
+class is essentially used by exponential time algorithms that work on
+prepossessed (and thus, hopefully small) graphs.
+
 \chapter{Graph Invariants}
 A graph property is a class of graphs that is closed under
 isomorphisms. A graph invariant is a function that maps isomorphic
@@ -704,6 +720,25 @@ Berry et al.\, In short, it does the following:
  vertex \(v\in V\) and remove it, if the resulting graph has a clique
  minimal separator \(S\), then \(S\cup\{v\}\) is an almost clique
  minimal separator.
+
+\section{Minor-Safe Separator}
+A separator \(S\) is safe for tree width, if for each connected
+component \(C\) of \(G[V\setminus S]\) the tree width of the
+graph \(G[C\cup S]\) with \(S\) as clique is bounded by the tree width
+of \(G\).
+ 
+Bodlaender and Koster have shown
+that a separator \(S\) is safe in these terms if for each component
+\(C\) in \(G[V\setminus S]\) the graph \(R=G[V\setminus C]\) contains
+a clique on the vertices of \(S\) as labeled
+minor~\cite{BodlaenderK2006}. We call such a separator \(S\)
+\emph{minor-safe}.
+ 
+The class \JClass{MinorSafeSeparator} implements a heuristic to find a minor-safe
+separator. Whenever the heuristic outputs a separator, it will be
+guaranteed that it actually is a minor-safe separator, however, if the
+heuristic does not find such a separator there still could be one
+contained in \(G\).
 
 \section{Minimal Vertex Separator}
 The class \JClass{MinimalVertexSeparator} implements an algorithm to compute a minimal vertex
@@ -930,7 +965,8 @@ following separators:
     components;
   \item safe separators of size $3$;
   \item clique minimal separators;
-  \item almost clique minimal separators.
+  \item almost clique minimal separators;
+  \item minor-safe separators found by a heuristic.
 \end{enumerate}
 The \JClass{GraphSplitter} makes use of two Java concepts in order to
 make it easy to use and efficient.
@@ -1098,6 +1134,15 @@ no vertex can be moved, a random vertex is moved and the process
 restarts. At most $r$ restarts will be performed.  At the end, the
 best found tree decomposition is returned.
 
+\section{Greedy Path Decompositions}
+A path decomposition can be seen as a special case of a tree
+decomposition that is sometimes easier to handle. In particular
+heuristics for path decompositions can be simpler and more flexible
+then the ones for tree decompositions. In \Jdrasil{} one such
+heuristic is provided by the class \JClass{GreedyPathDecomposer},
+which greedily computes a path decomposition by adding vertices to the
+current bag such that other vertices can be removed quickly from the bag.
+
 \chapter{Approximation}
 An approximation algorithm as the one by Robertson and Seymour~\cite{RobertsonS1995} can be interesting in two ways: it
 produces lower \emph{and} upper bounds at the same time, while also
@@ -1168,6 +1213,66 @@ cops-and-robber search game. Together with an algorithm by Berarducci
 and Intrigila~\cite{BerarducciI1993} to evaluate such games in time
 $n^{O(tw(G))}$, this yields a way to compute exact tree decompositions. In
 \Jdrasil{} the class \JClass{CopsAndRobber} implements this approach.
+
+\section{Cops and Robber (Bottom-Up)}
+Tree width has nice game theoretic characterisations, one of which is
+the node-search game played by a set of searchers and a fugitive. The
+variant of the game that corresponds to tree width is the one with a
+visible fugitive of unbounded speed (also known as the helicopter cops
+and robber game, defined by Robertson and Seymour).
+ 
+In \Jdrasil, the class \JClass{CatchAndGlue} computes a winning strategy for the cops (from which a tree
+decomposition can be deduced) in a bottom-up fashion.  In order to do
+so, a queue of win-configurations is maintained which is pre-filled
+with trivial win-configurations, i.\,e., configurations in which the
+robber will be caught immediately. Then predecessor configurations
+(with respect to a winning strategy of the cops) are computed for the
+configurations in the queue, and if these configurations are
+win-configurations as well, they are added back to the queue.  As larger
+win-configurations are "better" in the sense that we wish to find a
+win-configuration for the whole graph, a priority queue is used that
+orders configurations by size.
+ 
+Computing predecessor configurations is straighted forward if the cops
+move does not disconnect the graph (i.\,e. a simple existential
+"fly"-move), however, it is difficult if a universal "split"-move is
+reconstructed (i.e., if the current configuration of the game
+originated from a cops move that has disconnected the graph and from a
+corresponding robber move whom has chosen a connected component). In
+this scenario multiple win-configurations (which we may or may not
+already have discovered) have to be glued together. These
+configurations correspond to branch nodes in the tree decomposition.
+
+The asymmetrical running time of this algorithm is worse then the one
+of the \JClass{CopsAndRobber} class, as the ``glue''-part may cost
+exponential time as well. However, in practice there are much less
+configurations considered over all if we compute the winning strategy
+backwards, as we can discard a lot of ``lose''-configurations and
+sinks in the configuration-graph.
+
+\section{Limited Graph Search}
+The tree width of a graph can be characterized from a game theoretic
+point of view with the graph search game where a team of searchers
+tries to catch a fugitive, who has unlimited speed. Depending on the
+visibility of the fugitive, a winning strategy of the searchers
+corresponds to a path- or tree-decomposition of the graph. Fomin,
+Fraigniaud and Nisse described a mixed version of the game~\cite{FominFN09}.
+Here, the fugitive is invisible, but he searchers may reveal her from
+time to time. By fixing the number \(q\) of reveals that are performed
+by the searchers, the game covers path decompositions (\(q=0\)) and
+tree decompositions (\(q=\infty\)), and, in particular, the area
+between these two extrema. In the cited paper such decompositions are
+called q-branched tree decompositions and they have, loosely speaking,
+the property that on each path from a root to the leafs there are at
+most \(q\) nodes with more then one children, i.e., at most \(q\)
+branching nodes.
+
+In \Jdrasil{} the class \JClass{LimitedGraphSearch} implements a
+dynamic program that computes a winning strategy of the searchers in
+the limited search game and, thus, computes a $q$-branched tree
+decomposition. The class will compute the smallest $k$ such that there
+is a winning strategy for a fixed $q$, or alternatively the smallest
+$k$ such that any $q$ exists such that the searcher win with $q$ reveals.
 
 \section{Dynamic Programming}
 The class \JClass{DynamicProgrammingDecomposer} implements exact exponential time (and exponential space)

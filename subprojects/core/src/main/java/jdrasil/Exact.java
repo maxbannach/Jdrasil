@@ -19,8 +19,7 @@
 package jdrasil;
 
 import jdrasil.algorithms.GraphSplitter;
-import jdrasil.algorithms.exact.CleanAndGlue;
-import jdrasil.algorithms.exact.LimitedGraphSearch;
+import jdrasil.algorithms.exact.CatchAndGlue;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.graph.Graph;
@@ -81,7 +80,7 @@ public class Exact {
 
                 // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
                 GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
-                    CleanAndGlue<Integer> cleanAndGlue = new CleanAndGlue<>(atom);
+                    CatchAndGlue<Integer> cleanAndGlue = new CatchAndGlue<>(atom);
                     try {
                         return cleanAndGlue.call();
                     } catch (Exception e) {
