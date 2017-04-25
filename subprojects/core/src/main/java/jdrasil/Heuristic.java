@@ -107,8 +107,8 @@ public class Heuristic implements sun.misc.SignalHandler {
             LOG.info("reducing the graph");
             reducer = new GraphReducer<>(input);
             Graph<Integer> reduced = reducer.getProcessedGraph();
-            if (reduced.getVertices().size() > 0) {
-                LOG.info("reduced the graph to " + reduced.getVertices().size() + " vertices");
+            if (reduced.getCopyOfVertices().size() > 0) {
+                LOG.info("reduced the graph to " + reduced.getCopyOfVertices().size() + " vertices");
 
                 // temporary tree decomposition to avoid raise conditions
                 TreeDecomposition<Integer> tmp;
@@ -119,16 +119,17 @@ public class Heuristic implements sun.misc.SignalHandler {
                 synchronized (this) {
                     this.decomposition = tmp;
                 }
-
-                LOG.info("Improving the decomposition");
-                tmp = this.decomposition.copy();
-                tmp.improveDecomposition();
-                synchronized (this) {
-                    this.decomposition = tmp;
+                if(!JdrasilProperties.timeout() ){
+	                LOG.info("Improving the decomposition");
+	                tmp = this.decomposition.copy();
+	                tmp.improveDecomposition();
+	                synchronized (this) {
+	                    this.decomposition = tmp;
+	                }
                 }
 
                 // we may skip the local search phase
-                if (!JdrasilProperties.containsKey("instant")) {
+                if (!JdrasilProperties.timeout() &&  !JdrasilProperties.containsKey("instant")) {
 
                     LOG.info("Starting local search phase");
                     localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE, 30, greedyPermutationDecomposer.getPermutation());
@@ -158,7 +159,7 @@ public class Heuristic implements sun.misc.SignalHandler {
      * @param td a tree decomposition of the reduced graph
      */
     private synchronized void printSolution(TreeDecomposition<Integer> td) {
-        if (reducer.getProcessedGraph().getVertices().size() != 0) reducer.addbackTreeDecomposition(td);
+        if (reducer.getProcessedGraph().getCopyOfVertices().size() != 0) reducer.addbackTreeDecomposition(td);
         this.decomposition = reducer.getTreeDecomposition();
         this.decomposition.connectComponents();
         tend = System.nanoTime();
@@ -183,7 +184,7 @@ public class Heuristic implements sun.misc.SignalHandler {
         if (reducer == null) {
             LOG.warning("Did not finish reducing the graph!");
             this.decomposition = new TreeDecomposition<>(input);
-            Bag<Integer> singleBag = this.decomposition.createBag(input.getVertices());
+            Bag<Integer> singleBag = this.decomposition.createBag(input.getCopyOfVertices());
             System.out.println(this.decomposition);
             System.exit(0);
         }
@@ -204,7 +205,7 @@ public class Heuristic implements sun.misc.SignalHandler {
         if (this.decomposition == null) {
             Graph<Integer> H = reducer.getProcessedGraph();
             this.decomposition = new TreeDecomposition<>(H);
-            Bag<Integer> singleBag = this.decomposition.createBag(H.getVertices());
+            Bag<Integer> singleBag = this.decomposition.createBag(H.getCopyOfVertices());
         }
 
         // print the decomposition

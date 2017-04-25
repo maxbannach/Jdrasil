@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
@@ -31,6 +32,7 @@ import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * The EliminationOrderDecomposer implements the elimination order algorithm.
@@ -45,6 +47,9 @@ import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
  */
 public class EliminationOrderDecomposer<T extends Comparable<T>> implements TreeDecomposer<T> {
 
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
+	
 	/** The graph that should be decomposed. This is copy and can be modified. */
 	private final Graph<T> graph;
 	
@@ -84,45 +89,83 @@ public class EliminationOrderDecomposer<T extends Comparable<T>> implements Tree
 	 */
 	private TreeDecomposition<T> permutationToTreeDecomposition(List<T> perm) {
 
-		// end of recursion is a single back
-		if (perm.size() == 1) {
-			TreeDecomposition<T> decomposition = new TreeDecomposition<>(graph);
-			Bag<T> bag = decomposition.createBag(new HashSet<>(perm));
-			
-			eliminatedVertexToBag.put(perm.get(0), bag);
-			return decomposition;
+		TreeDecomposition<T> decomposition = new TreeDecomposition<>(graph);
+		Map<T, Integer> elimOrder = new HashMap<>();
+		int index = 0;
+		for(T v : perm){
+			elimOrder.put(v, index++);
+			Set<T> neighbours = new HashSet<T>(graph.getNeighborhood(v));
+			neighbours.add(v);
+			Bag<T> bag = decomposition.createBag(neighbours);
+			bag.id = perm.size()-index+1;
+			eliminatedVertexToBag.put(v, bag);
+			graph.eliminateVertex(v);
 		}
-		
-		// remove first element from permutation
-		T v = perm.get(0);
-		perm.remove(0);
-		
-		// create bag for v
-		Set<T> bagVertices = new HashSet<T>();
-		bagVertices.add(v);
-		for (T u : graph.getNeighborhood(v)) {
-			bagVertices.add(u);
-		}
-	
-		// eliminate v
-		graph.eliminateVertex(v);
-		
-		// search the next vertex of the bag that will be eliminated
-		T vj = null;
-		for (T u : perm) {
-			if (bagVertices.contains(u)) {
-				vj = u;
-				break;
+		// Now add the edges: 
+		int edgesAdded = 0;
+		for(T v : perm){
+			int next_index = perm.size();
+			T nextElimNode = null;
+			for(T u : eliminatedVertexToBag.get(v).vertices){
+				if(!elimOrder.containsKey(v))
+					throw new RuntimeException("Did not find this fucking node! ");
+				int positionInPermutation = elimOrder.get(u);
+				if(positionInPermutation < elimOrder.get(v))
+					throw new RuntimeException("Invalid index found! ");
+				
+				if (v.compareTo(u) != 0 &&  positionInPermutation < next_index){
+					nextElimNode = u;
+					next_index = positionInPermutation;
+				}
+			}
+			if(nextElimNode != null){
+				edgesAdded++;
+				
+				decomposition.addTreeEdge(eliminatedVertexToBag.get(v), eliminatedVertexToBag.get(nextElimNode));
 			}
 		}
+		if(edgesAdded + 1 != perm.size())
+			LOG.info("Have " + edgesAdded + " edges for " + perm.size() + " nodes?");
 		
-		// recurse
-		TreeDecomposition<T> decomposition = permutationToTreeDecomposition(perm);
-				
-		// add edge
-		Bag<T> bag = decomposition.createBag(bagVertices);
-		eliminatedVertexToBag.put(v, bag);
-		decomposition.addTreeEdge(eliminatedVertexToBag.get(v), eliminatedVertexToBag.get(vj));
+//		// end of recursion is a single back
+//		if (perm.size() == 1) {
+//			TreeDecomposition<T> decomposition = new TreeDecomposition<>(graph);
+//			Bag<T> bag = decomposition.createBag(new HashSet<>(perm));
+//			
+//			eliminatedVertexToBag.put(perm.get(0), bag);
+//			return decomposition;
+//		}
+//		
+//		// remove first element from permutation
+//		T v = perm.get(0);
+//		perm.remove(0);
+//		
+//		// create bag for v
+//		Set<T> bagVertices = new HashSet<T>();
+//		bagVertices.add(v);
+//		for (T u : graph.getNeighborhood(v)) {
+//			bagVertices.add(u);
+//		}
+//	
+//		// eliminate v
+//		graph.eliminateVertex(v);
+//		
+//		// search the next vertex of the bag that will be eliminated
+//		T vj = null;
+//		for (T u : perm) {
+//			if (bagVertices.contains(u)) {
+//				vj = u;
+//				break;
+//			}
+//		}
+//		
+//		// recurse
+//		TreeDecomposition<T> decomposition = permutationToTreeDecomposition(perm);
+//				
+//		// add edge
+//		Bag<T> bag = decomposition.createBag(bagVertices);
+//		eliminatedVertexToBag.put(v, bag);
+//		decomposition.addTreeEdge(eliminatedVertexToBag.get(v), eliminatedVertexToBag.get(vj));
 		
 		decomposition.setGraph(original);
 		// done
@@ -131,7 +174,7 @@ public class EliminationOrderDecomposer<T extends Comparable<T>> implements Tree
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		int n = graph.getVertices().size();
+		int n = graph.getCopyOfVertices().size();
 		TreeDecomposition<T> decomposition = permutationToTreeDecomposition(permutation);
 		decomposition.setN(n);
 		decomposition.setCreatedFromPermutation(true);

@@ -18,6 +18,7 @@
 
 package jdrasil;
 
+import jdrasil.algorithms.ExactDecomposer;
 import jdrasil.algorithms.GraphSplitter;
 import jdrasil.algorithms.exact.CatchAndGlue;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
@@ -72,7 +73,7 @@ public class Exact {
             /* use reduction rules to reduce the graph */
             GraphReducer<Integer> reducer = new GraphReducer<Integer>(input);
             Graph<Integer> H = reducer.getProcessedGraph();
-            if (H.getVertices().size() == 0) {
+            if (H.getNumVertices() == 0) {
                 decomposition = reducer.getTreeDecomposition();
             } else {
                 int lb = new MinorMinWidthLowerbound<>(H).call();
@@ -80,9 +81,10 @@ public class Exact {
 
                 // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
                 GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
-                    CatchAndGlue<Integer> cleanAndGlue = new CatchAndGlue<>(atom);
+                    CatchAndGlue<Integer> catchAndGlue = new CatchAndGlue<>(atom);
+//                    ExactDecomposer<Integer> catchAndGlue = new ExactDecomposer<>(atom);
                     try {
-                        return cleanAndGlue.call();
+                        return catchAndGlue.call();
                     } catch (Exception e) {
                         LOG.warning(e.getMessage());
                         return null;

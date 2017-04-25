@@ -55,7 +55,7 @@ public class BitSetGraph<T extends Comparable<T>> {
     public BitSetGraph(Graph<T> graph) {
         // parse given graph
         this.graph = graph;
-        this.n = graph.getVertices().size();
+        this.n = graph.getCopyOfVertices().size();
 
         // compute the bijection
         this.vToInt = new HashMap<>();

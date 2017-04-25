@@ -133,7 +133,7 @@ public class MinorMinWidthLowerbound<T extends Comparable<T>> implements Lowerbo
 	public Integer call() throws Exception {	 
 
 		// as long as the graph has vertices we can still contract some
-		while (graph.getVertices().size() > 0) {
+		while (graph.getCopyOfVertices().size() > 0) {
 			
 			// search vertex of min degree
 			int min = Integer.MAX_VALUE;

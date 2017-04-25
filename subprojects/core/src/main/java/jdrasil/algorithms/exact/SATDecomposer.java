@@ -80,7 +80,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	public SATDecomposer(Graph<T> graph, Encoding encoding) {
 		this.graph = graph;
 		this.lb = 0;
-		this.ub = graph.getVertices().size();
+		this.ub = graph.getCopyOfVertices().size();
 		this.encoding = encoding;
 	}
 	
@@ -146,7 +146,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
 		// catch the empty graph
-		if (graph.getVertices().size() == 0) return new TreeDecomposition<T>(graph);
+		if (graph.getCopyOfVertices().size() == 0) return new TreeDecomposition<T>(graph);
 
 		// compute the permutation with respect to the choose encoding
 		List<T> permutation = computePermutation();
@@ -154,7 +154,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 		// if something went wrong, return a trivial tree-decomposition
 		if (permutation == null) {		
 			TreeDecomposition<T> T = new TreeDecomposition<>(graph);
-			T.createBag(graph.getVertices());
+			T.createBag(graph.getCopyOfVertices());
 			return T;
 		}
 		

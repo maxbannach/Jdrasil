@@ -26,7 +26,7 @@ apply plugin: 'idea'
  */
 task pace() {
   dependsOn('core:assemble')
-  dependsOn('upgrades:upgrade_glucose')
+  //dependsOn('upgrades:upgrade_glucose')
   dependsOn('core:exact')
   dependsOn('core:heuristic')
 }

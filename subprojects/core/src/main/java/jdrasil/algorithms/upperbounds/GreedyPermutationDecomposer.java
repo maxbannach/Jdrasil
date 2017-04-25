@@ -19,10 +19,14 @@
 package jdrasil.algorithms.upperbounds;
 
 import java.io.Serializable;
+import java.security.GeneralSecurityException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 
-
+import jdrasil.Datastructures.UpdatablePriorityQueue;
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
@@ -30,6 +34,7 @@ import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
 import jdrasil.utilities.RandomNumberGenerator;
+import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
  * This class implements greedy permutation heuristics to compute a tree-decomposition. The heuristic eliminates
@@ -42,6 +47,12 @@ import jdrasil.utilities.RandomNumberGenerator;
  */
 public class GreedyPermutationDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>, Serializable {
 
+	
+
+	/** Jdrasils Logger */
+	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
+	
+	
 	private static final long serialVersionUID = 1L;
 
 	/** The graph to be decomposed. */
@@ -97,7 +108,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		// fill-in value and degree of the vertex
 		int phi = G.getFillInValue(v);
 		int delta = G.getNeighborhood(v).size();
-		int n = G.getVertices().size();
+		int n = G.getNumVertices();
 
 		// compute the value of the vertex with respect to the current algorithm
 		int value = 0;
@@ -115,7 +126,11 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 				value = phi - delta;
 				break;
 			case FillInDegree:
-				value = delta + (1/(n*n))*phi;
+				int m = n*n;
+				if(m > 0)
+					value = delta + (1/m) * phi;
+				else
+					value = delta;
 				break;
 			case DegreeFillIn:
 				value = phi + (1/n)*delta;
@@ -145,14 +160,14 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		List<VertexValue> best = new LinkedList<>();
 
 		// search for the best vertex
-		for (T v : G.getVertices()) {
+		for (T v : G.getCopyOfVertices()) {
 
 			// the vertex-value-tuple of the current vertex
 			VertexValue tuple = getValue(G, v);
 
 			// eliminate vertex and look for further value
-			if (k > 1 && G.getVertices().size() > 1) {
-				System.out.println("test");
+			if (k > 1 && G.getCopyOfVertices().size() > 1) {
+//				System.out.println("test");
 				Graph.EliminationInformation info = G.eliminateVertex(v);
 				VertexValue next = nextVertex(G, k - 1);
 				G.deEliminateVertex(info);
@@ -184,9 +199,11 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 	
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
-		return call(graph.getVertices().size()+1);
+		return call(graph.getNumVertices()+1);
 	}
 
+	
+	
 	/**
 	 * If the algorithm is used with a good upper bound, it can aboard whenever the width of the greedily constructed permutation
 	 * becomes to big.
@@ -197,18 +214,41 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 	public TreeDecomposition<T> call(int upper_bound) throws Exception {
 		
 		// catch the empty graph
-		if (graph.getVertices().size() == 0) return new TreeDecomposition<T>(graph);
+		if (graph.getCopyOfVertices().size() == 0) return new TreeDecomposition<T>(graph);
 
 		// the permutation that we wish to compute and a copy of the graph, which will be modified
 		List<T> permutation = new LinkedList<T>();
 		Graph<T> workingCopy = GraphFactory.copy(graph);
-
+		if(toRun == Algorithm.Degree){
+			workingCopy.setLogEdgesInNeighbourhood(false);
+		}
+		UpdatablePriorityQueue<T, Integer> q = new UpdatablePriorityQueue<T, Integer>();
+		for(T v : graph.getCopyOfVertices()){
+			VertexValue vv = getValue(graph, v);
+			q.insert(vv.vertex, vv.value);
+		}
+			
 		// compute the permutation
-		for (int i = 0; i < graph.getVertices().size(); i++) {
+		for (int i = 0; i < graph.getNumVertices(); i++) {
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
-
+			
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice
-			T v = nextVertex(workingCopy, this.k).vertex;
+			int lowestPrio = q.getMinPrio();
+			T vv = q.removeMinRandom();
+			Set<T> tmp = new HashSet<>();
+			T v = vv; // nextVertex(working, this.k);
+			for(T v1 : workingCopy.getNeighborhood(v)){
+				tmp.add(v1);
+				for(T v2 : workingCopy.getNeighborhood(v1)){
+					tmp.add(v2);
+				}
+			}
+			int predictionNewNumberEdges = workingCopy.getNumberOfEdges() + workingCopy.getFillInValue(v) - workingCopy.getNeighborhood(v).size();
+			//LOG.info("Eliminating node " + v + " with prio " + lowestPrio);
+//			if(getValue(workingCopy, v).value != lowestPrio)
+//				throw new RuntimeException("Prio in heap was " + lowestPrio + " but recomputation gave " + getValue(workingCopy, v).value);
+//			
+			//T v = nextVertex(workingCopy, this.k).vertex;
 			if(workingCopy.getNeighborhood(v).size() >= upper_bound){
 				// Okay, this creates a clique of size >= upper_bound + 1, I can abort!
 				return null;
@@ -216,7 +256,21 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 
 			// add it to the permutation and eliminate it in the current subgraph
 			permutation.add(v);
-			workingCopy.eliminateVertex(v);
+			workingCopy.eliminateVertex(v, toRun != Algorithm.Degree);
+			if(toRun != Algorithm.Degree &&  workingCopy.getNumberOfEdges() != predictionNewNumberEdges){
+				throw new RuntimeException("Miss-predicted fill values!");
+			}
+			for(T v_n : tmp){
+				if(v_n != v && v.compareTo(v_n) != 0){
+					//LOG.info("updating value of node " + v_n + ", v=" + v + ", compare yields" + v.compareTo(v_n));
+					VertexValue v_update = getValue(workingCopy, v_n);
+					if(v_update == null){
+						LOG.info("v_update was null");
+					}
+					
+					q.updateValue(v_n, getValue(workingCopy, v_n).value);
+				}
+			}
 		}
 
 		// done

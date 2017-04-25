@@ -91,7 +91,7 @@ public class TwinDecomposition<T extends Comparable<T>> extends Invariant<T, Int
 	 * 
 	 */
 	private Map<T, Set<T>> getTwinDecomposition(boolean trueTwins) {
-		PartitionRefinement<T> P = new PartitionRefinement<>(graph.getVertices());
+		PartitionRefinement<T> P = new PartitionRefinement<>(graph.getCopyOfVertices());
 		for (T v : graph) {
 			Set<T> Nv = new HashSet<T>(graph.getNeighborhood(v)); 
 			if (trueTwins) Nv.add(v);

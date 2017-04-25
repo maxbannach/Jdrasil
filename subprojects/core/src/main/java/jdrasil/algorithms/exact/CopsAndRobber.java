@@ -104,7 +104,7 @@ public class CopsAndRobber<T extends Comparable<T>> implements TreeDecomposer<T>
 	 */
 	public CopsAndRobber(Graph<T> graph) {
 		this.graph = graph;
-		this.n = graph.getVertices().size();
+		this.n = graph.getCopyOfVertices().size();
 		this.vertexToInt = new HashMap<>();
 		this.intToVertex = new HashMap<>();
 		int i = 0;
@@ -282,7 +282,7 @@ public class CopsAndRobber<T extends Comparable<T>> implements TreeDecomposer<T>
 		Map<BitSet, Bag<T>> setToBag = new HashMap<>();
 		
 		// catch the empty graph
-		if (graph.getVertices().size() == 0) return tree;
+		if (graph.getCopyOfVertices().size() == 0) return tree;
 		
 		// perform DFS starting on root node
 		Stack<BitSet> S = new Stack<>();

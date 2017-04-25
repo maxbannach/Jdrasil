@@ -58,6 +58,9 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 	/** Jdrasils Logger */
 	private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
+	/** The exhaustive application of reduction rules may be to expensive, in this case we use only a subset of them. */
+	private final int EXHAUSTIVE_THRESHOLD = 2000;
+
 	/** Bags that are created during the reduction (and which have to be glued to a later decomposition).*/
 	private Stack<Set<T>> bags;
 	
@@ -78,7 +81,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 	 */
 	@Override
 	protected Graph<T> preprocessGraph() {
-		
+
 		// init data structures
 		this.bags = new Stack<>();
 		this.low = 0;
@@ -86,23 +89,30 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 
 		// the reduced graph we will produce
 		Graph<T> reduced = GraphFactory.copy(graph);
-				
+
 		// input was empty graph – nothing to do
-		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
+		if (reduced.getCopyOfVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
 		// handle easy cases: vertices of degree 0 and 1
+		LOG.info("Removing unconnected nodes");
 		eliminateLowDegreeNodes(reduced, 0);
+		LOG.info("Removing leafs");
 		eliminateLowDegreeNodes(reduced, 1);
 		
 		// input was a tree
-		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
+		if (reduced.getCopyOfVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
 		// no tree, eliminate degree 2 vertices
+		LOG.info("Removing nodes with degree <= 2");
 		eliminateLowDegreeNodes(reduced, 2);
-		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
+		if (reduced.getCopyOfVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); };
 		
-		// apply classic reduction rules until exhaustion 
-		boolean fixPointReached = false;
+		LOG.info("Running single pass trick...");
+		for(int i = 0 ; i < 20 && singlePass(reduced) ; i++) {}
+
+		// apply classic reduction rules until exhaustion
+		LOG.info("Applying other rules...");
+		boolean fixPointReached = reduced.getNumVertices() > EXHAUSTIVE_THRESHOLD;
 		while(!fixPointReached){
 			Set<T> bag = null;
 			bag = isolatedVertexRule(reduced);
@@ -119,7 +129,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 				bags.push(bag);
 			}
 		}
-		if (reduced.getVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); }
+		if (reduced.getCopyOfVertices().size() == 0) { glueBags(); return GraphFactory.emptyGraph(); }
 		
 		// done
 		return reduced;
@@ -177,6 +187,59 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 			}
 		}
 	}
+	
+	/**
+	 * Eliminate several nodes in one run. 
+	 * This combines partial applications of several rules: 
+	 * 	- we eliminate all nodes with fill value of at most 1 - these are either simplicial, or almost simplicial
+	 * 	- we eliminate nodes with degree <=3, and fill-in value of <= 2 - this is the triangle rule.
+	 * Before this, make sure that no nodes with degree <= 2 have not been eliminated yet. 
+	 * @param work
+	 * @return Whether at least one node has been eliminated or not. 
+	 */
+	private boolean singlePass(Graph<T> work){
+		int numApplications = 0;
+		boolean ret = false;
+		Queue<T> q = new LinkedList<>();
+		Set<T> onQueue = new HashSet<>();
+		for(T v : work){
+			if(work.getNeighborhood(v).size() <= 3 || work.getFillInValue(v) <= 1){
+				q.add(v);
+				onQueue.add(v);
+			}
+		}
+		while(!q.isEmpty()){
+			T v = q.poll();
+			int fillValue = work.getFillInValue(v);
+			onQueue.remove(v);
+			boolean eliminate = fillValue < 1 || (fillValue == 1 && work.getNeighborhood(v).size() <= low);
+			if(!eliminate){
+				// Check if triangle rule is applicable: In this case, the node has a degree of 3, and fillIn-value at most 2, as one of the edges between its neighbours exists
+				eliminate = work.getNeighborhood(v).size() == 3 && fillValue <= 2;
+			}
+			if(eliminate){
+				numApplications++;
+				ret = true;
+				for(T n : work.getNeighborhood(v)){
+					if(!onQueue.contains(n)){
+						onQueue.add(n);
+						q.add(n);
+					}
+				}
+				Set<T> newBag = new HashSet<>();
+				newBag.add(v);
+				newBag.addAll(work.getNeighborhood(v));
+				bags.push(newBag);
+				if (fillValue < 1) low = Math.max(low, newBag.size()-1);
+				work.eliminateVertex(v);
+				
+			}
+		}
+		LOG.info("Ran single-pass, eliminated " + numApplications + " nodes! ");
+		return ret;
+	}
+	
+	
 
 	/**
 	 * If the graph contains an isolated vertex v, create a bag {v} and remove the vertex.
@@ -206,7 +269,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 			if (work.getNeighborhood(v).size() == 1) {
 				Set<T> set = new HashSet<>();
 				set.add(v);
-				set.add(work.getNeighborhood(v).get(0));
+				set.addAll(work.getNeighborhood(v));
 				work.removeVertex(v);
 				low = Math.max(low, 2);
 				return set;
@@ -249,9 +312,11 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		low = Math.max(low, 4);
 		for (T v : work) {
 			if (work.getNeighborhood(v).size() != 3) continue;
-			T x = work.getNeighborhood(v).get(0);
-			T y = work.getNeighborhood(v).get(1);
-			T z = work.getNeighborhood(v).get(2);
+			ArrayList<T> neighbours = new ArrayList<>();
+			neighbours.addAll(work.getNeighborhood(v));
+			T x = neighbours.get(0);
+			T y = neighbours.get(1);
+			T z = neighbours.get(2);
 			if (work.isAdjacent(x, y) || work.isAdjacent(x, z) || work.isAdjacent(y, z)) {
 				Set<T> set = new HashSet<>();
 				set.add(v);
@@ -300,50 +365,57 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 	 * @return
 	 */
 	private Set<T> cubeRule(Graph<T> work) {
-		for (T v : work) {
-			if (work.getNeighborhood(v).size() != 3) continue;
-			T x = work.getNeighborhood(v).get(0);
-			if (work.getNeighborhood(x).size() != 3) continue;
-			T y = work.getNeighborhood(v).get(1);
-			if (work.getNeighborhood(y).size() != 3) continue;
-			T z = work.getNeighborhood(v).get(2);
-			if (work.getNeighborhood(z).size() != 3) continue;
-			
-			// v is center of cube with neighbors x,y,z, compute other corners a,b,c
-			T a = work.getNeighborhood(x).get(0);
-			if (a.compareTo(v) == 0) a = work.getNeighborhood(x).get(2); 
-			T b = work.getNeighborhood(x).get(1);
-			if (b.compareTo(v) == 0) b = work.getNeighborhood(x).get(2);
-			
-			if ( !(work.isAdjacent(y, a) && work.isAdjacent(z, b)) ) {
-				T tmp = a;
-				a = b;
-				b = tmp;
+			for (T v : work) {
+				if (work.getNeighborhood(v).size() != 3) continue;
+				ArrayList<T> neighboursOfV = new ArrayList<>();
+				neighboursOfV.addAll(work.getNeighborhood(v));
+				for(T x : neighboursOfV)
+					if(work.getNeighborhood(x).size() != 3)
+						continue;
+
+				List<T> N = new ArrayList<>(work.getNeighborhood(v));
+				T x = N.get(0);
+				if (work.getNeighborhood(x).size() != 3) continue;
+				T y = N.get(1);
+				if (work.getNeighborhood(y).size() != 3) continue;
+				T z = N.get(2);
+				if (work.getNeighborhood(z).size() != 3) continue;
+
+				// v is center of cube with neighbors x,y,z, compute other corners a,b,c
+				N = new ArrayList<>(work.getNeighborhood(x));
+				T a = N.get(0);
+				if (a.compareTo(v) == 0) a = N.get(2);
+				T b = N.get(1);
+				if (b.compareTo(v) == 0) b = N.get(2);
+
+				if ( !(work.isAdjacent(y, a) && work.isAdjacent(z, b)) ) {
+					T tmp = a;
+					a = b;
+					b = tmp;
+				}
+				if ( !(work.isAdjacent(y, a) && work.isAdjacent(z, b)) ) continue;
+
+				T c = null;
+				for (T tmp : work.getNeighborhood(y)) {
+					if (tmp.compareTo(v) != 0 && work.isAdjacent(z, tmp)) c = tmp;
+				}
+				if (c == null) continue;
+
+				Set<T> set = new HashSet<>();
+				set.add(z);
+				set.add(b);
+				set.add(c);
+				set.add(v);
+				work.removeVertex(z);
+				if (!work.isAdjacent(a, b)) work.addEdge(a, b);
+				if (!work.isAdjacent(a, c)) work.addEdge(a, c);
+				if (!work.isAdjacent(a, v)) work.addEdge(a, v);
+				if (!work.isAdjacent(b, c)) work.addEdge(b, c);
+				if (!work.isAdjacent(b, v)) work.addEdge(b, v);
+				if (!work.isAdjacent(c, v)) work.addEdge(c, v);
+				return set;
 			}
-			if ( !(work.isAdjacent(y, a) && work.isAdjacent(z, b)) ) continue;
-			
-			T c = null;
-			for (T tmp : work.getNeighborhood(y)) {
-				if (tmp.compareTo(v) != 0 && work.isAdjacent(z, tmp)) c = tmp;
-			}			
-			if (c == null) continue;
-			
-			Set<T> set = new HashSet<>();
-			set.add(z);
-			set.add(b);
-			set.add(c);
-			set.add(v);
-			work.removeVertex(z);
-			if (!work.isAdjacent(a, b)) work.addEdge(a, b);
-			if (!work.isAdjacent(a, c)) work.addEdge(a, c);
-			if (!work.isAdjacent(a, v)) work.addEdge(a, v);
-			if (!work.isAdjacent(b, c)) work.addEdge(b, c);
-			if (!work.isAdjacent(b, v)) work.addEdge(b, v);
-			if (!work.isAdjacent(c, v)) work.addEdge(c, v);
-			
-			return set;
-		}
-		
+
 		// done
 		return null;
 	}
@@ -361,7 +433,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		Set<T> set = new HashSet<>();
 		set.add(v);
 		set.addAll(work.getNeighborhood(v));
-		low = Math.max(low, set.size());
+		low = Math.max(low, set.size()-1);
 		work.removeVertex(v);
 		return set;
 	}

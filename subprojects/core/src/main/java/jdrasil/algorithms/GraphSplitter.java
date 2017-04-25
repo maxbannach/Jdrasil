@@ -168,10 +168,10 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
     protected TreeDecomposition<T> compute() {
 
         // if the graph fits in a single bag we have neither to separate it further nor to handle it as atom
-        if (graph.getVertices().size() <= low+1) {
+        if (graph.getCopyOfVertices().size() <= low+1) {
             LOG.info("Atom fits in a single bag");
             TreeDecomposition<T> oneBag = new TreeDecomposition<T>(graph);
-            oneBag.createBag(graph.getVertices());
+            oneBag.createBag(graph.getCopyOfVertices());
             return oneBag;
         }
 
@@ -185,7 +185,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         }
 
         // if the graph is small, we will just solve it
-        if (graph.getVertices().size() < FORK_THRESHOLD) mode = Connectivity.ATOM;
+        if (graph.getCopyOfVertices().size() < FORK_THRESHOLD) mode = Connectivity.ATOM;
 
         // if the graph is connected, we search for biconnected components, that is, we search a separator of size 1
         // such separators are safe since they are cliques
@@ -225,7 +225,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
 
         // if the graph is triconnected, we may search a separator of size 3, i.e., computing 4-connected components
         // note that these separators are safe because we assume the graph has tree width at least 4 (preprocessing)
-        if (mode == Connectivity.TCC && graph.getVertices().size() <= 200) {
+        if (mode == Connectivity.TCC && graph.getNumVertices() <= 200) {
             LOG.info("searching a separator of size three");
             Set<T> S = new HashSet<T>();
             for (T c1 : graph) { // guess first cut vertex
@@ -290,7 +290,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         }
 
         // we found all clique minimal separators, we may now search for almost clique minimal separators
-        if (mode == Connectivity.ACLIQUE && graph.getVertices().size() <= 200) {
+        if (mode == Connectivity.ACLIQUE && graph.getNumVertices() <= 200) {
             LOG.info("searching an almost clique minimal separator");
             Set<T> S = new HashSet<T>();
             for (T c1 : graph) { // guess first cut vertex (the "almost" part of the almost clique
@@ -325,7 +325,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         }
 
         // no further separation possible -> decompose the atom using the provided function
-        LOG.info("Handle atom of size " + graph.getVertices().size());
+        LOG.info("Handle atom of size " + graph.getCopyOfVertices().size());
         return handleAtom.apply(graph);
     }
 

@@ -88,7 +88,7 @@ public class GreedyPathDecomposer <T extends Comparable<T>> implements TreeDecom
 		Bag<T> bPrev=null;
 
 		// Vertices which are not yet chosen to a bag of the path decomposition
-	    Set<T> unchosenV=graph.getVertices();
+	    Set<T> unchosenV=graph.getCopyOfVertices();
 
 	    // deg is the number of neighbors which are not yet chosen to a bag of the path decomposition
 	    Map<T,Integer> deg=new HashMap<T,Integer>();

@@ -95,7 +95,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		this.tree = GraphFactory.emptyGraph();
 		this.numberOfBags = 0;
 		this.width = -1;
-		this.n = graph.getVertices().size();
+		this.n = graph.getCopyOfVertices().size();
 		createdFromPermutation = false;
 	}
 	
@@ -129,7 +129,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	 */
 	public void setGraph(Graph<T> graph) {
 		this.graph = graph;
-		this.n = graph.getVertices().size();
+		this.n = graph.getCopyOfVertices().size();
 	}
 	
 	/**
@@ -155,7 +155,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	 * @param s
 	 * @return
 	 */
-	public List<Bag<T>> getNeighborhood(Bag<T> s) {
+	public Set<Bag<T>> getNeighborhood(Bag<T> s) {
 		return tree.getNeighborhood(s);
 	}
 	
@@ -177,7 +177,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	 * @return
 	 */
 	public Set<Bag<T>> getBags() {
-		return tree.getVertices();
+		return tree.getCopyOfVertices();
 	}
 	
 	/**
@@ -319,7 +319,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		}
 		
 		// reconstruct the path
-		List<Bag<T>> path = new ArrayList<>(tree.getVertices().size());		
+		List<Bag<T>> path = new ArrayList<>(tree.getCopyOfVertices().size());		
 		Bag<T> current = t;
 		while (!predecessor.get(current).equals(current)) {
 			path.add(current);
@@ -361,7 +361,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		boolean stop = false;
 		do{
 			stop = true;
-			for(Bag<T> b: tree.getVertices()){
+			for(Bag<T> b: tree.getCopyOfVertices()){
 				Graph<T> g = toGraph(b);
 				
 				// if the graph is not a clique, improve it
@@ -383,7 +383,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
  * @param b the bag to improve
  */
 	public void improveBag(Bag<T> b){
-		List<Bag<T>> neighbours = tree.getNeighborhood(b);
+		Set<Bag<T>> neighbours = tree.getNeighborhood(b);
 		Graph<T> g = toGraph(b);
 		
 		// compute a minimal separator
@@ -460,7 +460,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	 */
 	private boolean inAnotherBag(T u, T v, Bag<T> b){
 		boolean res = false;
-		for(Bag<T> d : tree.getVertices()){
+		for(Bag<T> d : tree.getCopyOfVertices()){
 			if(d != b && d.contains(u) && d.contains(v)){
 				res = true;
 			}
@@ -474,7 +474,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		res.n = n;
 		res.numberOfBags = numberOfBags;
 		res.width = width;
-		
+		res.createdFromPermutation = createdFromPermutation;
 		return res;
 	}
 	
@@ -534,7 +534,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 			}
 		}
 		
-		numberOfBags=tree.getVertices().size();
+		numberOfBags=tree.getCopyOfVertices().size();
 		int id=1;
 		for (Bag<T> v : tree) {
 			v.id=id++;

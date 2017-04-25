@@ -89,10 +89,10 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 
 		GraphReducer<T> reducer = new GraphReducer<>(graph);
 		Graph<T> reduced = reducer.getProcessedGraph();
-		if (reduced.getVertices().size() == 0) return reducer.getTreeDecomposition();
+		if (reduced.getCopyOfVertices().size() == 0) return reducer.getTreeDecomposition();
 
-		int n = reduced.getVertices().size();
-		LOG.info("Reduced the graph from " + graph.getVertices().size() + " to " + n + " vertices");
+		int n = reduced.getCopyOfVertices().size();
+		LOG.info("Reduced the graph from " + graph.getCopyOfVertices().size() + " to " + n + " vertices");
 
 		// first compute lower and upper bounds on the tree-width
 		int lb = new MinorMinWidthLowerbound<>(reduced).call();

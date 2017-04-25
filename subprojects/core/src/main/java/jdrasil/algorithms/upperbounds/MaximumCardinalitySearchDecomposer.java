@@ -62,8 +62,8 @@ public class MaximumCardinalitySearchDecomposer<T extends Comparable<T>> impleme
 	 */
 	public MaximumCardinalitySearchDecomposer(Graph<T> graph) {
 		this.graph = graph;
-		this.n = graph.getVertices().size();
-		this.unlabeledVertices = new LinkedList<>(graph.getVertices());
+		this.n = graph.getCopyOfVertices().size();
+		this.unlabeledVertices = new LinkedList<>(graph.getCopyOfVertices());
 		this.labeldNeighbors = new HashMap<>();
 	}
 	
@@ -87,12 +87,12 @@ public class MaximumCardinalitySearchDecomposer<T extends Comparable<T>> impleme
 	public TreeDecomposition<T> call() throws Exception {
 		
 		// catch the empty graph
-		if (graph.getVertices().size() == 0) return new TreeDecomposition<T>(graph);
+		if (graph.getCopyOfVertices().size() == 0) return new TreeDecomposition<T>(graph);
 		
 		List<T> permutation = new LinkedList<T>();
 		
 		// each vertex has an entry
-		for (T v : graph.getVertices()) {
+		for (T v : graph.getCopyOfVertices()) {
 			labeldNeighbors.put(v, 0);
 		}
 		

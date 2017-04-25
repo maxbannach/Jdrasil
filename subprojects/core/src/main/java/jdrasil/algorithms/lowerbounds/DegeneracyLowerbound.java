@@ -60,7 +60,7 @@ public class DegeneracyLowerbound<T extends Comparable<T>> implements Lowerbound
 		}
 		
 		// process the graph
-		while (!graph.getVertices().isEmpty()) {
+		while (!graph.getCopyOfVertices().isEmpty()) {
 			// find minimum degree
 			T v = null;
 			for (T w : graph) {

@@ -80,7 +80,7 @@ public class CliqueMinimalSeparator<T extends Comparable<T>> extends Invariant<T
         Graph<T> H = GraphFactory.copy(graph);
 
         // minimal elimination order
-        List<T> alpha = new ArrayList<T>(graph.getVertices().size());
+        List<T> alpha = new ArrayList<T>(graph.getCopyOfVertices().size());
 
         // set of generators of minimal separators in H
         Set<T> X = new HashSet<T>();
@@ -91,9 +91,9 @@ public class CliqueMinimalSeparator<T extends Comparable<T>> extends Invariant<T
         int s = -1;
 
         // compute the elimination order
-        for (int n = graph.getVertices().size()-forbidden.size(), i = 0; i < n; i++) {
+        for (int n = graph.getCopyOfVertices().size()-forbidden.size(), i = 0; i < n; i++) {
             // choose a vertex with minimal label
-            T x = G.getVertices().stream().max( (a,b) -> Integer.compare(label.get(a), label.get(b))).get();
+            T x = G.getCopyOfVertices().stream().max( (a,b) -> Integer.compare(label.get(a), label.get(b))).get();
             Set<T> Y = new HashSet<T>(G.getNeighborhood(x));
 
             // may add x to the generators

@@ -52,7 +52,7 @@ Jdrasil comes with a manual and JavaDocs. To build the manual, an up-to-date Lua
 The manual will be placed in `build/docs/manual/manual.pdf` and the JavaDocs in `build/docs/javadoc`.
 
 ## Build for PACE
-Jdrasil provides a Gradle task that builds the PACE-version of Jdrasil. In particular, this will build Jdrasil, install the Glucose SAT solver as upgrade, and will create the above mentioned start scripts.
+Jdrasil provides a Gradle task that builds the PACE-version of Jdrasil. In particular, this will build Jdrasil and create the above mentioned start scripts.
 ```
 ./gradlew pace
 ```

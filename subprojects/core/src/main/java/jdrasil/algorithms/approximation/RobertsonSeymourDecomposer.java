@@ -70,7 +70,7 @@ public class RobertsonSeymourDecomposer<T extends Comparable<T>> implements Tree
      */
     public RobertsonSeymourDecomposer(Graph<T> graph) {
         this.graph = graph;
-        this.n = graph.getVertices().size();
+        this.n = graph.getCopyOfVertices().size();
         this.m = graph.getNumberOfEdges();
         this.lb = 1;
         this.ub = n;

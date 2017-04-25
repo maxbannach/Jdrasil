@@ -94,16 +94,16 @@ public class MinorSafeSeparator<T extends Comparable<T>> extends Invariant<T, In
         // check if the condition is satisfied for every component
         for (Set<T> C : components) {
             Set<T> R = new HashSet<>();
-            R.addAll(graph.getVertices());
+            R.addAll(graph.getCopyOfVertices());
             R.removeAll(C);
             Graph<T> tmp = GraphFactory.graphFromSubgraph(graph, R);
 
             // iterate over all edges {v,w} in G[V\C] that are not connected to S
-            for (T v : graph.getVertices()) {
+            for (T v : graph.getCopyOfVertices()) {
                 if (C.contains(v) || S.contains(v)) continue;
                 for (T w : graph.getNeighborhood(v)) {
                     if (S.contains(w) || v.compareTo(w) >= 0) continue;
-                    if (tmp.getVertices().contains(v) && tmp.getVertices().contains(w)) tmp.contract(v,w);
+                    if (tmp.getCopyOfVertices().contains(v) && tmp.getCopyOfVertices().contains(w)) tmp.contract(v,w);
                 }
             }
 
@@ -142,7 +142,7 @@ public class MinorSafeSeparator<T extends Comparable<T>> extends Invariant<T, In
         // extract the model
         Map<T, Boolean> model = new HashMap<>();
         if (this.safeSeparator != null)
-            for (T v : graph.getVertices()) model.put(v, this.safeSeparator.contains(v));
+            for (T v : graph.getCopyOfVertices()) model.put(v, this.safeSeparator.contains(v));
         return model;
     }
 

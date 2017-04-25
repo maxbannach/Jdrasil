@@ -67,7 +67,7 @@ public class LimitedGraphSearch<T extends Comparable<T>> implements TreeDecompos
      * @param graph
      */
     public LimitedGraphSearch(Graph<T> graph) {
-        this(graph, graph.getVertices().size()+1);
+        this(graph, graph.getCopyOfVertices().size()+1);
     }
 
     /**

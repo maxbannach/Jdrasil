@@ -52,7 +52,7 @@ public class PathImprovedGraph<T extends Comparable<T>> extends Preprocessor<T> 
                     SA.add(v);
                     Set<T> SB = new HashSet<T>();
                     SB.add(w);
-                    MinimalVertexSeparator<T> MVS = new MinimalVertexSeparator<T>(graph, graph.getVertices(), SA, SB, k - 1);
+                    MinimalVertexSeparator<T> MVS = new MinimalVertexSeparator<T>(graph, graph.getCopyOfVertices(), SA, SB, k - 1);
                     MVS.setDisjointToS(true);
                     Set<T> vertexSeparator = MVS.getSeparatorAsSet();
 
