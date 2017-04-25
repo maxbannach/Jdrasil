@@ -66,6 +66,15 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     /** The number of vertices of the graph. */
     private int n;
 
+    /** The algorithm can run in two modes: improving a lower- or an upper-bound. */
+    enum Mode {
+        improveLowerbound,
+        improveUpperbound;
+    }
+
+    /** The selected mode of the algorithm – default is improve lowerbound. */
+    private Mode mode;
+
     /**
      * Queue of subgraphs \(S\) on which the robber can be caught if the cops stand on \(N(S)\), i.e., winning configurations
      * for the cops.
@@ -98,6 +107,22 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         this.memory = new BitSetTrie();
         this.from   = new HashMap<>();
         this.tries  = new HashMap<>();
+        setMode(Mode.improveLowerbound);
+    }
+
+    /**
+     * Set the mode the algorithm is running in. The algorithm can either start by computing a lower- or upper-bound and
+     * then improve it.
+     *
+     * Improving lower-bounds is usually cheaper, but since lower-bounds are not so strong there may be many computations
+     * if the real tree width is large.
+     * Improving upper-bounds is usually more expensive, but may be favored if the heuristic finds good solutions, say k+1.
+     * The later can of course not be guaranteed but is often the case.
+     *
+     * @param mode
+     */
+    public void setMode(Mode mode) {
+        this.mode = mode;
     }
 
     /**
@@ -146,37 +171,28 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
             return true;
         }
 
-        if (S.cardinality() < n - 2*k) {
+        // Prune 3: if we have handled a superset of S and N(S), we can prune S
+        BitSet mask = (BitSet) S.clone();
+        mask.or(neighbors);
+        if (memory.getSuperSets(mask).iterator().hasNext()) {
+            this.memory.insert(S);
+            return false;
+        }
 
-            // Prune 3: if N(S)+delta is not a potential maximal clique we can discard it
-            BitSet omega = (BitSet) neighbors.clone();
-            omega.or(delta);
-            if (!graph.isPotentialMaximalClique(omega)) return false;
-
-            // Prune 4: if we have handled a superset of S and N(S), we can prune S
-            BitSet mask = (BitSet) S.clone();
-            mask.or(neighbors);
-            if (memory.getSuperSets(mask).iterator().hasNext()) {
-                memory.insert(S);
+        // Prune 4: if we have handled a superset S' of S such that N(S') is a subset of N(S) we can prune
+        for (BitSet Sprime : memory.getSuperSets(S)) {
+            BitSet neighborsPrime = graph.exteriorBorder(Sprime);
+            boolean cut = true;
+            for (int v = neighborsPrime.nextSetBit(0); v >= 0; v = neighborsPrime.nextSetBit(v + 1)) {
+                if (!neighbors.get(v)) {
+                    cut = false;
+                    break;
+                }
+            }
+            if (cut) {
+                this.memory.insert(S);
                 return false;
             }
-
-            // Prune 5: if we have handled a superset S' of S such that N(S') is a subset of N(S) we can prune
-            for (BitSet Sprime : memory.getSuperSets(S)) {
-                BitSet neighborsPrime = graph.exteriorBorder(Sprime);
-                boolean cut = true;
-                for (int v = neighborsPrime.nextSetBit(0); v >= 0; v = neighborsPrime.nextSetBit(v + 1)) {
-                    if (!neighbors.get(v)) {
-                        cut = false;
-                        break;
-                    }
-                }
-                if (cut) {
-                    memory.insert(S);
-                    return false;
-                }
-            }
-
         }
 
         // Store the new win-configuration in the priority queue.
@@ -234,56 +250,33 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
                 if (offer(newS, k, S)) return true;
 
                 // 3. try to glue S to other win-configurations
-//                Stack<BitSet> stack = new Stack<>();
-//                stack.push(S);
-//                while (!stack.isEmpty()) {
-//                    BitSet current = (BitSet) stack.pop().clone();
-//                    BitSet currentNeighbors = graph.exteriorBorder(current);
-//                    BitSet mask = (BitSet) current.clone();
-//                    mask.or(currentNeighbors);
-//                    mask.flip(0,n);
-//                    for (BitSet toGlue : tries.get(v).getSubSets(mask)) {
-//                        BitSet glueNeighbors = graph.exteriorBorder(toGlue);
-//                        glueNeighbors.or(currentNeighbors);
-//                        if (glueNeighbors.cardinality() > k+1) continue; // not enough cops
-//                        newS = (BitSet) current.clone();
-//                        newS.or(toGlue);
-//
-//                        int absorbable = graph.absorbable(newS);
-//                        if (absorbable < 0 || absorbable == v) {
-//                            BitSet tmp = (BitSet) newS.clone();
-//                            tmp.set(v); // may prevent us from offering
-//                            graph.saturate(tmp);
-//                            if (offer(tmp, k, current, toGlue)) return true;
-//                        }
-//                        if (absorbable < 0) {
-//                            from.put(newS, new BitSet[]{current, toGlue});
-//                            stack.push(newS);
-//                        }
-//
-//                    }
-//                }
+                Stack<BitSet> stack = new Stack<>();
+                stack.push(S);
+                while (!stack.isEmpty()) {
+                    BitSet current = (BitSet) stack.pop().clone();
+                    BitSet currentNeighbors = graph.exteriorBorder(current);
+                    BitSet mask = (BitSet) current.clone();
+                    mask.or(currentNeighbors);
+                    mask.flip(0,n);
+                    for (BitSet toGlue : tries.get(v).getSubSets(mask)) {
+                        BitSet glueNeighbors = graph.exteriorBorder(toGlue);
+                        glueNeighbors.or(currentNeighbors);
+                        if (glueNeighbors.cardinality() > k+1) continue; // not enough cops
+                        newS = (BitSet) current.clone();
+                        newS.or(toGlue);
 
-                BitSet mask = (BitSet) S.clone();
-                mask.flip(0, n); // search in V\S
-                mask.andNot(delta);
-                for (BitSet toGlue : tries.get(v).getSubSets(mask)) {
-                    newS = (BitSet) toGlue.clone();
-                    BitSet glueDelta = graph.exteriorBorder(newS);
-                    glueDelta.or(delta);
-                    if (glueDelta.cardinality() > k+1) continue; // not enough cops to glue
+                        int absorbable = graph.absorbable(newS);
+                        if (absorbable < 0 || absorbable == v) {
+                            BitSet tmp = (BitSet) newS.clone();
+                            tmp.set(v); // may prevent us from offering
+                            graph.saturate(tmp);
+                            if (offer(tmp, k, current, toGlue)) return true;
+                        }
+                        if (absorbable < 0) {
+                            from.put(newS, new BitSet[]{current, toGlue});
+                            stack.push(newS);
+                        }
 
-                    // glue with S
-                    int size = queue.size();
-                    newS.or(S);
-                    graph.saturate(newS);
-                    if (offer(newS, k, S, toGlue)) return true;
-
-                    // glue with S and v
-                    if (queue.size() == size) {
-                        newS.set(v);
-                        graph.saturate(newS);
-                        if (offer(newS, k, S, toGlue)) return true;
                     }
                 }
 
@@ -305,6 +298,9 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     private Bag<T> extractTreeDecomposition(BitSet S, TreeDecomposition<T> td) {
         // 1. create current bag
         BitSet bagVertices = (BitSet) S.clone();
+
+        LOG.info(S + " -> " + (from.get(S) != null ? Arrays.toString(from.get(S)) : "null"));
+
         for (BitSet f : from.get(S)) bagVertices.andNot(f); // reduce to delta
         bagVertices.or(graph.exteriorBorder(S));            // add neighbors
         Bag<T> bag = td.createBag(graph.getVertexSet(bagVertices));
@@ -322,33 +318,44 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     @Override
     public TreeDecomposition<T> call() throws Exception {
 
-//        TreeDecomposition<T> td = new GreedyPermutationDecomposer<T>(graph.getGraph()).call();
-//        BitSet all = new BitSet();
-//        all.set(0,n);
-//
-//        int k = td.getWidth() - 1;
-//        LOG.info(String.format("tree width <= %2d ( heuristic )", k+1));
-//        while (decompose(k)) {
-//            LOG.info(String.format("tree width <= %2d ( %4d configurations )", k, configurations));
-//            td = new TreeDecomposition<>(graph.getGraph());
-//            extractTreeDecomposition(all, td);
-//            k = k - 1;
-//        }
-//        LOG.info(String.format("tree width > %3d ( %4d configurations )", k, configurations));
+        // the decomposition we are going to compute
+        TreeDecomposition<T> td = null;
+        int k = 0;
 
-
-        int k = 1;
-        while (!decompose(k)) {
-            LOG.info(String.format("tree width > %2d ( %4d configurations )", k, configurations));
-            k++;
-        }
-        LOG.info(String.format("tree width = %2d ( %4d configurations )", k, configurations));
-
-        // extract constructed tree decomposition
-        TreeDecomposition<T> td = new TreeDecomposition<T>(graph.getGraph());
+        // helper mask for the whole graph
         BitSet all = new BitSet();
         all.set(0,n);
-        extractTreeDecomposition(all, td);
+
+        // either improve a lower- or an upper-bound
+        switch (this.mode) {
+            case improveLowerbound:
+                k = new MinorMinWidthLowerbound<>(graph.getGraph()).call();
+                LOG.info(String.format("tree width > %2d ( heuristic )", k-1 ));
+                while (!decompose(k)) {
+                    LOG.info(String.format("tree width > %2d ( %4d configurations )", k, configurations));
+                    k++;
+                }
+                LOG.info(String.format("tree width = %2d ( %4d configurations )", k, configurations));
+
+                // extract constructed tree decomposition
+                td = new TreeDecomposition<T>(graph.getGraph());
+                extractTreeDecomposition(all, td);
+                break;
+
+            case improveUpperbound:
+                td = new GreedyPermutationDecomposer<T>(graph.getGraph()).call();
+
+                k = td.getWidth() - 1;
+                LOG.info(String.format("tree width <= %2d ( heuristic )", k+1));
+                while (decompose(k)) {
+                    LOG.info(String.format("tree width <= %2d ( %4d configurations )", k, configurations));
+                    td = new TreeDecomposition<>(graph.getGraph());
+                    extractTreeDecomposition(all, td);
+                    k = k - 1;
+                }
+                LOG.info(String.format("tree width > %3d ( %4d configurations )", k, configurations));
+                break;
+        }
 
         // done
         return td;
