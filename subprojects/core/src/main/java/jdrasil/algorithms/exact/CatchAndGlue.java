@@ -67,7 +67,7 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     private int n;
 
     /** The algorithm can run in two modes: improving a lower- or an upper-bound. */
-    enum Mode {
+    public enum Mode {
         improveLowerbound,
         improveUpperbound;
     }
@@ -298,8 +298,6 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
     private Bag<T> extractTreeDecomposition(BitSet S, TreeDecomposition<T> td) {
         // 1. create current bag
         BitSet bagVertices = (BitSet) S.clone();
-
-        LOG.info(S + " -> " + (from.get(S) != null ? Arrays.toString(from.get(S)) : "null"));
 
         for (BitSet f : from.get(S)) bagVertices.andNot(f); // reduce to delta
         bagVertices.or(graph.exteriorBorder(S));            // add neighbors

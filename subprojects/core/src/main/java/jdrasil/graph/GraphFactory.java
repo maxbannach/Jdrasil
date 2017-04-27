@@ -186,25 +186,22 @@ public class GraphFactory {
 	 * @return graph that has exactly the same edge relation as the given graph
 	 */
 	public static <T extends Comparable<T>> Graph<T> copy(Graph<T> graph) {
-		return new Graph<T>(graph);
-//		Graph<T> copy = GraphFactory.emptyGraph();
-//		
-//		
-//		
-//		
-//		// copy vertices
-//		for (T v : graph) copy.addVertex(v);
-//		
-//		// copy edges
-//		for (T v : graph) {
-//			for (T w : graph.getNeighborhood(v)) {
-//				if (v.compareTo(w) < 0) {
-//					copy.addEdge(v, w);
-//				}
-//			}
-//		} 
-//		
-//		return copy;
+//		return new Graph<T>(graph);
+		Graph<T> copy = GraphFactory.emptyGraph();
+
+		// copy vertices
+		for (T v : graph) copy.addVertex(v);
+
+		// copy edges
+		for (T v : graph) {
+			for (T w : graph.getNeighborhood(v)) {
+				if (v.compareTo(w) < 0) {
+					copy.addEdge(v, w);
+				}
+			}
+		}
+
+		return copy;
 	}
 	
 }

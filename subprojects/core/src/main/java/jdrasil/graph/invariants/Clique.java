@@ -52,6 +52,7 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 	 * @return
 	 */
 	private Map<T, Boolean> computeModelWithSAT() {
+
 		// compute a bijection from the vertices to {1,...,n}
 		Map<T, Integer> vertToInt = new HashMap<>();
 		Map<Integer, T> intToVert = new HashMap<>();
@@ -69,6 +70,7 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 				phi.addClause(-1*vertToInt.get(v), -1*vertToInt.get(u));
 			}
 		}
+		if (phi.numberOfClauses() == 0) return null; // no edges
 
 		// solve the formula
 		int k = 1;
