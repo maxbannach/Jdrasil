@@ -82,6 +82,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	
 	private boolean logEdgesInNeighbourhood;
 	
+	private boolean isDirected;
+	
 	/**
 	 * Package private constructor, only initialize data structures.
 	 */
@@ -90,15 +92,12 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		adjacencies = new HashMap<>();
 		edgesInNeighborhood = new HashMap<>();
 		setLogEdgesInNeighbourhood(true);
+		isDirected = false;
 	}
 	
 	public Graph(Graph<T> original){
-//		adjacencyList = new HashMap<>();
+		isDirected = original.isDirected;
 		setLogEdgesInNeighbourhood(original.isLogEdgesInNeighbourhood());
-//		for(T v : original.adjacencyList.keySet()){
-//			adjacencyList.put(v,  new ArrayList<>());
-//			adjacencyList.get(v).addAll(original.adjacencyList.get(v));
-//		}
 		
 		adjacencies = new HashMap<>();
 		for(T v : original.adjacencies.keySet()){
@@ -184,12 +183,18 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * @param v - the endpoint of the edge
 	 */
 	public void addDirectedEdge(T u, T v) {
+		isDirected = true;
+		addHalfOfEdge(u, v);
+			
+	}
+	
+	
+	private void addHalfOfEdge(T u, T v){
 		addVertex(u);
 		addVertex(v);
 		if (adjacencies.get(u).contains(v)) return;
 		m++;
-//		adjacencyList.get(u).add(v);
-		adjacencies.get(u).add(v);		
+		adjacencies.get(u).add(v);	
 	}
 	
 	/**
@@ -202,13 +207,15 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * @param v - an endpoint of the edge
 	 */
 	public void addEdge(T u, T v) {
-		
+		boolean updateEdgeStatistics = !isDirected;					// Do not log fill-values if this graph is undirected.
+		if(updateEdgeStatistics && adjacencies.get(u).contains(v))
+			return;
 		// add symetric edge
-		addDirectedEdge(u, v);
-		addDirectedEdge(v, u);
+		addHalfOfEdge(u, v);
+		addHalfOfEdge(v, u);
 		
 		// update number of neighbor edges value
-		if(logEdgesInNeighbourhood){
+		if(updateEdgeStatistics && logEdgesInNeighbourhood){
 			for (T x : getNeighborhood(u)) {
 				if (isAdjacent(x, v)) {
 					edgesInNeighborhood.put(x, edgesInNeighborhood.get(x)+1);
@@ -222,12 +229,23 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	/**
 	 * Remove a given directed edge from the graph.
 	 * This method costs O(1), as operations are performed with hashing.
+	 * This method may be used from the outside, and will turn the graph into a directed graph. 
 	 * @param u
 	 * @param v
 	 */
 	public void removeDirectedEdge(T u, T v) {
+		isDirected = true;
+		removeHalfOfEdge(u, v);
+	}
+	
+	/**
+	 * Internal method to remove a directed edge. 
+	 * As all undirected edges are represented by two directed edges, this method is used to remove both of the directed representants.
+	 * @param u
+	 * @param v
+	 */
+	private void removeHalfOfEdge(T u, T v){
 		m--;
-//		adjacencyList.get(u).remove(v);
 		adjacencies.get(u).remove(v);
 	}
 	
@@ -239,8 +257,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	public void removeEdge(T u, T v) {
 		
 		// remove symmetric edge
-		removeDirectedEdge(u, v);
-		removeDirectedEdge(v, u);
+		removeHalfOfEdge(u, v);
+		removeHalfOfEdge(v, u);
 		
 		// update number of neighbor edges value
 		if(logEdgesInNeighbourhood){
@@ -302,7 +320,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	public ContractionInformation contract(T v, T w) {
 		
 		ContractionInformation info = new ContractionInformation(v, w);
-		
+		boolean oldLogEdges = logEdgesInNeighbourhood;			// If "logEdgesInNeighbourhood" was set to false by the greedy algorithm, this breaks the updates here. Use the old method for a while!
+		logEdgesInNeighbourhood = true;
 		// add the neighbors of w to N(v)
 		for (T u : getNeighborhood(w)) {
 			info.addEdges.add(u);
@@ -314,7 +333,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		
 		// delete w
 		removeVertex(w);
-		
+		logEdgesInNeighbourhood = oldLogEdges;
 		// done
 		return info;
 	}
@@ -324,9 +343,12 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 * @param info
 	 */
 	public void deContract(ContractionInformation info) {
+		boolean oldLogEdges = logEdgesInNeighbourhood;			// If "logEdgesInNeighbourhood" was set to false by the greedy algorithm, this breaks the updates here. Use the old method for a while!
+		logEdgesInNeighbourhood = true;
 		addVertex(info.w);
 		for (T u : info.addEdges) addEdge(u, info.w);
 		for (T u : info.removeEdges) removeEdge(u, info.v);
+		logEdgesInNeighbourhood = oldLogEdges;
 	}
 	
 	/**
@@ -718,6 +740,8 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	 */
 	public int getFillInValue(T v) {
 		int delta = getNeighborhood(v).size();
+		if(isDirected)
+			LOG.warning("Requesting fill-values of a directed graph!");
 		return (delta*delta-delta)/2 - edgesInNeighborhood.get(v);
 	}
 	
