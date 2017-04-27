@@ -317,7 +317,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
             Set<T> S = new MinorSafeSeparator<>(graph).getSeparator();
             if (S != null) {
                 LOG.info("found: " + S);
-                return forkOnSeparator(S, Connectivity.CC);
+                return forkOnSeparator(S, Connectivity.MINOR);
             }
             // found none, done with splitting
             mode = Connectivity.ATOM;

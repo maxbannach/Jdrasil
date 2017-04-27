@@ -78,6 +78,14 @@ public class MinorSafeSeparator<T extends Comparable<T>> extends Invariant<T, In
         return null;
     }
 
+    class NonEdge {
+        T v, w;
+        public NonEdge(T v, T w) {
+            this.v = v;
+            this.w = w;
+        }
+    }
+
     /**
      * Checks if the given separator is minor-safe, that is, if a clique on S is contained in G[V\C] for each component C
      * in G[V\S]. This method is greedy and makes false-negative errors, i.e., if S is not minor-safe this will always be
@@ -98,30 +106,82 @@ public class MinorSafeSeparator<T extends Comparable<T>> extends Invariant<T, In
             R.removeAll(C);
             Graph<T> tmp = GraphFactory.graphFromSubgraph(graph, R);
 
-            // iterate over all edges {v,w} in G[V\C] that are not connected to S
-            for (T v : graph.getCopyOfVertices()) {
-                if (C.contains(v) || S.contains(v)) continue;
-                for (T w : graph.getNeighborhood(v)) {
-                    if (S.contains(w) || v.compareTo(w) >= 0) continue;
-                    if (tmp.getCopyOfVertices().contains(v) && tmp.getCopyOfVertices().contains(w)) tmp.contract(v,w);
-                }
-            }
+//            // iterate over all edges {v,w} in G[V\C] that are not connected to S
+//            for (T v : graph.getCopyOfVertices()) {
+//                if (C.contains(v) || S.contains(v)) continue;
+//                for (T w : graph.getNeighborhood(v)) {
+//                    if (S.contains(w) || v.compareTo(w) >= 0) continue;
+//                    if (tmp.getCopyOfVertices().contains(v) && tmp.getCopyOfVertices().contains(w)) tmp.contract(v,w);
+//                }
+//            }
+//
+//            // iterate over all non-edges {v,w} in S
+//            for (T v : S) {
+//                for (T w : S) {
+//                    if (tmp.isAdjacent(v, w) || v.compareTo(w) >= 0) continue;
+//                    List<T> common = new LinkedList<>();
+//                    common.addAll(tmp.getNeighborhood(v));
+//                    common.retainAll(tmp.getNeighborhood(w));
+//                    common.removeAll(S);
+//                    if (common.size() == 0) return false; // found a component in which we can not turn S into a clique
+//                    T x = common.get(RandomNumberGenerator.nextInt(common.size()));
+//                    if (RandomNumberGenerator.nextBoolean()) {
+//                        tmp.contract(v,x);
+//                    } else {
+//                        tmp.contract(w,x);
+//                    }
+//                }
+//            }
 
-            // iterate over all non-edges {v,w} in S
+            List<NonEdge> missing = new ArrayList<>(S.size());
             for (T v : S) {
                 for (T w : S) {
-                    if (tmp.isAdjacent(v, w) || v.compareTo(w) >= 0) continue;
-                    List<T> common = new LinkedList<>();
-                    common.addAll(tmp.getNeighborhood(v));
-                    common.retainAll(tmp.getNeighborhood(w));
-                    common.removeAll(S);
-                    if (common.size() == 0) return false; // found a component in which we can not turn S into a clique
+                    if (v.compareTo(w) >= 0 || tmp.isAdjacent(v, w)) continue;
+                    missing.add(new NonEdge(v, w));
+                }
+            }
+            Collections.shuffle(missing); //TODO: use jdrasil randomness
+
+            for (NonEdge e : missing) {
+                if (tmp.isAdjacent(e.v, e.w)) continue; // already completed
+
+                // compute common neighbors
+                List<T> common = new ArrayList<>();
+                common.addAll(tmp.getNeighborhood(e.v));
+                common.retainAll(tmp.getNeighborhood(e.w));
+                common.removeAll(S);
+                if (common.size() > 0) {
+                    // Test 1: if we have a common neighbor, just contract one of them to create the edge
                     T x = common.get(RandomNumberGenerator.nextInt(common.size()));
                     if (RandomNumberGenerator.nextBoolean()) {
-                        tmp.contract(v,x);
+                        tmp.contract(e.v, x);
                     } else {
-                        tmp.contract(w,x);
+                        tmp.contract(e.w, x);
                     }
+                } else {
+                    // Test 2: search a path that we can contract via BFS
+                    Queue<T> queue = new LinkedList<>();
+                    queue.offer(e.v);
+                    HashMap<T, T> pre = new HashMap<>();
+                    for (T x : S) pre.put(x, x);
+                    pre.remove(e.w);
+                    while (!queue.isEmpty() && !pre.containsKey(e.w)) {
+                        T x = queue.poll();
+                        for (T y : tmp.getNeighborhood(x)) {
+                            if (pre.containsKey(y)) continue;
+                            pre.put(y, x);
+                            queue.offer(y);
+                            if (y.equals(e.w)) break;
+                        }
+                    }
+
+                    T current = pre.get(e.w);
+                    if (current == null) return false; // no path -> no minor found
+                    while (current != e.v) {
+                        tmp.contract(e.w, current);
+                        current = pre.get(current);
+                    }
+
                 }
             }
 
