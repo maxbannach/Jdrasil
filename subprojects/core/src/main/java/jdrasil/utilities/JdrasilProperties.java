@@ -145,6 +145,7 @@ public class JdrasilProperties {
         System.out.println("  -parallel : enable parallel processing");
         System.out.println("  -instant : computes solution directly (only heuristic mode)");
         System.out.println("  -log : enable log output");
+        System.out.println("  -debug : Run some more debugging");
     }
 
 }
