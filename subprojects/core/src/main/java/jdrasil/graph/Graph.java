@@ -449,16 +449,24 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	}
 	
 	
-	private void checkFillValues(){
+	public T checkFillValues(){
 		for(T v : getCopyOfVertices()){
 			int tmp = 0;
 			for(T u1 : getNeighborhood(v))
 				for(T u2 : getNeighborhood(v))
 					if(u1.compareTo(u2) < 0 && isAdjacent(u1, u2))
 						tmp++;
-			if(edgesInNeighborhood.get(v) != tmp)
-				throw new RuntimeException("Edges in neighbourhood were not counted correctly! ");
+			if(edgesInNeighborhood.get(v) != tmp){
+				LOG.info("Edges in neighbourhood were not counted correctly! Counted " + tmp + ", but stored " + edgesInNeighborhood.get(v));
+				LOG.info("Node was " + v);
+				StringBuilder sb = new StringBuilder();
+				for(T u : getNeighborhood(v))
+					sb.append(u + "  ");
+				LOG.info("With neighbours " + sb.toString());
+				return v;
+			}
 		}
+		return null;
 	}
 	
 	private void updateFillValuesDist2(T v, Set<T> nodesDistance2, Map<T, Integer> predicedValues){
@@ -860,6 +868,13 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 
 	public void setLogEdgesInNeighbourhood(boolean logEdgesInNeighbourhood) {
 		this.logEdgesInNeighbourhood = logEdgesInNeighbourhood;
+	}
+	
+	public void setNumEdgesInNeighbourhood(T v, int newVal){
+		if(edgesInNeighborhood.containsKey(v) == false)
+			throw new RuntimeException("This vertex does not exists! ");
+		edgesInNeighborhood.put(v, newVal);
+		
 	}
 	
 }
