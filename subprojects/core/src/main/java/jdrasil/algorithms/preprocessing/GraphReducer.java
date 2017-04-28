@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
@@ -495,65 +496,167 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 	private void glueBags_test(){
 		// Get elimination order of given TD
 		long tStart = System.currentTimeMillis();
-		
-		Stack<Set<T>> myStack = bags; //(Stack<Set<T>>) bags.clone();
-		while(!myStack.isEmpty()){
-			Set<T> s = myStack.pop();
-			treeDecomposition.createBag(s);
-		}
-		///////////////////////////////////////////////////////////////////////
-		// Get a list of all bags, and sort it in reverse elimination order
-		ArrayList<Bag<T>> allBags = new ArrayList<>(treeDecomposition.getBags());
-		allBags.sort((Bag<T> b1, Bag<T> b2) -> b1.id - b2.id);
-		
-		
-		Set<T> seenAlready = new HashSet<>();
-		
-		///////////////////////////////////////////////////////////////////////
-		// Remember of each node when it was eliminated
-		HashMap<T, Integer> posInElimOrder = new HashMap<>();
-		LOG.info("running test on arraylist of size " + allBags.size());
-		int edgesAdded = 0;
 		int components_created = 0;
-		for(int i = 0 ; i < allBags.size();i++){
-			Bag<T> nextBag = allBags.get(i);
-			if(nextBag.vertices.size() > 0){
-				T eliminated = null;
-				int count = 0;
-				int lowestNextIndex = -1;
-				for(T v : nextBag.vertices){
-					if(!seenAlready.contains(v)){
-						eliminated = v;
+		Stack<Set<T>> myStack = bags; //(Stack<Set<T>>) bags.clone();
+
+		int edgesAdded = 0;
+		// Okay, just undo pre-solving and glue the bags created by the preprocessor to this treedecomposition! 
+		if(treeDecomposition.getNumberOfBags() == treeDecomposition.getTree().getNumberOfEdges()+1){
+			if(myStack.isEmpty())
+				return;
+			// Okay, I will create new bags here. Adjust the indices! 
+			for(Bag<T> b : treeDecomposition.getBags()){
+				b.id += myStack.size();
+			}
+			Map<T, Bag<T>> eliminatedAt = new HashMap<>();
+			int lowestId = Integer.MAX_VALUE;
+			for(Bag<T> b : treeDecomposition.getBags()){
+				if(b.id < lowestId)
+					lowestId = b.id;
+				for(T v : b.vertices){
+					if(!eliminatedAt.containsKey(v) || eliminatedAt.get(v).id < b.id){
+						eliminatedAt.put(v, b);
 					}
-					else{
-						count++;
-						if(posInElimOrder.containsKey(v) == false){
-							throw new RuntimeException();
-						}
-						if(posInElimOrder.get(v) > lowestNextIndex)
-							lowestNextIndex = posInElimOrder.get(v);
-					}
-				}
-				if(eliminated == null){
-					LOG.info("eliminated = null?");
-					System.exit(-666);
-				}
-				if(count < nextBag.vertices.size() - 1){
-					LOG.info("count is quatsch?");
-					System.exit(-666);
-				}
-				posInElimOrder.put(eliminated, i);
-				seenAlready.add(eliminated);
-				
-				if(lowestNextIndex >= 0){
-					treeDecomposition.addTreeEdge(nextBag, allBags.get(lowestNextIndex));
-					edgesAdded++;
-				}
-				else{
-					//System.out.println("Starting new connected component! ");
-					components_created++;
 				}
 			}
+			while(!myStack.isEmpty()){
+				Set<T> s = myStack.pop();
+				Bag<T> newBag = treeDecomposition.createBag(s);
+				// Now this bag has somewhat been created BEFORE the permutation was computed - adjust its id accordingly! 
+				newBag.id = --lowestId;
+				// Get an edge from this bag to one that existed before
+				Bag<T> next = null;
+				int numElimHere = 0;
+				for(T v : newBag.vertices){
+					if(eliminatedAt.containsKey(v)){
+						if(next == null || next.id > eliminatedAt.get(v).id){
+							next = eliminatedAt.get(v);
+						}
+					}
+					else{
+						numElimHere++;
+						eliminatedAt.put(v, newBag);
+					}
+				}
+				if(next != null){
+					treeDecomposition.addTreeEdge(newBag, next);
+				}
+				else{
+					LOG.info("No outgoing edge here! ");
+				}
+				if(numElimHere > 1){
+					LOG.info("Eliminated two nodes at once? ");
+				}
+			}
+		}
+		else{
+			// For each node in the tree decomposition, check if it's been eliminated already
+			LOG.info("This was created by a  permutation, but the tree decomposition is not actually a tree?");
+			
+			for(Bag<T> b : treeDecomposition.getBags())
+				b.id += myStack.size();
+			
+			Map<T, Bag<T>> eliminatedAt = new HashMap<>();
+			// Go throw the bags. For each node, look at the last bag where it appears --- this is the one at which it was eliminated! 
+			for(Bag<T> b : treeDecomposition.getBags()){
+				for(T v : b.vertices){
+					if(!eliminatedAt.containsKey(v) || eliminatedAt.get(v).id > b.id){
+						eliminatedAt.put(v, b);
+					}
+				}
+			}
+			// Make sure that the current tree decomposition is valid! 
+			int edgesAddedToTreeDecomp = 0;
+			for(Bag<T> b : treeDecomposition.getBags()){
+				// Look for an outgoing edge
+				Bag<T> nextBag = null;
+				for(T v : b.vertices){
+					Bag<T> bagWhereThisWasEliminated = eliminatedAt.get(v);
+					if(bagWhereThisWasEliminated.id != b.id){
+						if(nextBag == null || nextBag.id > bagWhereThisWasEliminated.id)
+							nextBag = bagWhereThisWasEliminated;
+					}
+				}
+				if(nextBag != null)
+					treeDecomposition.addTreeEdge(b, nextBag);
+			}
+			// Now glue in the new bags: 
+			while(!myStack.isEmpty()){
+				Set<T> s = myStack.pop();
+				Bag<T> added = treeDecomposition.createBag(s);
+				added.id = myStack.size()+1;
+				Bag<T> nextBag = null;
+				for(T v : added.vertices){
+					if(!eliminatedAt.containsKey(v)){
+						eliminatedAt.put(v, added);
+					}
+					Bag<T> bagWhereThisWasEliminated = eliminatedAt.get(v);
+					if(bagWhereThisWasEliminated.id != added.id){
+						if(nextBag == null || nextBag.id > bagWhereThisWasEliminated.id)
+							nextBag = bagWhereThisWasEliminated;
+					}
+				}
+				if(nextBag != null)
+					treeDecomposition.addTreeEdge(added, nextBag);
+			}
+			
+//			while(!myStack.isEmpty()){
+//				Set<T> s = myStack.pop();
+//				treeDecomposition.createBag(s);
+//			}
+//			///////////////////////////////////////////////////////////////////////
+//			// Get a list of all bags, and sort it in reverse elimination order
+//			ArrayList<Bag<T>> allBags = new ArrayList<>(treeDecomposition.getBags());
+//			allBags.sort((Bag<T> b1, Bag<T> b2) -> b1.id - b2.id);
+//			
+//			
+//			Set<T> seenAlready = new HashSet<>();
+//			
+//			///////////////////////////////////////////////////////////////////////
+//			// Remember of each node when it was eliminated
+//			HashMap<T, Integer> posInElimOrder = new HashMap<>();
+//			LOG.info("running test on arraylist of size " + allBags.size());
+//			
+//			for(int i = 0 ; i < allBags.size();i++){
+//				Bag<T> nextBag = allBags.get(i);
+//				if(nextBag.vertices.size() > 0){
+//					T eliminated = null;
+//					int count = 0;
+//					int lowestNextIndex = -1;
+//					for(T v : nextBag.vertices){
+//						if(!seenAlready.contains(v)){
+//							eliminated = v;
+//						}
+//						else{
+//							count++;
+//							if(posInElimOrder.containsKey(v) == false){
+//								throw new RuntimeException();
+//							}
+//							if(posInElimOrder.get(v) > lowestNextIndex)
+//								lowestNextIndex = posInElimOrder.get(v);
+//						}
+//					}
+//					if(eliminated == null){
+//						LOG.info("eliminated = null?");
+//						System.exit(-666);
+//					}
+//					if(count < nextBag.vertices.size() - 1){
+//						LOG.info("count is quatsch?");
+//						System.exit(-666);
+//					}
+//					posInElimOrder.put(eliminated, i);
+//					seenAlready.add(eliminated);
+//					
+//					if(lowestNextIndex >= 0){
+//						treeDecomposition.addTreeEdge(nextBag, allBags.get(lowestNextIndex));
+//						edgesAdded++;
+//					}
+//					else{
+//						//System.out.println("Starting new connected component! ");
+//						components_created++;
+//					}
+//				}
+//			}
 		}
 		LOG.info("restored elimination order in time " + (System.currentTimeMillis() - tStart) + " , added edges: " + edgesAdded);
 		LOG.info("Created " + components_created + " components! ");
