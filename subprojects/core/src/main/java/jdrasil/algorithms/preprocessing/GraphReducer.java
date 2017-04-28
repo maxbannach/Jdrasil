@@ -560,7 +560,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 			// Go throw the bags. For each node, look at the last bag where it appears --- this is the one at which it was eliminated! 
 			for(Bag<T> b : treeDecomposition.getBags()){
 				for(T v : b.vertices){
-					if(!eliminatedAt.containsKey(v) || eliminatedAt.get(v).id > b.id){
+					if(!eliminatedAt.containsKey(v) || eliminatedAt.get(v).id < b.id){
 						eliminatedAt.put(v, b);
 					}
 				}
@@ -659,6 +659,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 //			}
 		}
 		LOG.info("restored elimination order in time " + (System.currentTimeMillis() - tStart) + " , added edges: " + edgesAdded);
+		LOG.info("Now the tree has " + treeDecomposition.getNumberOfBags() + " bags, and " + treeDecomposition.getTree().getNumberOfEdges() + " edges!");
 		LOG.info("Created " + components_created + " components! ");
 		treeDecomposition.connectComponents();
 	}

@@ -227,6 +227,8 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			VertexValue vv = getValue(graph, v);
 			q.insert(vv.vertex, vv.value);
 		}
+		
+		TreeDecomposition<T> td = new TreeDecomposition<>(graph);
 			
 		// compute the permutation
 		for (int i = 0; i < graph.getNumVertices(); i++) {
@@ -244,11 +246,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 				}
 			}
 			int predictionNewNumberEdges = workingCopy.getNumberOfEdges() + workingCopy.getFillInValue(v) - workingCopy.getNeighborhood(v).size();
-			//LOG.info("Eliminating node " + v + " with prio " + lowestPrio);
-//			if(getValue(workingCopy, v).value != lowestPrio)
-//				throw new RuntimeException("Prio in heap was " + lowestPrio + " but recomputation gave " + getValue(workingCopy, v).value);
-//			
-			//T v = nextVertex(workingCopy, this.k).vertex;
+			
 			if(workingCopy.getNeighborhood(v).size() >= upper_bound){
 				// Okay, this creates a clique of size >= upper_bound + 1, I can abort!
 				return null;
@@ -256,6 +254,12 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 
 			// add it to the permutation and eliminate it in the current subgraph
 			permutation.add(v);
+			Set<T> bagNodes = new HashSet<>();
+			bagNodes.addAll(workingCopy.getNeighborhood(v));
+			bagNodes.add(v);
+			td.createBag(bagNodes);
+			// Look into this bag: Is there a node such that its neighbourhood is a subset of this bag? 
+			// If so, it can be removed here as well! 
 			workingCopy.eliminateVertex(v, toRun != Algorithm.Degree);
 			if(toRun != Algorithm.Degree &&  workingCopy.getNumberOfEdges() != predictionNewNumberEdges){
 				throw new RuntimeException("Miss-predicted fill values!");
@@ -275,7 +279,9 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 
 		// done
 		this.permutation = permutation;
-		return new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
+		td.setCreatedFromPermutation(true);
+		
+		return td; //new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
 	}
 
 	@Override
