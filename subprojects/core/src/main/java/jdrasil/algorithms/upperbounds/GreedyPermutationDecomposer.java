@@ -20,6 +20,7 @@ package jdrasil.algorithms.upperbounds;
 
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -231,7 +232,9 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		TreeDecomposition<T> td = new TreeDecomposition<>(graph);
 			
 		// compute the permutation
-		for (int i = 0; i < graph.getNumVertices(); i++) {
+		for (int i = 0; i < graph.getNumVertices() && q.size() > 0; i++) {
+			if(workingCopy.getNumVertices() != q.size())
+				throw new RuntimeException("Queue is wrong???");
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
 			
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice
@@ -263,6 +266,32 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			workingCopy.eliminateVertex(v, toRun != Algorithm.Degree);
 			if(toRun != Algorithm.Degree &&  workingCopy.getNumberOfEdges() != predictionNewNumberEdges){
 				throw new RuntimeException("Miss-predicted fill values!");
+			}
+			// Check if further nodes can be eliminated here! 
+			List<T> deleteImmediately = new ArrayList<>();
+			for(T u : bagNodes){
+				if(u.compareTo(v) != 0){
+					if(workingCopy.getNeighborhood(u).size() < bagNodes.size()-1){
+						for(T w : workingCopy.getNeighborhood(u))
+							if(!bagNodes.contains(w))
+								throw new RuntimeException("Hmm. This node DOES have neighbours outside the clique I just created??? ");
+						deleteImmediately.add(u);
+					}
+				}
+			}
+			// Delete nodes which have only neighbours in the clique of the node that was just eliminated. 
+			// For compatibility reasons, add them to the permutation, and give them bags... 
+			for(T u : deleteImmediately){
+//				Set<T> dummyBag = new HashSet<>();
+//				dummyBag.addAll(workingCopy.getNeighborhood(u));
+//				dummyBag.add(u);
+				permutation.add(u);
+//				td.createBag(dummyBag);
+				workingCopy.eliminateVertex(u, toRun != Algorithm.Degree);
+				q.updateValue(u, q.getMinPrio()-1);
+				if(q.removeMin().compareTo(u) != 0)
+					throw new RuntimeException("Removing the node from the queue did not work???");
+				tmp.remove(u);
 			}
 			for(T v_n : tmp){
 				if(v_n != v && v.compareTo(v_n) != 0){

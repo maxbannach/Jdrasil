@@ -113,6 +113,10 @@ public class UpdatablePriorityQueue<E, V extends Comparable<V>> {
 			throw new RuntimeException("Cannot remove from empty heap! ");
 		return values.get(heap.get(0));
 	}
+	
+	public int size(){
+		return heap.size();
+	}
 	/**
 	 * Move a key upwards in the heap
 	 * @param index the index to start from
