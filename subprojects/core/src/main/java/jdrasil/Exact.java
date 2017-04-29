@@ -82,7 +82,7 @@ public class Exact {
                 // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
                 GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
                     CatchAndGlue<Integer> catchAndGlue = new CatchAndGlue<>(atom);
-//                    catchAndGlue.setMode(CatchAndGlue.Mode.improveUpperbound);
+                    catchAndGlue.setMode(CatchAndGlue.Mode.improveUpperbound);
 //                    ExactDecomposer<Integer> catchAndGlue = new ExactDecomposer<>(atom);
                     try {
                         return catchAndGlue.call();

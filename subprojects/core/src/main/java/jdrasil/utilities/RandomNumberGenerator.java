@@ -209,4 +209,11 @@ public class RandomNumberGenerator {
         return dice.longs(streamSize, randomNumberOrigin, randomNumberBound);
     }
 
+    /**
+     * Get the underlying random object.
+     * @return
+     */
+    public static Random getDice() {
+        return dice;
+    }
 }
