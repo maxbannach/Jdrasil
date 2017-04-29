@@ -203,8 +203,8 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		boolean ret = false;
 		Queue<T> q = new LinkedList<>();
 		Set<T> onQueue = new HashSet<>();
-		for(T v : work){
-			if(work.getNeighborhood(v).size() <= 3 || work.getFillInValue(v) <= 1){
+		for (T v : work) {
+			if (work.getNeighborhood(v).size() <= 3 || work.getFillInValue(v) <= 1) {
 				q.add(v);
 				onQueue.add(v);
 			}
@@ -213,12 +213,12 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 			T v = q.poll();
 			int fillValue = work.getFillInValue(v);
 			onQueue.remove(v);
-			boolean eliminate = fillValue < 1 || (fillValue == 1 && work.getNeighborhood(v).size() <= low);
-			if(!eliminate){
+			boolean eliminate = fillValue < 1 || (fillValue == 1 && work.getNeighborhood(v).size() < low);
+			if (!eliminate) {
 				// Check if triangle rule is applicable: In this case, the node has a degree of 3, and fillIn-value at most 2, as one of the edges between its neighbours exists
-				eliminate = work.getNeighborhood(v).size() == 3 && fillValue <= 2;
+				eliminate = work.getNeighborhood(v).size() == 3 && fillValue <= 2 && low >= 3;
 			}
-			if(eliminate){
+			if (eliminate) {
 				numApplications++;
 				ret = true;
 				for(T n : work.getNeighborhood(v)){
@@ -227,20 +227,18 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 						q.add(n);
 					}
 				}
+
 				Set<T> newBag = new HashSet<>();
 				newBag.add(v);
 				newBag.addAll(work.getNeighborhood(v));
 				bags.push(newBag);
 				if (fillValue < 1) low = Math.max(low, newBag.size()-1);
 				work.eliminateVertex(v);
-				
 			}
 		}
 		LOG.info("Ran single-pass, eliminated " + numApplications + " nodes! ");
 		return ret;
 	}
-	
-	
 
 	/**
 	 * If the graph contains an isolated vertex v, create a bag {v} and remove the vertex.

@@ -18,7 +18,6 @@
 
 package jdrasil;
 
-import jdrasil.algorithms.ExactDecomposer;
 import jdrasil.algorithms.GraphSplitter;
 import jdrasil.algorithms.exact.CatchAndGlue;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
@@ -83,7 +82,6 @@ public class Exact {
                 GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
                     CatchAndGlue<Integer> catchAndGlue = new CatchAndGlue<>(atom);
 //                    catchAndGlue.setMode(CatchAndGlue.Mode.improveUpperbound);
-//                    ExactDecomposer<Integer> catchAndGlue = new ExactDecomposer<>(atom);
                     try {
                         return catchAndGlue.call();
                     } catch (Exception e) {

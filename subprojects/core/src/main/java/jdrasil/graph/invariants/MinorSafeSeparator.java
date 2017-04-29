@@ -30,6 +30,9 @@ public class MinorSafeSeparator<T extends Comparable<T>> extends Invariant<T, In
     /** Jdrasils logger */
     private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
+    /** Minors will be searched randomly, this parameter defines how many tries are performed until we give up. */
+    private final int TRIES = 20;
+
     /** The safe separator that we try to compute. */
     private Set<T> safeSeparator;
 
@@ -57,7 +60,6 @@ public class MinorSafeSeparator<T extends Comparable<T>> extends Invariant<T, In
     private Set<T> searchMinorSafeSeparator() throws Exception {
 
         // Compute a set of potential minor-safe separators by extracting separators from a heuristic tree decomposition
-        List<Set<T>> potentialSeparators = new LinkedList<>();
         TreeDecomposition<T> td = new GreedyPermutationDecomposer<T>(graph).call();
         for (Bag<T> b1 : td.getBags()) {
             for (Bag<T> b2 : td.getTree().getNeighborhood(b1)) {
@@ -76,6 +78,17 @@ public class MinorSafeSeparator<T extends Comparable<T>> extends Invariant<T, In
 
         // no minor-safe separator was found
         return null;
+    }
+
+    /**
+     * Capsule an non present edge.
+     */
+    private class NonEdge {
+        T v, w;
+        public NonEdge(T v, T w) {
+            this.v = v;
+            this.w = w;
+        }
     }
 
     /**
@@ -98,33 +111,75 @@ public class MinorSafeSeparator<T extends Comparable<T>> extends Invariant<T, In
             R.removeAll(C);
             Graph<T> tmp = GraphFactory.graphFromSubgraph(graph, R);
 
-            // iterate over all edges {v,w} in G[V\C] that are not connected to S
-            for (T v : graph.getCopyOfVertices()) {
-                if (C.contains(v) || S.contains(v)) continue;
-                for (T w : graph.getNeighborhood(v)) {
-                    if (S.contains(w) || v.compareTo(w) >= 0) continue;
-                    if (tmp.getCopyOfVertices().contains(v) && tmp.getCopyOfVertices().contains(w)) tmp.contract(v,w);
-                }
-            }
-
-            // iterate over all non-edges {v,w} in S
+            // compute the edges missing in S, they have to be completed to make S a clique
+            List<NonEdge> missing = new ArrayList<>(S.size());
             for (T v : S) {
                 for (T w : S) {
-                    if (tmp.isAdjacent(v, w) || v.compareTo(w) >= 0) continue;
-                    List<T> common = new LinkedList<>();
-                    common.addAll(tmp.getNeighborhood(v));
-                    common.retainAll(tmp.getNeighborhood(w));
-                    common.removeAll(S);
-                    if (common.size() == 0) return false; // found a component in which we can not turn S into a clique
-                    T x = common.get(RandomNumberGenerator.nextInt(common.size()));
-                    if (RandomNumberGenerator.nextBoolean()) {
-                        tmp.contract(v,x);
-                    } else {
-                        tmp.contract(w,x);
-                    }
+                    if (v.compareTo(w) >= 0 || tmp.isAdjacent(v, w)) continue;
+                    missing.add(new NonEdge(v, w));
                 }
             }
 
+            // trie to find S as clique minor, we will do this randomly with multiple runs
+            Stack<Graph.ContractionInformation> contractions = new Stack<>();
+            boolean minorFound = false;
+            searchminor: for (int i = 0; i < TRIES; i++) {
+
+                // redo previous contractions
+                while (!contractions.isEmpty()) tmp.deContract(contractions.pop());
+
+                // go over the missing edges in random order
+                Collections.shuffle(missing, RandomNumberGenerator.getDice());
+                for (NonEdge e : missing) {
+                    if (tmp.isAdjacent(e.v, e.w)) continue; // already completed
+
+                    // compute common neighbors
+                    List<T> common = new ArrayList<>();
+                    common.addAll(tmp.getNeighborhood(e.v));
+                    common.retainAll(tmp.getNeighborhood(e.w));
+                    common.removeAll(S);
+                    if (common.size() > 0) {
+                        // Test 1: if we have a common neighbor, just contract one of them to create the edge
+                        T x = common.get(RandomNumberGenerator.nextInt(common.size()));
+                        if (RandomNumberGenerator.nextBoolean()) {
+                            tmp.contract(e.v, x);
+                        } else {
+                            tmp.contract(e.w, x);
+                        }
+                    } else {
+                        // Test 2: search a path that we can contract via BFS
+                        Queue<T> queue = new LinkedList<>();
+                        queue.offer(e.v);
+                        HashMap<T, T> pre = new HashMap<>();
+                        for (T x : S) pre.put(x, x);
+                        pre.remove(e.w);
+                        while (!queue.isEmpty() && !pre.containsKey(e.w)) {
+                            T x = queue.poll();
+                            for (T y : tmp.getNeighborhood(x)) {
+                                if (pre.containsKey(y)) continue;
+                                pre.put(y, x);
+                                queue.offer(y);
+                                if (y.equals(e.w)) break;
+                            }
+                        }
+                        T current = pre.get(e.w);
+                        if (current == null) continue searchminor; // no path -> no minor found
+
+                        // contract the path into w
+                        while (current != e.v) {
+                            tmp.contract(e.w, current);
+                            current = pre.get(current);
+                        }
+                    }
+                }
+
+                // S found as clique minor, proceed with next component
+                minorFound = true;
+                break;
+            }
+
+            // we found S not as minor for component C -> S probably not a minor-safe separator
+            if (!minorFound) return false;
         }
 
         // we found labeled minors for each component -> S is safe

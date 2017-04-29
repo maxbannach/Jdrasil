@@ -215,7 +215,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
                 if (c2 != null) { // found 2-vertex-separator
                     S.add(c2);
                     LOG.info("found " + S);
-                    return forkOnSeparator(S, Connectivity.CC);
+                    return forkOnSeparator(S, Connectivity.BCC);
                 }
             }
             // not found a cut -> graph is triconnected
@@ -265,7 +265,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
 
                         if (!isSafe) continue; // S is no safe separator
                         LOG.info("found " + S);
-                        return forkOnSeparator(S, Connectivity.CC);
+                        return forkOnSeparator(S, Connectivity.TCC);
                     }
                 }
             }
@@ -282,7 +282,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
             Set<T> S = new CliqueMinimalSeparator<>(graph).getSeparator();
             if (S != null) {
                 LOG.info("found: " + S);
-                return forkOnSeparator(S, Connectivity.CC);
+                return forkOnSeparator(S, Connectivity.CLIQUE);
             }
             // if we do not found one, we may search for almost clique minimal separators
             mode = Connectivity.ACLIQUE;
@@ -300,8 +300,25 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
                 if (clique == null) continue; // v is not part of an almost clique separator
                 // if we found a clique separator in G\{v}, the clique + {v} is an almost clique separator
                 clique.add(c1);
+
+                // almost clique separators are only safe if they are inclusion minimal, that is, if each component
+                // of G[V\S] is full
+                boolean isSafe = true;
+                for (Set<T> C : new ConnectedComponents<T>(graph, clique).getAsSets()) {
+                    boolean full = true;
+                    for (T v : S) {
+                        boolean connected = false;
+                        for (T w : graph.getNeighborhood(v)) {
+                            if (C.contains(w)) { connected = true; break; }
+                        }
+                        if (!connected) { full = false; break; }
+                    }
+                    if (!full) { isSafe = false; break; }
+                }
+                if (!isSafe) continue;
+
                 LOG.info("found: " + clique);
-                return forkOnSeparator(clique, Connectivity.BCC);
+                return forkOnSeparator(clique, Connectivity.ACLIQUE);
             }
             // if we do not found one, we may search for labeled-minor separators
             mode = Connectivity.MINOR;
@@ -317,7 +334,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
             Set<T> S = new MinorSafeSeparator<>(graph).getSeparator();
             if (S != null) {
                 LOG.info("found: " + S);
-                return forkOnSeparator(S, Connectivity.CC);
+                return forkOnSeparator(S, Connectivity.MINOR);
             }
             // found none, done with splitting
             mode = Connectivity.ATOM;
