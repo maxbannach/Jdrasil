@@ -90,7 +90,7 @@ public class MinimalSeparator<T extends Comparable<T>> extends Invariant<T, Inte
 		}
 		// for every node i, compute a maximum flow that separates i from any
 		// other node j
-		int i = 0;
+		for(int i = 0;  i < n ; i++)
 		for (int j = i + 1; j < n; j++) {
 			if (!graph.isAdjacent(mapIT.get(i), mapIT.get(j))) {
 				boolean[][] res = new Dinic(g, i, j + n).start();
