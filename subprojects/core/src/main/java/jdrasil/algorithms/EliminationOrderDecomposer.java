@@ -97,19 +97,23 @@ public class EliminationOrderDecomposer<T extends Comparable<T>> implements Tree
 			Set<T> neighbours = new HashSet<T>(graph.getNeighborhood(v));
 			neighbours.add(v);
 			Bag<T> bag = decomposition.createBag(neighbours);
-			bag.id = perm.size()-index+1;
+			//bag.id = perm.size()-index+1;
 			eliminatedVertexToBag.put(v, bag);
 			graph.eliminateVertex(v);
 		}
 		// Now add the edges: 
 		int edgesAdded = 0;
 		for(T v : perm){
-			int next_index = perm.size();
+			int next_index = Integer.MAX_VALUE; 
 			T nextElimNode = null;
 			for(T u : eliminatedVertexToBag.get(v).vertices){
 				if(!elimOrder.containsKey(v))
 					throw new RuntimeException("Did not find this fucking node! ");
 				int positionInPermutation = elimOrder.get(u);
+				int pos2 = eliminatedVertexToBag.get(u).id;
+				if(pos2 != positionInPermutation+1){
+					throw new RuntimeException("orders are different?");
+				}
 				if(positionInPermutation < elimOrder.get(v))
 					throw new RuntimeException("Invalid index found! ");
 				

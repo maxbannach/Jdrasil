@@ -20,6 +20,7 @@ package jdrasil.algorithms.upperbounds;
 
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -227,9 +228,13 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			VertexValue vv = getValue(graph, v);
 			q.insert(vv.vertex, vv.value);
 		}
+		
+		TreeDecomposition<T> td = new TreeDecomposition<>(graph);
 			
 		// compute the permutation
-		for (int i = 0; i < graph.getNumVertices(); i++) {
+		for (int i = 0; i < graph.getNumVertices() && q.size() > 0; i++) {
+			if(workingCopy.getNumVertices() != q.size())
+				throw new RuntimeException("Queue is wrong???");
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
 			
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice
@@ -244,11 +249,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 				}
 			}
 			int predictionNewNumberEdges = workingCopy.getNumberOfEdges() + workingCopy.getFillInValue(v) - workingCopy.getNeighborhood(v).size();
-			//LOG.info("Eliminating node " + v + " with prio " + lowestPrio);
-//			if(getValue(workingCopy, v).value != lowestPrio)
-//				throw new RuntimeException("Prio in heap was " + lowestPrio + " but recomputation gave " + getValue(workingCopy, v).value);
-//			
-			//T v = nextVertex(workingCopy, this.k).vertex;
+			
 			if(workingCopy.getNeighborhood(v).size() >= upper_bound){
 				// Okay, this creates a clique of size >= upper_bound + 1, I can abort!
 				return null;
@@ -256,9 +257,41 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 
 			// add it to the permutation and eliminate it in the current subgraph
 			permutation.add(v);
+			Set<T> bagNodes = new HashSet<>();
+			bagNodes.addAll(workingCopy.getNeighborhood(v));
+			bagNodes.add(v);
+			td.createBag(bagNodes);
+			// Look into this bag: Is there a node such that its neighbourhood is a subset of this bag? 
+			// If so, it can be removed here as well! 
 			workingCopy.eliminateVertex(v, toRun != Algorithm.Degree);
 			if(toRun != Algorithm.Degree &&  workingCopy.getNumberOfEdges() != predictionNewNumberEdges){
 				throw new RuntimeException("Miss-predicted fill values!");
+			}
+			// Check if further nodes can be eliminated here! 
+			List<T> deleteImmediately = new ArrayList<>();
+			for(T u : bagNodes){
+				if(u.compareTo(v) != 0){
+					if(workingCopy.getNeighborhood(u).size() < bagNodes.size()-1){
+						for(T w : workingCopy.getNeighborhood(u))
+							if(!bagNodes.contains(w))
+								throw new RuntimeException("Hmm. This node DOES have neighbours outside the clique I just created??? ");
+						deleteImmediately.add(u);
+					}
+				}
+			}
+			// Delete nodes which have only neighbours in the clique of the node that was just eliminated. 
+			// For compatibility reasons, add them to the permutation, and give them bags... 
+			for(T u : deleteImmediately){
+//				Set<T> dummyBag = new HashSet<>();
+//				dummyBag.addAll(workingCopy.getNeighborhood(u));
+//				dummyBag.add(u);
+				permutation.add(u);
+//				td.createBag(dummyBag);
+				workingCopy.eliminateVertex(u, toRun != Algorithm.Degree);
+				q.updateValue(u, q.getMinPrio()-1);
+				if(q.removeMin().compareTo(u) != 0)
+					throw new RuntimeException("Removing the node from the queue did not work???");
+				tmp.remove(u);
 			}
 			for(T v_n : tmp){
 				if(v_n != v && v.compareTo(v_n) != 0){
@@ -275,7 +308,9 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 
 		// done
 		this.permutation = permutation;
-		return new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
+		td.setCreatedFromPermutation(true);
+		
+		return td; //new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
 	}
 
 	@Override

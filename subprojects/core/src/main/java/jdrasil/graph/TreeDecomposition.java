@@ -95,7 +95,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		this.tree = GraphFactory.emptyGraph();
 		this.numberOfBags = 0;
 		this.width = -1;
-		this.n = graph.getCopyOfVertices().size();
+		this.n = graph.getNumVertices();
 		createdFromPermutation = false;
 	}
 	

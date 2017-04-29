@@ -503,6 +503,9 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 			return eliminateVertex(v);
 		Map<T, Integer> predicedValues = new HashMap<>();
 		
+		
+		// TODO: If the fill-value is 0, calling eliminated is expensive and useless! 
+		// We don't have to check for missing edges between the neighbours of this node! 
 		if(getFillInValue(v) == 0){
 			setLogEdgesInNeighbourhood(false);
 			Set<T> neighbourhood = getNeighborhood(v);
