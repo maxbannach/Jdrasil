@@ -89,22 +89,30 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
 			GreedyPermutationDecomposer<T> greedyPermutation = new GreedyPermutationDecomposer<T>(graph);
 
-			// choose an algorithm at random
-			// with probability 0.5 we choose fill-in, as this algorithm performs very well,
-			// the other algorithms have probability 0.1
-			double p = RandomNumberGenerator.nextDouble();
-			if (p > 0.9) {
+			if(iterationsPerformed < 3){
 				greedyPermutation.setToRun(Algorithm.Degree);
-			} else if (p > 0.8) {
-				greedyPermutation.setToRun(Algorithm.DegreePlusFillIn);
-			} else if (p > 0.7) {
+			}
+			else if(iterationsPerformed < 4){
 				greedyPermutation.setToRun(Algorithm.SparsestSubgraph);
-			} else if (p > 0.6) {
-				greedyPermutation.setToRun(Algorithm.FillInDegree);
-			} else if (p > 0.5) {
-				greedyPermutation.setToRun(Algorithm.DegreeFillIn);
-			} else {
-				greedyPermutation.setToRun(Algorithm.FillIn);
+			}
+			else{
+				// choose an algorithm at random
+				// with probability 0.5 we choose fill-in, as this algorithm performs very well,
+				// the other algorithms have probability 0.1
+				double p = RandomNumberGenerator.nextDouble();
+				if (p > 0.9) {
+					greedyPermutation.setToRun(Algorithm.Degree);
+				} else if (p > 0.8) {
+					greedyPermutation.setToRun(Algorithm.DegreePlusFillIn);
+				} else if (p > 0.7) {
+					greedyPermutation.setToRun(Algorithm.SparsestSubgraph);
+				} else if (p > 0.6) {
+					greedyPermutation.setToRun(Algorithm.FillInDegree);
+				} else if (p > 0.5) {
+					greedyPermutation.setToRun(Algorithm.DegreeFillIn);
+				} else {
+					greedyPermutation.setToRun(Algorithm.FillIn);
+				}
 			}
 
 			// compute the decomposition

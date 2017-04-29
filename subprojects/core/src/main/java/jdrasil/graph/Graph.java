@@ -499,8 +499,10 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 		
 		setLogEdgesInNeighbourhood(true);
 //		checkFillValues();
-		if(!updateFillValues)
+		if(!updateFillValues){
+			setLogEdgesInNeighbourhood(false);
 			return eliminateVertex(v);
+		}
 		Map<T, Integer> predicedValues = new HashMap<>();
 		
 		

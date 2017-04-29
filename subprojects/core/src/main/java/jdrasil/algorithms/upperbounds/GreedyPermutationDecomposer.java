@@ -220,7 +220,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		
 		// catch the empty graph
 		if (graph.getCopyOfVertices().size() == 0) return new TreeDecomposition<T>(graph);
-
+		long tStart = System.currentTimeMillis();
 		// the permutation that we wish to compute and a copy of the graph, which will be modified
 		List<T> permutation = new LinkedList<T>();
 		Graph<T> workingCopy = GraphFactory.copy(graph);
@@ -249,7 +249,8 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 					eliminatedAt.put(v, finalBag);
 				}
 				td.setCreatedFromPermutation(true);
-				LOG.info("PANIC! Returning a bag with " + allRemainingVertices.size() + " nodes!");
+				LOG.info("PANIC! Returning a bag with " + allRemainingVertices.size() + " nodes, time since started: " + (System.currentTimeMillis() - tStart));
+				LOG.info("This bag has id " + finalBag.id + ", and the TD has " + td.getNumberOfBags() + " bags...");
 				break;
 			}
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice
@@ -294,6 +295,9 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 					}
 				}
 			}
+			if(deleteImmediately.size() == workingCopy.getNumVertices()){
+				LOG.info("Creating final bag (" + workingCopy.getNumVertices() + "), time till here: " + (System.currentTimeMillis() -tStart));
+			}
 			// Delete nodes which have only neighbours in the clique of the node that was just eliminated. 
 			// For compatibility reasons, add them to the permutation, and give them bags... 
 			for(T u : deleteImmediately){
@@ -319,11 +323,16 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		}
 
 		// done
+		LOG.info("Adding bags, time till here: " + (System.currentTimeMillis() - tStart));
 		this.permutation = permutation;
 		td.setCreatedFromPermutation(true);
 		// Finalise the tree decomposition by adding edges to it!
 		for(T v : permutation){
 			Bag<T> elimBag = eliminatedAt.get(v);
+			if(elimBag.id >= td.getNumberOfBags()){
+				LOG.info("Reached the final bag, cancelling! Time till here: " + (System.currentTimeMillis() - tStart));
+				break;
+			}
 			Bag<T> connectTo = null;
 			for(T u : elimBag.vertices){
 				Bag<T> otherBag = eliminatedAt.get(u);
@@ -335,6 +344,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			if(connectTo != null)
 				td.addTreeEdge(elimBag, connectTo);
 		}
+		LOG.info("And returning, time till here: " + (System.currentTimeMillis() - tStart));
 		return td; //new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
 	}
 
