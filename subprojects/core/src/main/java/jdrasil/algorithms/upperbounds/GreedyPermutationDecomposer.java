@@ -21,19 +21,23 @@ package jdrasil.algorithms.upperbounds;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import jdrasil.Datastructures.UpdatablePriorityQueue;
 import jdrasil.algorithms.EliminationOrderDecomposer;
+import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
+import jdrasil.utilities.JdrasilProperties;
 import jdrasil.utilities.RandomNumberGenerator;
 import jdrasil.utilities.logging.JdrasilLogger;
 
@@ -228,7 +232,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			VertexValue vv = getValue(graph, v);
 			q.insert(vv.vertex, vv.value);
 		}
-		
+		Map<T, Bag<T>> eliminatedAt = new HashMap<>();
 		TreeDecomposition<T> td = new TreeDecomposition<>(graph);
 			
 		// compute the permutation
@@ -236,7 +240,18 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			if(workingCopy.getNumVertices() != q.size())
 				throw new RuntimeException("Queue is wrong???");
 			if (Thread.currentThread().isInterrupted()) throw new Exception();
-			
+			if((i % 10) == 0 && JdrasilProperties.timeout()){
+				// Panic, we're running out of time! 
+				Set<T> allRemainingVertices = workingCopy.getCopyOfVertices();
+				Bag<T> finalBag = td.createBag(allRemainingVertices);
+				for(T v : allRemainingVertices){
+					permutation.add(v);
+					eliminatedAt.put(v, finalBag);
+				}
+				td.setCreatedFromPermutation(true);
+				LOG.info("PANIC! Returning a bag with " + allRemainingVertices.size() + " nodes!");
+				break;
+			}
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice
 			int lowestPrio = q.getMinPrio();
 			T vv = q.removeMinRandom();
@@ -260,7 +275,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			Set<T> bagNodes = new HashSet<>();
 			bagNodes.addAll(workingCopy.getNeighborhood(v));
 			bagNodes.add(v);
-			td.createBag(bagNodes);
+			eliminatedAt.put(v, td.createBag(bagNodes));
 			// Look into this bag: Is there a node such that its neighbourhood is a subset of this bag? 
 			// If so, it can be removed here as well! 
 			workingCopy.eliminateVertex(v, toRun != Algorithm.Degree);
@@ -282,11 +297,8 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			// Delete nodes which have only neighbours in the clique of the node that was just eliminated. 
 			// For compatibility reasons, add them to the permutation, and give them bags... 
 			for(T u : deleteImmediately){
-//				Set<T> dummyBag = new HashSet<>();
-//				dummyBag.addAll(workingCopy.getNeighborhood(u));
-//				dummyBag.add(u);
 				permutation.add(u);
-//				td.createBag(dummyBag);
+				eliminatedAt.put(u, eliminatedAt.get(v));
 				workingCopy.eliminateVertex(u, toRun != Algorithm.Degree);
 				q.updateValue(u, q.getMinPrio()-1);
 				if(q.removeMin().compareTo(u) != 0)
@@ -309,7 +321,20 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		// done
 		this.permutation = permutation;
 		td.setCreatedFromPermutation(true);
-		
+		// Finalise the tree decomposition by adding edges to it!
+		for(T v : permutation){
+			Bag<T> elimBag = eliminatedAt.get(v);
+			Bag<T> connectTo = null;
+			for(T u : elimBag.vertices){
+				Bag<T> otherBag = eliminatedAt.get(u);
+				if(otherBag.id != elimBag.id){
+					if(connectTo == null || connectTo.id > otherBag.id)
+						connectTo = otherBag;
+				}
+			}
+			if(connectTo != null)
+				td.addTreeEdge(elimBag, connectTo);
+		}
 		return td; //new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
 	}
 
