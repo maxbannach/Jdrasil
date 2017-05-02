@@ -483,6 +483,30 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 			predicedValues.put(u, edgesInNeighborhood.get(u) + fillDecrease);
 		}
 	}
+	/**
+	 * Eliminate a simplicial vertex.
+	 * When calling this, v must be simplicial
+	 * @param v
+	 * @param updateFillValues
+	 * @return
+	 */
+	public EliminationInformation eliminateSimplicialVertex(T v, boolean updateFillValues){
+		EliminationInformation info = new EliminationInformation(v);
+		
+		int degree = adjacencies.get(v).size();
+		int reduce = degree -1;
+		// Create the eliminiation information, and reduce the 
+		for (T u : getNeighborhood(v)) {
+			info.addNeighbors(u);
+			edgesInNeighborhood.put(u, edgesInNeighborhood.get(u)-reduce);
+		}
+
+		// delete the vertex
+		setLogEdgesInNeighbourhood(false);
+		removeVertex(v);
+		
+		return info;
+	}
 	
 	public EliminationInformation eliminateVertex(T v, boolean updateFillValues){
 		boolean runOldWay = false;

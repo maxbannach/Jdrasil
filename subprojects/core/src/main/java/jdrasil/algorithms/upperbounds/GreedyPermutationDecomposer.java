@@ -303,7 +303,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			for(T u : deleteImmediately){
 				permutation.add(u);
 				eliminatedAt.put(u, eliminatedAt.get(v));
-				workingCopy.eliminateVertex(u, toRun != Algorithm.Degree);
+				workingCopy.eliminateSimplicialVertex(u, toRun != Algorithm.Degree);
 				q.updateValue(u, q.getMinPrio()-1);
 				if(q.removeMin().compareTo(u) != 0)
 					throw new RuntimeException("Removing the node from the queue did not work???");
@@ -344,7 +344,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			if(connectTo != null)
 				td.addTreeEdge(elimBag, connectTo);
 		}
-		LOG.info("And returning, time till here: " + (System.currentTimeMillis() - tStart));
+		LOG.info("And returning, time till here: " + (System.currentTimeMillis() - tStart) + ". Got " + td.getNumberOfBags() + " bags for " + permutation.size() + " nodes!");
 		return td; //new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
 	}
 
