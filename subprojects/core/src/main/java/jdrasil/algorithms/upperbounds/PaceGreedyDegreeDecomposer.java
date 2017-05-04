@@ -94,7 +94,7 @@ public class PaceGreedyDegreeDecomposer {
 //					q.checkIsHeap();
 					minValue = q.getMinPrio();
 					if(minValue >= 0)
-						throw new RuntimeException("Crap! q.size()=" + q.size() + ", minValue=" + minValue + " and ranking of " + n + " = " + q.getValue(n));
+						throw new RuntimeException("Crap! q.size()=" + q.size() + ", minValue=" + minValue);
 					int removed = q.removeMin();
 					if(removed != n)
 						throw new RuntimeException();
