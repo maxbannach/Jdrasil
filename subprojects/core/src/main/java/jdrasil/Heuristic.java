@@ -20,6 +20,7 @@ package jdrasil;
 
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.algorithms.upperbounds.LocalSearchDecomposer;
+import jdrasil.algorithms.upperbounds.PaceGreedyDegreeDecomposer;
 import jdrasil.algorithms.upperbounds.StochasticGreedyPermutationDecomposer;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
@@ -101,6 +102,10 @@ public class Heuristic implements sun.misc.SignalHandler {
             // read graph from stdin
             input = GraphFactory.graphFromStdin();
 
+            
+            PaceGreedyDegreeDecomposer pcdd = new PaceGreedyDegreeDecomposer(input);
+            pcdd.computeTreeDecomposition();
+            
             /* Compute a explicit decomposition */
             tstart = System.nanoTime();
 
