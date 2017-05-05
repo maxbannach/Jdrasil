@@ -27,7 +27,7 @@ import java.util.List;
  */
 import java.util.logging.Logger;
 
-
+import jdrasil.Heuristic;
 import jdrasil.algorithms.upperbounds.GreedyPermutationDecomposer.Algorithm;
 import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
@@ -86,7 +86,9 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 		// each run will call the Greed-Permutation heuristic
 		while (itr --> 0) {
 			iterationsPerformed++;
-			if (Thread.currentThread().isInterrupted()) throw new Exception();
+//			if (Thread.currentThread().isInterrupted()) throw new Exception();
+			if(Heuristic.shutdownFlag)
+				break;
 			GreedyPermutationDecomposer<T> greedyPermutation = new GreedyPermutationDecomposer<T>(graph);
 
 			if(iterationsPerformed < 3){

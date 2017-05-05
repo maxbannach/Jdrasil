@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import jdrasil.Heuristic;
 import jdrasil.Datastructures.UpdatablePriorityQueue;
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.graph.Bag;
@@ -239,19 +240,29 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		for (int i = 0; i < graph.getNumVertices() && q.size() > 0; i++) {
 			if(workingCopy.getNumVertices() != q.size())
 				throw new RuntimeException("Queue is wrong???");
-			if (Thread.currentThread().isInterrupted()) throw new Exception();
-			if((i % 10) == 0 && JdrasilProperties.timeout()){
+			/***********************************************************************************
+			 * 				Check for termination. 
+			 * - Check if it make sense to finalize this decomposition by putting all remaining 
+			 * 		nodes into one single bag. If this yields a decomposition which improves 
+			 * 		the upper bound, do so. Otherwise, return null
+			 ***********************************************************************************/
+			if((i % 10) == 0 && (JdrasilProperties.timeout() || Heuristic.shutdownFlag)){
 				// Panic, we're running out of time! 
-				Set<T> allRemainingVertices = workingCopy.getCopyOfVertices();
-				Bag<T> finalBag = td.createBag(allRemainingVertices);
-				for(T v : allRemainingVertices){
-					permutation.add(v);
-					eliminatedAt.put(v, finalBag);
+				if(q.size() <= upper_bound){
+					Set<T> allRemainingVertices = workingCopy.getCopyOfVertices();
+					Bag<T> finalBag = td.createBag(allRemainingVertices);
+					for(T v : allRemainingVertices){
+						permutation.add(v);
+						eliminatedAt.put(v, finalBag);
+					}
+					td.setCreatedFromPermutation(true);
+					LOG.info("PANIC! Returning a bag with " + allRemainingVertices.size() + " nodes, time since started: " + (System.currentTimeMillis() - tStart));
+					LOG.info("This bag has id " + finalBag.id + ", and the TD has " + td.getNumberOfBags() + " bags...");
+					break;
 				}
-				td.setCreatedFromPermutation(true);
-				LOG.info("PANIC! Returning a bag with " + allRemainingVertices.size() + " nodes, time since started: " + (System.currentTimeMillis() - tStart));
-				LOG.info("This bag has id " + finalBag.id + ", and the TD has " + td.getNumberOfBags() + " bags...");
-				break;
+				else{
+					return null;
+				}
 			}
 			// obtain next vertex with respect to the current algorithm and check if this is a reasonable choice
 			int lowestPrio = q.getMinPrio();

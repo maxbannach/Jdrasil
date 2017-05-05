@@ -53,10 +53,7 @@ public class PaceGreedyDegreeDecomposer {
 		Set<Integer> eliminated = new HashSet<>();
 		while(q.size() > 0){
 			iterations++;
-			if((iterations % 1000) == 0){
-				LOG.info("Iteration " + iterations + " , largestBag=" + largestBag + " permutation.size()=" + permutation.size());
-			}
-			int next = q.removeMin();
+			int next = q.removeMinRandom();
 			if(eliminated.contains(next))
 				throw new RuntimeException();
 			eliminated.add(next);
@@ -98,7 +95,6 @@ public class PaceGreedyDegreeDecomposer {
 					int removed = q.removeMin();
 					if(removed != n)
 						throw new RuntimeException();
-//					q.checkIsHeap();
 				}
 				else
 					q.updateValue(n, adjacencyLists[n].size());
@@ -117,7 +113,6 @@ public class PaceGreedyDegreeDecomposer {
 							else
 								j++;
 					}
-					
 				}
 			}
 		}

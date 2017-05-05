@@ -29,7 +29,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 
-
+import jdrasil.Heuristic;
 import jdrasil.algorithms.EliminationOrderDecomposer;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
@@ -120,6 +120,9 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 
 			// try to improve the current permutation for s steps
 			for(int i = 0; i < s; i++){
+				
+				
+				
 				// the current best neighbour, its permutation and its score
 				List<T> bestNeighbourPerm = null;
 				T bestNeighbour = null;
@@ -127,7 +130,11 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 
 				// try to improve the current permutation by changing the position of one node
 				for(T v: perm){
-
+					/*
+					 * Check if we have to terminate! 
+					 */
+					if(Heuristic.shutdownFlag)
+						return tdOpt;
 					// test only the allowed vertices
 					if(! tabu.contains(v)){
 						// find the minsucc and maxpred vertices of v, i.e. the most likely nodes
