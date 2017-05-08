@@ -99,7 +99,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 				);
 		tdOpt = dec.call();
 
-		int evalOpt = evalPerm(permOpt);
+		long evalOpt = evalPerm(permOpt);
 
 		// initialize the current permutation that we will work on
 		List<T> perm = new LinkedList<T>(permOpt);
@@ -116,7 +116,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 			dec.call();
 			Map<T, Bag<T>> map = dec.eliminatedVertexToBag;
 			Map<T,Integer> pos = toMap(perm);
-			int eval = evalPerm(perm);
+			long eval = evalPerm(perm);
 
 			// try to improve the current permutation for s steps
 			for(int i = 0; i < s; i++){
@@ -126,7 +126,7 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 				// the current best neighbour, its permutation and its score
 				List<T> bestNeighbourPerm = null;
 				T bestNeighbour = null;
-				int evalTmp = Integer.MAX_VALUE;
+				long evalTmp = Long.MAX_VALUE;
 
 				// try to improve the current permutation by changing the position of one node
 				for(T v: perm){
@@ -157,8 +157,8 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 
 						// evaluate the permutations of the minsucc and maxpred vertices
 						// and update the bestNeighbour values if necessary
-						int evalMax = Integer.MAX_VALUE;
-						int evalMin = Integer.MAX_VALUE;
+						long evalMax = Long.MAX_VALUE;
+						long evalMin = Long.MAX_VALUE;
 						if(maxw != null){
 							List<T> permMax = modifyPerm(perm, v, pos.get(v), max);
 							evalMax = evalPerm(permMax);
@@ -286,21 +286,25 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 		return nperm;
 	}
 
-
+	
 	/**
 	 * Calculates the cost of a permutation by computing its treewidth and preferring tree decompositions with more smaller bags.
 	 * @param perm The permutation
 	 * @return the cost of perm
 	 */
-	public int evalPerm(List<T> perm) throws Exception{
+	public long evalPerm(List<T> perm) throws Exception{
 		Map<T, Integer> pos = toMap(perm);
 		Graph<T> g = GraphFactory.copy(graph);
+		g.setLogEdgesInNeighbourhood(false);
 		int maxBag = 0;
-		int res = 0;
+		long res = 0;
 		int posOfV = 0;
+		int maxDegreeSeenHere = 0;
 		for(T v: perm){
 			// only consider the neighbours with higher index. The others are already removed
 			Set<T> bag = new HashSet<T>();
+			if(g.getNeighborhood(v).size() > maxDegreeSeenHere)
+				maxDegreeSeenHere = g.getNeighborhood(v).size();
 			for(T u: g.getNeighborhood(v)){
 				if(pos.get(u) > posOfV){
 					bag.add(u);
@@ -328,7 +332,10 @@ public class LocalSearchDecomposer<T extends Comparable<T>> implements TreeDecom
 		}
 
 		// ensure that the tw dominates
-		return res+maxBag*maxBag*perm.size()*perm.size();
+		long l1 = maxBag * maxBag;
+		long l2 = perm.size() * perm.size();
+		
+		return res+l1*l2;
 	}
 
 
