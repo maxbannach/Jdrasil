@@ -11,6 +11,10 @@ public class IntVector {
 		array = new int[16];
 	}
 	
+	public IntVector(IntVector original){
+		array = Arrays.copyOf(original.array, original.array.length);
+		size = original.size;
+	}
 	
 	public void push(int elem){
 		if(size >= array.length)

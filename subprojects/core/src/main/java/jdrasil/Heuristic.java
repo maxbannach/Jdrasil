@@ -105,10 +105,15 @@ public class Heuristic implements sun.misc.SignalHandler {
         try {
             // read graph from stdin
             input = GraphFactory.graphFromStdin();
-
-            for(int i = 0 ; i < 1 ; i++){
+            int upperBound = input.getNumVertices();
+            boolean needsPostProcessing = false;
+            for(int i = 0 ; i < 10 && !JdrasilProperties.timeout() && !Heuristic.shutdownFlag ; i++){
 	            PaceGreedyDegreeDecomposer pcdd = new PaceGreedyDegreeDecomposer(input);
-	            pcdd.computeTreeDecomposition();
+	            TreeDecomposition<Integer> td =  pcdd.computeTreeDecomposition(upperBound);
+	            if(td != null && td.getWidth() < upperBound){
+	            	this.decomposition = td;
+	            	upperBound = td.getWidth();
+	            }
             }
             
             /* Compute a explicit decomposition */
@@ -128,8 +133,10 @@ public class Heuristic implements sun.misc.SignalHandler {
                 tmp = greedyPermutationDecomposer.call();
                 synchronized (this) {
                 	if(this.decomposition == null || 
-                			(tmp != null && tmp.getWidth() < this.decomposition.getWidth()))
+                			(tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
                 		this.decomposition = tmp;
+                		needsPostProcessing = true;
+                	}
                 }
 //                if(!JdrasilProperties.timeout() ){
 //	                LOG.info("Improving the decomposition");
@@ -148,14 +155,16 @@ public class Heuristic implements sun.misc.SignalHandler {
                     tmp = localSearchDecomposer.call();
                     synchronized (this) {
                     	if(this.decomposition == null || 
-                    			(tmp != null && tmp.getWidth() < this.decomposition.getWidth()))
+                    			(tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
                     		this.decomposition = tmp;
+                    		needsPostProcessing = true;
+                    	}
                     }
 
                 }
             }
             // print and exit
-            printSolution(this.decomposition);
+            printSolution(this.decomposition, needsPostProcessing);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -172,9 +181,11 @@ public class Heuristic implements sun.misc.SignalHandler {
      * This method will exit the program.
      * @param td a tree decomposition of the reduced graph
      */
-    private synchronized void printSolution(TreeDecomposition<Integer> td) {
-        if (reducer.getProcessedGraph().getCopyOfVertices().size() != 0) reducer.addbackTreeDecomposition(td);
-        this.decomposition = reducer.getTreeDecomposition();
+    private synchronized void printSolution(TreeDecomposition<Integer> td, boolean needsPostProcessing) {
+    	if(needsPostProcessing){
+	        if (reducer.getProcessedGraph().getCopyOfVertices().size() != 0) reducer.addbackTreeDecomposition(td);
+	        this.decomposition = reducer.getTreeDecomposition();
+    	}
         this.decomposition.connectComponents();
         tend = System.nanoTime();
         System.out.println(this.decomposition);
