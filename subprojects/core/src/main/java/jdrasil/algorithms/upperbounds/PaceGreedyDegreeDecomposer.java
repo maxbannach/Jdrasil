@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import javax.management.RuntimeErrorException;
 import javax.swing.plaf.ActionMapUIResource;
 
+import jdrasil.Heuristic;
 import jdrasil.Datastructures.IntVector;
 import jdrasil.Datastructures.UpdatablePriorityQueue;
 import jdrasil.graph.Bag;
@@ -66,6 +67,9 @@ public class PaceGreedyDegreeDecomposer {
 			}
 			if(adjacencyLists[next].size() > upperBound){
 				return null;
+			}
+			if(Heuristic.shutdownFlag){
+				return null; 
 			}
 			if(eliminated.contains(next))
 				throw new RuntimeException();
@@ -208,7 +212,7 @@ public class PaceGreedyDegreeDecomposer {
 	
 	
 	private void makeClique(int next, IntVector bag, IntVector alsoDelete){
-		bag.push(next);;
+		bag.push(next);
 		for(int i = 0 ; i < adjacencyLists[next].size() ; i++){
 			FLAG++;
 			int neighbourIndex = adjacencyLists[next].get(i);

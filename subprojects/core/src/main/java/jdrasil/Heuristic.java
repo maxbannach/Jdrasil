@@ -73,7 +73,7 @@ public class Heuristic implements sun.misc.SignalHandler {
     /** The local search decomposer used in the third phase */
     private LocalSearchDecomposer<Integer> localSearchDecomposer;
 
-    public static boolean shutdownFlag;
+    public static volatile boolean shutdownFlag;
     
     /**
      * Entry point to Jdrasil in heuristic mode. The program, started with this method, will read a graph from standard
@@ -107,12 +107,14 @@ public class Heuristic implements sun.misc.SignalHandler {
             input = GraphFactory.graphFromStdin();
             int upperBound = input.getNumVertices();
             boolean needsPostProcessing = false;
-            for(int i = 0 ; i < 10 && !JdrasilProperties.timeout() && !Heuristic.shutdownFlag ; i++){
+            for(int i = 0 ; i < 30 && !JdrasilProperties.timeout() && !Heuristic.shutdownFlag ; i++){
 	            PaceGreedyDegreeDecomposer pcdd = new PaceGreedyDegreeDecomposer(input);
 	            TreeDecomposition<Integer> td =  pcdd.computeTreeDecomposition(upperBound);
 	            if(td != null && td.getWidth() < upperBound){
 	            	this.decomposition = td;
 	            	upperBound = td.getWidth();
+	            	if(i > 3 && upperBound < 1000)
+	            		break;
 	            }
             }
             
@@ -130,6 +132,7 @@ public class Heuristic implements sun.misc.SignalHandler {
 
                 LOG.info("Starting greedy permutation phase");
                 greedyPermutationDecomposer = new StochasticGreedyPermutationDecomposer<>(reduced);
+                greedyPermutationDecomposer.setUpper_bound(upperBound);
                 tmp = greedyPermutationDecomposer.call();
                 synchronized (this) {
                 	if(this.decomposition == null || 
