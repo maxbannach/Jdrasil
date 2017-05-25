@@ -119,56 +119,57 @@ public class Heuristic implements sun.misc.SignalHandler {
 	            		break;
 	            }
             }
-            
-            /* Compute a explicit decomposition */
-            tstart = System.nanoTime();
-
-            LOG.info("reducing the graph");
-            reducer = new GraphReducer<>(input);
-            Graph<Integer> reduced = reducer.getProcessedGraph();
-            if (reduced.getCopyOfVertices().size() > 0) {
-                LOG.info("reduced the graph to " + reduced.getCopyOfVertices().size() + " vertices");
-
-                // temporary tree decomposition to avoid raise conditions
-                TreeDecomposition<Integer> tmp;
-
-                LOG.info("Starting greedy permutation phase");
-                greedyPermutationDecomposer = new StochasticGreedyPermutationDecomposer<>(reduced);
-                //greedyPermutationDecomposer.setUpper_bound(upperBound);
-                tmp = greedyPermutationDecomposer.call();
-                synchronized (this) {
-                	if(this.decomposition == null || 
-                			(tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
-                		this.decomposition = tmp;
-                		needsPostProcessing = true;
-                	}
-                }
-//                if(!JdrasilProperties.timeout() ){
-//	                LOG.info("Improving the decomposition");
-//	                tmp = this.decomposition.copy();
-//	                tmp.improveDecomposition();
-//	                synchronized (this) {
-//	                    this.decomposition = tmp;
-//	                }
-//                }
-
-                // we may skip the local search phase
-                if (!Heuristic.shutdownFlag &&  !JdrasilProperties.timeout() &&  !JdrasilProperties.containsKey("instant")) {
-
-                    LOG.info("Starting local search phase");
-                    if(greedyPermutationDecomposer.getPermutation() != null)
-                    	perm = greedyPermutationDecomposer.getPermutation();
-                    localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE, 30, perm);
-                    tmp = localSearchDecomposer.call();
-                    synchronized (this) {
-                    	if(this.decomposition == null || 
-                    			(tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
-                    		this.decomposition = tmp;
-                    		needsPostProcessing = true;
-                    	}
-                    }
-
-                }
+            if(!Heuristic.shutdownFlag){
+	            /* Compute a explicit decomposition */
+	            tstart = System.nanoTime();
+	
+	            LOG.info("reducing the graph");
+	            reducer = new GraphReducer<>(input);
+	            Graph<Integer> reduced = reducer.getProcessedGraph();
+	            if (reduced.getCopyOfVertices().size() > 0) {
+	                LOG.info("reduced the graph to " + reduced.getCopyOfVertices().size() + " vertices");
+	
+	                // temporary tree decomposition to avoid raise conditions
+	                TreeDecomposition<Integer> tmp;
+	
+	                LOG.info("Starting greedy permutation phase");
+	                greedyPermutationDecomposer = new StochasticGreedyPermutationDecomposer<>(reduced);
+	                //greedyPermutationDecomposer.setUpper_bound(upperBound);
+	                tmp = greedyPermutationDecomposer.call();
+	                synchronized (this) {
+	                	if(this.decomposition == null || 
+	                			(tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
+	                		this.decomposition = tmp;
+	                		needsPostProcessing = true;
+	                	}
+	                }
+	//                if(!JdrasilProperties.timeout() ){
+	//	                LOG.info("Improving the decomposition");
+	//	                tmp = this.decomposition.copy();
+	//	                tmp.improveDecomposition();
+	//	                synchronized (this) {
+	//	                    this.decomposition = tmp;
+	//	                }
+	//                }
+	
+	                // we may skip the local search phase
+	                if (!Heuristic.shutdownFlag &&  !JdrasilProperties.timeout() &&  !JdrasilProperties.containsKey("instant")) {
+	
+	                    LOG.info("Starting local search phase");
+	                    if(greedyPermutationDecomposer.getPermutation() != null)
+	                    	perm = greedyPermutationDecomposer.getPermutation();
+	                    localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE, 30, perm);
+	                    tmp = localSearchDecomposer.call();
+	                    synchronized (this) {
+	                    	if(this.decomposition == null || 
+	                    			(tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
+	                    		this.decomposition = tmp;
+	                    		needsPostProcessing = true;
+	                    	}
+	                    }
+	
+	                }
+	            }
             }
             // print and exit
             printSolution(this.decomposition, needsPostProcessing);
