@@ -84,7 +84,7 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 		//int ub = graph.getCopyOfVertices().size();
 
 		// iterating sqrt(n) times, at least 100
-		int itr = (int) Math.max(Math.sqrt(getUpper_bound()), 1000);
+		int itr = (int) Math.max(Math.sqrt(getUpper_bound()), 10000);
 		int iterationsPerformed = 0;
 		// each run will call the Greed-Permutation heuristic
 		while (itr --> 0) {

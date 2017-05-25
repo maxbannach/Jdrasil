@@ -31,6 +31,7 @@ import jdrasil.utilities.logging.JdrasilLogger;
 import sun.misc.Signal;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -107,6 +108,7 @@ public class Heuristic implements sun.misc.SignalHandler {
             input = GraphFactory.graphFromStdin();
             int upperBound = input.getNumVertices();
             boolean needsPostProcessing = false;
+            List<Integer> perm = null;
             for(int i = 0 ; i < 30 && !JdrasilProperties.timeout() && !Heuristic.shutdownFlag ; i++){
 	            PaceGreedyDegreeDecomposer pcdd = new PaceGreedyDegreeDecomposer(input);
 	            TreeDecomposition<Integer> td =  pcdd.computeTreeDecomposition(upperBound);
@@ -132,7 +134,7 @@ public class Heuristic implements sun.misc.SignalHandler {
 
                 LOG.info("Starting greedy permutation phase");
                 greedyPermutationDecomposer = new StochasticGreedyPermutationDecomposer<>(reduced);
-                greedyPermutationDecomposer.setUpper_bound(upperBound);
+                //greedyPermutationDecomposer.setUpper_bound(upperBound);
                 tmp = greedyPermutationDecomposer.call();
                 synchronized (this) {
                 	if(this.decomposition == null || 
@@ -154,7 +156,9 @@ public class Heuristic implements sun.misc.SignalHandler {
                 if (!Heuristic.shutdownFlag &&  !JdrasilProperties.timeout() &&  !JdrasilProperties.containsKey("instant")) {
 
                     LOG.info("Starting local search phase");
-                    localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE, 30, greedyPermutationDecomposer.getPermutation());
+                    if(greedyPermutationDecomposer.getPermutation() != null)
+                    	perm = greedyPermutationDecomposer.getPermutation();
+                    localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE, 30, perm);
                     tmp = localSearchDecomposer.call();
                     synchronized (this) {
                     	if(this.decomposition == null || 
