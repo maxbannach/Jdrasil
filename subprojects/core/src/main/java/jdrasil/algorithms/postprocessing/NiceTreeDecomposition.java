@@ -3,10 +3,9 @@ package jdrasil.algorithms.postprocessing;
 import jdrasil.graph.Bag;
 import jdrasil.graph.TreeDecomposition;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
+
+import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Int;
 
 /**
  * A \emph{nice} tree-decomposition is \emph{rooted} tree-decomposition in which each bag has one of the following types:
@@ -36,6 +35,25 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      */
     private Map<T, Integer> treeIndex;
 
+    /** Every bag in a nice tree-decomposition has a specific type (root, leaf, join, introduce, forget). */
+    public enum BagType {
+        ROOT,
+        LEAF,
+        INTRODUCE,
+        FORGET,
+        JOIN;
+    }
+
+    /**
+     * Stores for every bag which type it has.
+     */
+    private Map<Bag<T>, BagType> bagType;
+
+    /**
+     * Introduce and forget bags also have a special vertex.
+     */
+    private Map<Bag<T>, T> specialVertex;
+
     /**
      * The root bag of the nice tree-decomposition.
      */
@@ -49,6 +67,7 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      */
     public NiceTreeDecomposition(TreeDecomposition<T> treeDecomposition) {
         super(treeDecomposition);
+
     }
 
     @Override
@@ -216,9 +235,102 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
     }
 
     /**
-     * Computes the tree-index for the decomposition.
+     * In a \emph{nice} tree-decomposition, the bags are partitioned into $\{\text{join}, \text{introduce}, \text{forget}, \text{leafs}\}$
+     * bags. This function computes, given a nice tree-decomposition, the type of each bag.
+     */
+    private void classifyBags() {
+        bagType = new HashMap<>();
+        specialVertex = new HashMap<>();
+
+        Set<Bag<T>> visited = new HashSet();
+        Stack<Bag<T>> stack = new Stack<>();
+        visited.add(root);
+        stack.push(root);
+
+        while (!stack.isEmpty()) {
+            Bag<T> v = stack.pop();
+            if (treeDecomposition.getNeighborhood(v).size() == 3) bagType.put(v, BagType.JOIN);
+            for (Bag<T> w : treeDecomposition.getNeighborhood(v)) {
+                if (visited.contains(w)) continue; // parent
+
+                if (!bagType.containsKey(v)) {
+                    Set<T> tmp = v.vertices;
+                    tmp.removeAll(w.vertices);
+                    if (tmp.size() == 1) {
+                        bagType.put(v, BagType.INTRODUCE);
+                        specialVertex.put(v, tmp.stream().findFirst().get());
+                    } else {
+                        tmp = w.vertices;
+                        tmp.removeAll(v.vertices);
+                        bagType.put(v, BagType.FORGET);
+                        specialVertex.put(v, tmp.stream().findFirst().get());
+                    }
+                }
+
+                visited.add(w);
+                stack.push(w);
+            }
+            if (!bagType.containsKey(v)) bagType.put(v, BagType.LEAF);
+        }
+
+    }
+
+    /**
+     * Given a bag of a tree-decomposition, we may which to index data using the elements of this bag. For instance, we
+     * which to to know which vertex is ``the first vertex in the bag'', since we do not want to allocate space in the range
+     * of $O(n)$ per bag.
+     *
+     * This function computes a so called \emph{tree-index}, which is a mapping from the vertices of the graph to
+     * $\{0,\dots,k\}$, where $k$ is the width of the given tree-decomposition. It guarantees, that in no bag two vertices
+     * have the same tree-index, i.\,e., it can be used to access data.
+     *
+     * The tree-index can be computed by the following simple algorithm (which also shows that something like the tree-index
+     * exists at all): Start at the root with a pool of available indices ($\{0,\dots,k\}$). Whenever you encounter a
+     * forget bag (say for $v$), pop a index from the queue and assign it to vertex $v$. In every child-branch, if you encounter
+     * a join bag for this vertex, add the index back to the queue. Observe that there is only one forget bag for every vertex
+     * such that every vertex optains just one index, and since there can not be a chain of more then $k$ forget vertex,
+     * we also have always a index in the queue.
+     *
      */
     private void computeTreeIndex() {
+        treeIndex = new HashMap<>();
+
+        // queue of available indices
+        Stack<Integer> indices = new Stack<>();
+        int i = treeDecomposition.getWidth()+1; while (i --> 0) indices.push(i);
+
+        // assign indices via DFS
+        Stack<Bag<T>> stack = new Stack<>();
+        Set<Bag<T>> visited = new HashSet<>();
+        Set<Bag<T>> finished = new HashSet<>();
+        stack.push(root);
+        visited.add(root);
+        while (!stack.isEmpty()) {
+            Bag<T> v = stack.peek();
+            if (finished.contains(v)) {
+                stack.pop();
+                if (bagType.get(v) == BagType.FORGET) {
+                    indices.push(treeIndex.get(specialVertex.get(v)));
+                } else if (bagType.get(v) == BagType.INTRODUCE) {
+                    indices.pop();
+                }
+                continue;
+            }
+            finished.add(v);
+
+            if (bagType.get(v) == BagType.FORGET) {
+                treeIndex.put(specialVertex.get(v), indices.pop());
+            } else if (bagType.get(v) == BagType.INTRODUCE) {
+                indices.push(treeIndex.get(specialVertex.get(v)));
+            }
+
+            for (Bag<T> w : treeDecomposition.getNeighborhood(v)) {
+                if (visited.contains(w)) continue;
+                stack.push(w);
+                visited.add(w);
+            }
+        }
+
     }
 
     /**
