@@ -11,7 +11,6 @@ import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Int;
  * A \emph{nice} tree-decomposition is \emph{rooted} tree-decomposition in which each bag has one of the following types:
  *
  * \begin{enumerate}
- *  \item There is exactly one \emph{root} bag that stores an empty set.
  *  \item A \emph{leaf} bag has no children and stores and empty set.
  *  \item An \emph{introduce} bag has exactly one child bag and has the same content as its child up to one
  *    addional vertex (which was ``introduced'' at this bag.
@@ -33,11 +32,10 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      * to an index such that no two vertex appearing in a bag share the same index. Therefore, the tree-index can be used
      * to index data structures when working on the tree-decomposition.
      */
-    private Map<T, Integer> treeIndex;
+    public Map<T, Integer> treeIndex;
 
-    /** Every bag in a nice tree-decomposition has a specific type (root, leaf, join, introduce, forget). */
+    /** Every bag in a nice tree-decomposition has a specific type (leaf, join, introduce, forget). */
     public enum BagType {
-        ROOT,
         LEAF,
         INTRODUCE,
         FORGET,
@@ -47,12 +45,12 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
     /**
      * Stores for every bag which type it has.
      */
-    private Map<Bag<T>, BagType> bagType;
+    public Map<Bag<T>, BagType> bagType;
 
     /**
      * Introduce and forget bags also have a special vertex.
      */
-    private Map<Bag<T>, T> specialVertex;
+    public Map<Bag<T>, T> specialVertex;
 
     /**
      * The root bag of the nice tree-decomposition.
@@ -75,6 +73,7 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
         Bag<T> suitableRoot = findSuitableRoot();
         this.root = makeNice(suitableRoot);
         optimizeDecomposition();
+        classifyBags();
         computeTreeIndex();
         return treeDecomposition;
     }
@@ -254,13 +253,13 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
                 if (visited.contains(w)) continue; // parent
 
                 if (!bagType.containsKey(v)) {
-                    Set<T> tmp = v.vertices;
+                    Set<T> tmp = new HashSet<>(v.vertices);
                     tmp.removeAll(w.vertices);
                     if (tmp.size() == 1) {
                         bagType.put(v, BagType.INTRODUCE);
                         specialVertex.put(v, tmp.stream().findFirst().get());
                     } else {
-                        tmp = w.vertices;
+                        tmp = new HashSet<>(w.vertices);
                         tmp.removeAll(v.vertices);
                         bagType.put(v, BagType.FORGET);
                         specialVertex.put(v, tmp.stream().findFirst().get());
@@ -330,15 +329,6 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
                 visited.add(w);
             }
         }
-
-    }
-
-    /**
-     * Returns the tree-index for this decomposition
-     * @return A mapping $\phi\colon V\rightarrow\{0,\dots,\mathrm{tw}\}$.
-     */
-    public Map<T, Integer> getTreeIndex() {
-        return treeIndex;
     }
 
     /**
