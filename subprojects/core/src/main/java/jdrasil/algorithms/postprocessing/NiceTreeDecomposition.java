@@ -3,7 +3,10 @@ package jdrasil.algorithms.postprocessing;
 import jdrasil.graph.Bag;
 import jdrasil.graph.TreeDecomposition;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
 /**
  * A \emph{nice} tree-decomposition is \emph{rooted} tree-decomposition in which each bag has one of the following types:
@@ -76,7 +79,132 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      * @return The actual root bag of the constructed nice tree-decomposition.
      */
     private Bag<T> makeNice(Bag<T> root) {
-        return null;
+        // TODO: this is hacky and should be reimplemented
+        if (treeDecomposition.getNumberOfBags()==0) {
+            return null;
+        }
+
+        // remove dublicates
+        new FlattenTreeDecomposition<T>(treeDecomposition).getProcessedTreeDecomposition();
+
+        Set<Bag<T>> visited=new HashSet<>();
+        Stack<Bag<T>> S = new Stack<>();
+
+        // find a leaf as root, so that path decompositions remain paths
+        root=null;
+        for (Bag<T> v : treeDecomposition.getTree()) {
+            if (treeDecomposition.getTree().getNeighborhood(v).size()<=1) {
+                root=v;
+                break;
+            }
+        }
+        S.push(root);
+        visited.add(root);
+
+        // Add bags: from root bag to empty bag one by one
+        if (root.vertices.size() > 0) {
+            Set<T> currentRootSet=new HashSet<>(root.vertices);
+            Bag<T> prevRoot=root;
+            for (T v : root.vertices) {
+                currentRootSet.remove(v);
+                Bag<T> b=treeDecomposition.createBag(new HashSet<T>(currentRootSet));
+                treeDecomposition.addTreeEdge(b, prevRoot);
+                prevRoot=b;
+                visited.add(b); // these nodes are already nice
+            }
+            root = prevRoot;
+        }
+
+        while (!S.isEmpty()) {
+            Bag<T> parent = S.pop();
+            Set<Bag<T>> childs=new HashSet<>();
+            for (Bag<T> v : treeDecomposition.getTree().getNeighborhood(parent)) {
+                if (!visited.contains(v)) {
+                    childs.add(v);
+                }
+            }
+            int childsToCome=childs.size();
+            // if leaf, then add bags: remove vertices one by one
+            if (childsToCome==0) {
+                Set<T> currentSet=new HashSet<>(parent.vertices);
+                Bag<T> prevParent=parent;
+                for (T v : parent.vertices) {
+                    currentSet.remove(v);
+                    Bag<T> b=treeDecomposition.createBag(new HashSet<T>(currentSet));
+                    treeDecomposition.addTreeEdge(prevParent, b);
+                    prevParent=b;
+                    //visited.add(b); not needed
+                }
+            }
+            // else iterate over childs
+            for (Bag<T> child : childs) {
+                // remove edges; we probably will create new nodes in between.
+                treeDecomposition.getTree().removeEdge(parent, child);
+                //if (child.vertices.equals(parent.vertices)) {
+                //	System.out.println("error on " + parent);
+                //}
+            }
+            for (Bag<T> child : childs) {
+                Bag<T> leftParent=parent;
+                Bag<T> rightParent=null;
+                // if there is more than one child left, make the node a join node
+                if (childsToCome>1) {
+                    leftParent=treeDecomposition.createBag(new HashSet<T>(parent.vertices));
+                    treeDecomposition.addTreeEdge(parent, leftParent);
+                    visited.add(leftParent);
+                    rightParent=treeDecomposition.createBag(new HashSet<T>(parent.vertices));
+                    treeDecomposition.addTreeEdge(parent, rightParent);
+                    visited.add(rightParent);
+                }
+
+                // Append the child (to the left parent, if join node; otherwise,
+                // leftParent is the right parent from the iteration before).
+                // Do this nicely, so remove or add one vertex at a time.
+
+                Set<T> removedVertices=new HashSet<>(parent.vertices);
+                removedVertices.removeAll(child.vertices);
+                Set<T> addedVertices=new HashSet<>(child.vertices);
+                addedVertices.removeAll(parent.vertices);
+                int diffSize=removedVertices.size()+addedVertices.size();
+
+                Set<T> currentSet=new HashSet<>(parent.vertices);
+                // in the following, at least one for loop will be executed once.
+                Bag<T> newChild=null;
+                for (T v : removedVertices) {
+                    currentSet.remove(v);
+                    diffSize--;
+                    if (diffSize==0) {
+                        newChild=child;
+                    } else {
+                        newChild=treeDecomposition.createBag(new HashSet<T>(currentSet));
+                        visited.add(newChild);
+                    }
+                    treeDecomposition.addTreeEdge(leftParent, newChild);
+                    leftParent=newChild;
+                }
+                for (T v : addedVertices) {
+                    currentSet.add(v);
+                    diffSize--;
+                    if (diffSize==0) {
+                        newChild=child;
+                    } else {
+                        newChild=treeDecomposition.createBag(new HashSet<T>(currentSet));
+                        visited.add(newChild);
+                    }
+                    treeDecomposition.addTreeEdge(leftParent, newChild);
+                    leftParent=newChild;
+                }
+
+                // In the following, newChild is the same as child.
+                S.push(newChild);
+                visited.add(newChild);
+
+                parent=rightParent;
+                childsToCome--;
+            }
+        }
+
+        return root;
     }
 
     /**

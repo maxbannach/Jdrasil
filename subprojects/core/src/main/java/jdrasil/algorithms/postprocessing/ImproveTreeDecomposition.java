@@ -30,7 +30,8 @@ public class ImproveTreeDecomposition<T extends Comparable<T>> extends Postproce
 
     @Override
     protected TreeDecomposition<T> postprocessTreeDecomposition() {
-        return null;
+        improveDecomposition();
+        return treeDecomposition;
     }
 
     /**
