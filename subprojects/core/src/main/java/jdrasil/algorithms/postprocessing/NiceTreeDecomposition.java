@@ -39,7 +39,8 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
         LEAF,
         INTRODUCE,
         FORGET,
-        JOIN;
+        JOIN,
+        INTRODUCE_EDGE; // only used by @see VeryNiceTreeDecomposition
     }
 
     /**
