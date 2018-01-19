@@ -211,11 +211,11 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	}
 	
 	/**
-	 * Compute the connected components of the tree-decomposition of bags that contain the vertex v.
+	 * Compute the connected components of the tree-decomposition of bags that contain the vertex $x$.
 	 * For each connected component there will be one arbitrary vertex on the returned stack, i.e.,
 	 * in a valid decomposition the size of the stack is 1.
-	 * @param x
-	 * @return
+	 * @param x The vertex for which we extract the connected components.
+	 * @return A Stack containing one bag for each connected component that contains bags with $x$.
 	 */
 	private Stack<Bag<T>> connectedComponents(T x) {
 		Stack<Bag<T>> startVertices = new Stack<>();
@@ -294,76 +294,9 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 	}
 
 	/**
-	 * Computes the unique path between s and t in the tree-decomposition.
-	 * @param s
-	 * @param t
-	 * @return
+	 * If the tree-decomposition is not connected (i.\,e., the underlying graph is a forest), this method will connect
+	 * it.
 	 */
-	private List<Bag<T>> getPath(Bag<T> s, Bag<T> t) {
-		
-		// DFS data structure
-		Map<Bag<T>, Bag<T>> predecessor = new HashMap<>();
-		Stack<Bag<T>> S = new Stack<>();		
-		predecessor.put(s, s);
-		S.push(s);
-		
-		// perform DFS starting on s
-		while (!S.isEmpty()) {
-			Bag<T> u = S.pop();
-			for (Bag<T> v : tree.getNeighborhood(u)) {
-				if (!predecessor.containsKey(v)) {
-					predecessor.put(v, u);
-					S.push(v);
-				}
-			}
-		}
-		
-		// reconstruct the path
-		List<Bag<T>> path = new ArrayList<>(tree.getCopyOfVertices().size());		
-		Bag<T> current = t;
-		while (!predecessor.get(current).equals(current)) {
-			path.add(current);
-			current = predecessor.get(current);
-		}
-		path.add(current);
-		
-		// done
-		return path;		
-	}
-	
-	/**
-	 * This method returns an invalid vertex, or null if there is no invalid vertex.
-	 * A vertex v is invalid, if there is a path \(B_1,B_2,...,B_k\) with \(v \in B_1\), \(v \in B_2\), but
-	 * \(v \not\in B_i\) for \(1 \lt i \lt k\).
-	 * The method computes such a path, and it can be stored in a given List object. 
-	 * @return
-	 */
-	public T getInvalidVertex(List<Bag<T>> path) {
-		if (path != null) path.clear();
-		for (T v : graph) {
-			Stack<Bag<T>> S = connectedComponents(v);
-			if (S.size() <= 1) continue; // this vertex is valid
-			Bag<T> s = S.pop();
-			Bag<T> t = S.pop();					
-			path.addAll(getPath(s, t));	
-			
-			return v;
-		}
-		
-		// no path found -> decomposition is valid
-		return null;
-	}
-
-	public TreeDecomposition<T> copy() {
-		TreeDecomposition<T> res = new TreeDecomposition<T>(GraphFactory.copy(graph));
-		res.tree = GraphFactory.copy(tree);
-		res.n = n;
-		res.numberOfBags = numberOfBags;
-		res.width = width;
-		res.createdFromPermutation = createdFromPermutation;
-		return res;
-	}
-	
 	public void connectComponents(){
 		List<Set<Bag<T>>> comps = tree.getConnectedComponents();
 		ArrayList<Bag<T>> heads = new ArrayList<>();
