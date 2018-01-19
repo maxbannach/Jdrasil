@@ -353,120 +353,6 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		// no path found -> decomposition is valid
 		return null;
 	}
-	
-	/**
-	 * Improve the current decomposition by trying to find a suitable, improvable bag. 
-	 */
-	public void improveDecomposition(){
-		boolean stop = false;
-		do{
-			stop = true;
-			for(Bag<T> b: tree.getCopyOfVertices()){
-				Graph<T> g = toGraph(b);
-				
-				// if the graph is not a clique, improve it
-				if(!g.isClique()){
-					improveBag(b);
-					stop = false;
-					break;
-				}
-			}
-			
-		}
-		while(!stop);
-		
-	}
-	
-/**
- * Improve a bag by computing a minimum separator for it and splitting it according to the separator. 
- * See "Treewidth computations I. Upper bounds" by Bodlaender and Koster.
- * @param b the bag to improve
- */
-	public void improveBag(Bag<T> b){
-		Set<Bag<T>> neighbours = tree.getNeighborhood(b);
-		Graph<T> g = toGraph(b);
-		
-		// compute a minimal separator
-		Set<T> sep = new MinimalSeparator<T>(g).getSeperator();
-
-		// remove the separator from the graph
-		for(T v: sep){
-			g.removeVertex(v);
-		}
-		
-		// compute the remaining connected components
-		List<Set<T>> cs = g.getConnectedComponents();
-		
-		// remove the bag b from the decomposition
-		tree.removeVertex(b);
-		
-		// replace b by a new bag containing the separator
-		Bag<T> bsep = createBag(sep);
-		tree.addVertex(bsep);
-		
-		// add more bags containing the separator and the connected components
-		for(Set<T> set: cs){
-			Set<T> tset = new HashSet<>();
-			tset.addAll(set);
-			
-			set.addAll(sep);
-			Bag<T> bset =  createBag(set);
-			tree.addVertex(bset);
-			tree.addEdge(bsep, bset);
-
-			// connected the components to the outer bags
-			for(Bag<T> bx: neighbours){
-				Set<T> intersection = new HashSet<T>(sep); // use the copy constructor
-				intersection.retainAll(bx.vertices);
-				Set<T> union = new HashSet<T>(sep); // use the copy constructor
-				union.addAll(tset);
-				if(union.containsAll(intersection)){
-					tree.addEdge(bset, bx);
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Construct a graph from a bag. 
-	 * It consists of all vertices from the bag and all graph edges. 
-	 * In addition, it also contains {u,v}, if there is another bag that contains u and v.
-	 * @param b the bag
-	 * @return the graph constructed from the bag
-	 */
-	public Graph<T> toGraph(Bag<T> b){
-			Graph<T> g = new Graph<>();
-		for(T v: b.vertices){
-			g.addVertex(v);
-		}
-		for(T v: b.vertices){
-			for(T u: b.vertices){
-				if(u != v){
-					if(graph.isAdjacent(u, v) || inAnotherBag(u,v,b)){
-						g.addEdge(u, v);
-					}
-				}
-			}
-		}
-		return g;
-	}
-	
-	/**
-	 * Computes whether another bag exists that contains u and v.
-	 * @param u the first node u
-	 * @param v the second node v
-	 * @param b the original bag that contains u and v
-	 * @return whether a bag b' != b exists that also contains u and v
-	 */
-	private boolean inAnotherBag(T u, T v, Bag<T> b){
-		boolean res = false;
-		for(Bag<T> d : tree.getCopyOfVertices()){
-			if(d != b && d.contains(u) && d.contains(v)){
-				res = true;
-			}
-		}
-		return res;
-	}
 
 	public TreeDecomposition<T> copy() {
 		TreeDecomposition<T> res = new TreeDecomposition<T>(GraphFactory.copy(graph));
@@ -540,14 +426,18 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 			v.id=id++;
 		}
 	}
-	
-	// Make the tree decomposition nice. The root and each leaf is an empty bag.
-	// Each inner bag has either two copies of itself as child or a single child,
-	// which differs in exactly one vertex.
-	// Path decompositions remain paths.
-	public void makeNice() {
+
+	/**
+	 * Make the tree decomposition nice. The root and each leaf is an empty bag.
+	 * Each inner bag has either two copies of itself as child or a single child,
+	 * which differs in exactly one vertex.
+	 * Path decompositions remain paths.
+	 *
+	 * @return The root bag of the nice tree decomposition.
+	 */
+	public Bag makeNice() {
 		if (numberOfBags==0) {
-			return;
+			return null;
 		}
 		contractDuplicateBags();
 
@@ -564,9 +454,9 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 		}
 		S.push(root);
 		visited.add(root);
-		
+
 		// Add bags: from root bag to empty bag one by one
-		if (root.vertices.size()>0) {
+		if (root.vertices.size() > 0) {
 			Set<T> currentRootSet=new HashSet<>(root.vertices);
 			Bag<T> prevRoot=root;
 			for (T v : root.vertices) {
@@ -576,8 +466,9 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 				prevRoot=b;
 				visited.add(b); // these nodes are already nice
 			}
+			root = prevRoot;
 		}
-		
+
 		while (!S.isEmpty()) {
 			Bag<T> parent = S.pop();
 			Set<Bag<T>> childs=new HashSet<>();
@@ -666,5 +557,7 @@ public class TreeDecomposition<T extends Comparable<T>> implements java.io.Seria
 				childsToCome--;
 			}
 		}
+
+		return root;
 	}
 }
