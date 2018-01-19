@@ -55,6 +55,7 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
     protected TreeDecomposition<T> postprocessTreeDecomposition() {
         Bag<T> suitableRoot = findSuitableRoot();
         this.root = makeNice(suitableRoot);
+        optimizeDecomposition();
         computeTreeIndex();
         return treeDecomposition;
     }
@@ -84,7 +85,7 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
             return null;
         }
 
-        // remove dublicates
+        // remove duplicates
         new FlattenTreeDecomposition<T>(treeDecomposition).getProcessedTreeDecomposition();
 
         Set<Bag<T>> visited=new HashSet<>();
@@ -205,6 +206,13 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
         }
 
         return root;
+    }
+
+    /**
+     * The structure of a nice tree-decomposition is crucial for the performance of algorithms working on it.
+     * This method tries to optimize the structure by, for instance, rearranging join bags.
+     */
+    private void optimizeDecomposition() {
     }
 
     /**
