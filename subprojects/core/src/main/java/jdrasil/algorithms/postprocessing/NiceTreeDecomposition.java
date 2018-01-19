@@ -98,7 +98,6 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      * @return The actual root bag of the constructed nice tree-decomposition.
      */
     private Bag<T> makeNice(Bag<T> root) {
-        // TODO: this is hacky and should be reimplemented
         if (treeDecomposition.getNumberOfBags()==0) {
             return null;
         }

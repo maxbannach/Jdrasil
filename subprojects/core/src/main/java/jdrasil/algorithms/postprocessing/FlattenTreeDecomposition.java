@@ -33,7 +33,6 @@ public class FlattenTreeDecomposition<T extends Comparable<T>> extends Postproce
 
     /**
      * Contract adjacent bags with same content.
-     * TODO: This is very hacky and should be reimplemented
      */
     private void contractDuplicateBags() {
         Graph<Bag<T>> tree = treeDecomposition.getTree();
