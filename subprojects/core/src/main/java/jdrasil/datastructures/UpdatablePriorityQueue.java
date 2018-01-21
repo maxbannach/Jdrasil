@@ -1,7 +1,7 @@
 /**
  * 
  */
-package jdrasil.Datastructures;
+package jdrasil.datastructures;
 
 import java.util.ArrayList;
 import java.util.HashMap;

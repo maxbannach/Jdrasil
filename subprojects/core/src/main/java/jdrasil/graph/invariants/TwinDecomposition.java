@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jdrasil.graph.Graph;
-import jdrasil.utilities.PartitionRefinement;
+import jdrasil.datastructures.PartitionRefinement;
 
 /**
  *

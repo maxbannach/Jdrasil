@@ -18,11 +18,10 @@
  */
 package jdrasil.algorithms.exact;
 
-import jdrasil.algorithms.lowerbounds.ImprovedGraphLowerbound;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.upperbounds.GreedyPermutationDecomposer;
 import jdrasil.graph.*;
-import jdrasil.utilities.BitSetTrie;
+import jdrasil.datastructures.BitSetTrie;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.util.*;

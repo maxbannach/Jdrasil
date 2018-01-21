@@ -18,6 +18,8 @@
  */
 package jdrasil.utilities;
 
+import jdrasil.datastructures.BitSetTrie;
+
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Random;

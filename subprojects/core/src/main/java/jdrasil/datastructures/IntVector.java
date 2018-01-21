@@ -1,4 +1,4 @@
-package jdrasil.Datastructures;
+package jdrasil.datastructures;
 
 import java.util.Arrays;
 

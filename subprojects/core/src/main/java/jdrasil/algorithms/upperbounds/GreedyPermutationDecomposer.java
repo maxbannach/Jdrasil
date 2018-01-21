@@ -19,7 +19,6 @@
 package jdrasil.algorithms.upperbounds;
 
 import java.io.Serializable;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,8 +29,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import jdrasil.Heuristic;
-import jdrasil.Datastructures.UpdatablePriorityQueue;
-import jdrasil.algorithms.EliminationOrderDecomposer;
+import jdrasil.datastructures.UpdatablePriorityQueue;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;

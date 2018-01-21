@@ -6,11 +6,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.management.RuntimeErrorException;
-import javax.swing.plaf.ActionMapUIResource;
-
-import jdrasil.Datastructures.IntVector;
-import jdrasil.Datastructures.UpdatablePriorityQueue;
+import jdrasil.datastructures.IntVector;
+import jdrasil.datastructures.UpdatablePriorityQueue;
 import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;

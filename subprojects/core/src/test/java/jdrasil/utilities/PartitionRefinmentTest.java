@@ -18,6 +18,8 @@
  */
 package jdrasil.utilities;
 
+import jdrasil.datastructures.PartitionRefinement;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
