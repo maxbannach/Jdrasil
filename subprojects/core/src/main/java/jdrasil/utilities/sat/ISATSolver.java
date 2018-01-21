@@ -16,7 +16,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.sat;
+package jdrasil.utilities.sat;
 
 
 
@@ -57,7 +57,7 @@ public interface ISATSolver {
 
 	/**
 	 * Gets the current state of the solver.
-	 * @see ISATSolver#setCurrentState(jdrasil.sat.ISATSolver.State) and @see State
+	 * @see ISATSolver#setCurrentState(jdrasil.utilities.sat.ISATSolver.State) and @see State
 	 * @return
 	 */
 	State getCurrentState();

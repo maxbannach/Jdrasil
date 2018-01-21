@@ -16,7 +16,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.sat;
+package jdrasil.utilities.sat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jdrasil.sat.ISATSolver.SATSolverNotAvailableException;
-import jdrasil.sat.encodings.BasicCardinalityEncoder;
-import jdrasil.sat.encodings.DecreasingCardinalityEncoder;
-import jdrasil.sat.encodings.IncrementalCardinalityEncoder;
+import jdrasil.utilities.sat.ISATSolver.SATSolverNotAvailableException;
+import jdrasil.utilities.sat.encodings.BasicCardinalityEncoder;
+import jdrasil.utilities.sat.encodings.DecreasingCardinalityEncoder;
+import jdrasil.utilities.sat.encodings.IncrementalCardinalityEncoder;
 
 /**
  * This class represents a formula of propositional logic in CNF.

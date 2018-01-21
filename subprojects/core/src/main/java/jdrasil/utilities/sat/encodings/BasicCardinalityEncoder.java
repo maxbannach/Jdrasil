@@ -16,7 +16,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.sat.encodings;
+package jdrasil.utilities.sat.encodings;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import jdrasil.sat.Formula;
+import jdrasil.utilities.sat.Formula;
 
 /**
  * This class provides methods to encode cardinality constraints into a formula of propositional logic.
@@ -44,7 +44,7 @@ public class BasicCardinalityEncoder {
 			
 	//MARK: Binomial Encoding
 	
-	/** @see BasicCardinalityEncoder#binomialAMK(jdrasil.sat.Formula, java.util.Set, int) */
+	/** @see BasicCardinalityEncoder#binomialAMK(jdrasil.utilities.sat.Formula, java.util.Set, int) */
 	private static void binomialAMK(Formula phi, List<Integer> variables, List<Integer> C, int k, int pos) {
 		
 		// construction of subset complete

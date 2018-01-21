@@ -16,11 +16,11 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.sat.encodings;
+package jdrasil.utilities.sat.encodings;
 
 import java.util.Set;
 
-import jdrasil.sat.Formula;
+import jdrasil.utilities.sat.Formula;
 
 /**
  * This class implements an incremental cardinality constraint for a given (fixed) formula 

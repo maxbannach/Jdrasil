@@ -32,7 +32,7 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
-import jdrasil.sat.Formula;
+import jdrasil.utilities.sat.Formula;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 /**

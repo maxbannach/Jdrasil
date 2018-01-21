@@ -1375,7 +1375,7 @@ largest clique in the graph.
 
 \section{The Formula Class}\label{section:satFormula}
 The main interface of \Jdrasil\ to use boolean logic is the class
-\JClass{jdrasil.sat.Formula}, which represents a boolean formula in
+\JClass{jdrasil.utilities.sat.Formula}, which represents a boolean formula in
 CNF. This class is always available and can always be used to create
 and manage logic formulas. 
 
@@ -1643,15 +1643,15 @@ documentation.
 
 \Jdrasil\ implements core functionality of SAT4J completely over
 reflections. This is done in the \emph{intern} class
-\JClass{jdrasil.sat.SAT4JSolver}, which is a
-\JClass{jdrasil.sat.ISATSolver}. If the SAT4J library is found in
+\JClass{jdrasil.utilities.sat.SAT4JSolver}, which is a
+\JClass{jdrasil.utilities.sat.ISATSolver}. If the SAT4J library is found in
 \Jdrasil's classpath, this class will be used by
-\JClass{jdrasil.sat.Formula} (see~\ref{section:satFormula}) to find a
+\JClass{jdrasil.utilities.sat.Formula} (see~\ref{section:satFormula}) to find a
 model. This is fully capsuled from the user, which only has to work
 with the formula class. 
 
 If SAT4J is available in the classpath,
-\JMethod(canRegisterSATSolver()) of \JClass{jdrasil.sat.Formula} will
+\JMethod(canRegisterSATSolver()) of \JClass{jdrasil.utilities.sat.Formula} will
 return true, if SAT4J is also used (this depends on \Jdrasil\ and other
 loaded upgrades), the method \JMethod{init()} will return the String
 ``SAT4J''. 
@@ -1674,7 +1674,7 @@ upgrades in these locations:
   ./tw-exact
 \end{lstlisting}
 Of course, the SAT4J library can be stored at another location as
-well. Other than that, just work with the class \JClass{jdrasil.sat.Formula}
+well. Other than that, just work with the class \JClass{jdrasil.utilities.sat.Formula}
 as we would otherwise.
 
 \section{Native IPASIR Solver}
@@ -1710,12 +1710,12 @@ the API of modern solvers as Lingeling or PicoSAT, so that such
 solvers can easily be linked against IPASIR.
 
 \Jdrasil\ can use an IPASIR solver as upgrade using the class
-\JClass{jdrasil.sat.NativeSATSolver}, which implements the interface
-\JClass{jdrasil.sat.ISATSolver} with native methods. Note how this
+\JClass{jdrasil.utilities.sat.NativeSATSolver}, which implements the interface
+\JClass{jdrasil.utilities.sat.ISATSolver} with native methods. Note how this
 interface, which we also use for other solvers like SAT4J, is closely
 related to IPASIR. 
 
-The corresponding C interface of \JClass{jdrasil.sat.NativeSATSolver} can be found
+The corresponding C interface of \JClass{jdrasil.utilities.sat.NativeSATSolver} can be found
 in the header file \file{jdrasil_sat_NativeSATSolver.h}, which is
 located in the corresponding subproject folder at \file{subprojects/upgrades/ipasir/}.\note{We can always create this file with
 \lstinline[basicstyle=\footnotesize\codefamily]{./gradlew cinterface}} The

@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import jdrasil.graph.Graph;
-import jdrasil.sat.Formula;
+import jdrasil.utilities.sat.Formula;
 
 /**
  * A clique in a graph is a subset of its vertices such that all vertices within the clique are pairwise adjacent.

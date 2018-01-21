@@ -16,13 +16,13 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.sat.formulations;
+package jdrasil.utilities.sat.formulations;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import jdrasil.graph.Graph;
-import jdrasil.sat.Formula;
+import jdrasil.utilities.sat.Formula;
 
 /**
  * This class produces to a given graph G=(V,E) a formula phi that is satisfiable if, and only if,

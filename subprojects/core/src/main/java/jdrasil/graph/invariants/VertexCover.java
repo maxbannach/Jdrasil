@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import jdrasil.graph.Graph;
-import jdrasil.sat.Formula;
+import jdrasil.utilities.sat.Formula;
 
 /**
  * A vertex-cover of a graph is a subset of its vertices such that every edge is incident to at least one of these vertices.

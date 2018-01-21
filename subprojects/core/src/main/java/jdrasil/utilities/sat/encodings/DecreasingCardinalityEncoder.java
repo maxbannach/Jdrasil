@@ -16,13 +16,13 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.sat.encodings;
+package jdrasil.utilities.sat.encodings;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import jdrasil.sat.Formula;
+import jdrasil.utilities.sat.Formula;
 
 /**
  * An decreasing cardinality constraint is an "atMostK" constraint that is reduced between multiple calls 

@@ -28,9 +28,9 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
-import jdrasil.sat.Formula;
-import jdrasil.sat.formulations.BaseEncoder;
-import jdrasil.sat.formulations.ImprovedEncoder;
+import jdrasil.utilities.sat.Formula;
+import jdrasil.utilities.sat.formulations.BaseEncoder;
+import jdrasil.utilities.sat.formulations.ImprovedEncoder;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
