@@ -5,8 +5,6 @@ import jdrasil.graph.TreeDecomposition;
 
 import java.util.*;
 
-import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Int;
-
 /**
  * A \emph{nice} tree-decomposition is \emph{rooted} tree-decomposition in which each bag has one of the following types:
  *
@@ -17,6 +15,8 @@ import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Int;
  *  \item A \emph{forget} bag has exactly one child bag and contains all but one vertex of its child (it ``forgets''
  *    this vertex).
  *  \item A \emph{join} bag has two children which both have the same content as the join bag.
+ *  \item A \emph{edge} bag has one child with the same connected as that child and ``introduces'' one edge in that bag.
+ *     It is required that every edge is introduces exactly once.
  * \end{enumerate}
  *
  * It is well known that to every tree-decomposition there can be found a nice tree-decomposition of the same width.
@@ -34,13 +34,13 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      */
     public Map<T, Integer> treeIndex;
 
-    /** Every bag in a nice tree-decomposition has a specific type (leaf, join, introduce, forget). */
+    /** Every bag in a nice tree-decomposition has a specific type (leaf, join, introduce, forget, edge). */
     public enum BagType {
         LEAF,
         INTRODUCE,
         FORGET,
         JOIN,
-        INTRODUCE_EDGE; // only used by @see VeryNiceTreeDecomposition
+        EDGE;
     }
 
     /**
@@ -53,10 +53,18 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      */
     public Map<Bag<T>, T> specialVertex;
 
+    /** Edge bags need two special vertices. */
+    public Map<Bag<T>, T> secondSpecialVertex;
+
     /**
      * The root bag of the nice tree-decomposition.
      */
     private Bag<T> root;
+
+    /**
+     * A very nice tree-decomposition as edge bags as well.
+     */
+    private boolean isVeryNice;
 
     /**
      * The constructor just initialize some internal data structures and stores the tree-decomposition that should
@@ -65,8 +73,19 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      * @param treeDecomposition The tree-decomposition to be postprocessed.
      */
     public NiceTreeDecomposition(TreeDecomposition<T> treeDecomposition) {
-        super(treeDecomposition);
+        this(treeDecomposition, false);
+    }
 
+    /**
+     * The constructor just initialize some internal data structures and stores the tree-decomposition that should
+     * be postprocessed.
+     *
+     * @param treeDecomposition The tree-decomposition to be postprocessed.
+     * @param veryNice Decide whether edge bags should be computed or not.
+     */
+    public NiceTreeDecomposition(TreeDecomposition<T> treeDecomposition, boolean veryNice) {
+        super(treeDecomposition);
+        this.isVeryNice = veryNice;
     }
 
     @Override
@@ -76,6 +95,7 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
         optimizeDecomposition();
         classifyBags();
         computeTreeIndex();
+        computeEdgeBags();
         return treeDecomposition;
     }
 
@@ -327,6 +347,56 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
                 if (visited.contains(w)) continue;
                 stack.push(w);
                 visited.add(w);
+            }
+        }
+    }
+
+    /**
+     * Compute all edge bags for the decomposition.
+     * This will change the tree-decomposition and the labeling of bags function.
+     * However, it will not change the tree-index.
+     */
+    private void computeEdgeBags() {
+        secondSpecialVertex = new HashMap<>();
+
+        // compute introduce edge bags by DFS
+        Stack<Bag<T>> stack = new Stack<>();
+        Set<Bag<T>> visited = new HashSet<>();
+        stack.push(getRoot());
+        visited.add(getRoot());
+
+        while (!stack.isEmpty()) {
+            Bag<T> v = stack.pop();
+
+            // we only have to do something for forget bags, as we will introduce all remaining edges before this bag
+            if (bagType.get(v) == BagType.FORGET) {
+
+                T x = specialVertex.get(v); // vertex that was forgotten
+                Bag<T> child = null;
+                for (Bag<T> w : treeDecomposition.getNeighborhood(v)) { // we have exactly one child, get it!
+                    if (!visited.contains(w)) { child = w; break; }
+                }
+
+                // go through neighbors, if they are in the child bag we have to introduce the ege
+                for (T y : treeDecomposition.getGraph().getNeighborhood(x)) {
+                    if (child.vertices.contains(y)) {
+                        Bag<T> newChild = treeDecomposition.createBag(child.vertices);
+                        bagType.put(newChild, BagType.EDGE);
+                        specialVertex.put(newChild, x);
+                        secondSpecialVertex.put(newChild, y);
+                        treeDecomposition.addTreeEdge(child, newChild);
+                        treeDecomposition.addTreeEdge(newChild, v);
+                        treeDecomposition.getTree().removeEdge(child, v);
+                        child = newChild;
+                    }
+                }
+            }
+
+            // continue DFS
+            for (Bag<T> w : treeDecomposition.getNeighborhood(v)) {
+                if (visited.contains(w)) continue;
+                visited.add(w);
+                stack.push(w);
             }
         }
     }
