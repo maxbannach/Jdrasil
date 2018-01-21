@@ -1,13 +1,16 @@
 package jdrasil.workontd;
 
+import jdrasil.algorithms.SmartDecomposer;
 import jdrasil.algorithms.postprocessing.NiceTreeDecomposition;
 import jdrasil.graph.Bag;
+import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -42,6 +45,11 @@ public class DynammicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
     private boolean worksOnVeryNiceTreeDecomposition;
 
     /**
+     * The graph on which we actually work.
+     */
+    private Graph<T> graph;
+
+    /**
      * The tree-decomposition on which the dynamic program runs.
      */
     private TreeDecomposition<T> treeDecomposition;
@@ -64,10 +72,11 @@ public class DynammicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      *
      * The program will be executed on a nice tree-decomposition (which does not have edge bags).
      *
+     * @param graph The graph for which the program shall be executed.
      * @param leafFactory A StateVectorFactory that generates (usually empty) state vectors for leafs.
      */
-    public DynammicProgrammingOnTreeDecomposition(StateVectorFactory<T> leafFactory) {
-        this(leafFactory, false);
+    public DynammicProgrammingOnTreeDecomposition(Graph<T> graph, StateVectorFactory<T> leafFactory) {
+        this(graph, leafFactory, false);
     }
 
     /**
@@ -77,11 +86,12 @@ public class DynammicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      *
      * The program may be executed on a \emph{very} nice tree-decomposition (which does have edge bags).
      *
+     * @param graph The graph for which the program shall be executed.
      * @param leafFactory A StateVectorFactory that generates (usually empty) state vectors for leafs.
      * @param veryNice Indicates if the program should be executed on a \emph{very} nice tree-decomposition.
      */
-    public DynammicProgrammingOnTreeDecomposition(StateVectorFactory<T> leafFactory, boolean veryNice) {
-        this(leafFactory, false, null);
+    public DynammicProgrammingOnTreeDecomposition(Graph<T> graph,StateVectorFactory<T> leafFactory, boolean veryNice) {
+        this(graph, leafFactory, false, null);
     }
 
     /**
@@ -94,13 +104,15 @@ public class DynammicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      * The given tree-decomposition will be transformed to an optimized nice (or very nice) tree-decomposition on which
      * the program then is executed. The given tree-decomposition may be null, in which case a new one will be computed.
      *
+     * @param graph The graph for which the program shall be executed.
      * @param leafFactory A StateVectorFactory that generates (usually empty) state vectors for leafs.
      * @param veryNice Indicates if the program should be executed on a \emph{very} nice tree-decomposition.
      * @param treeDecomposition A given tree-decomposition on which the program shall run.
      */
-    public DynammicProgrammingOnTreeDecomposition(StateVectorFactory<T> leafFactory, boolean veryNice, TreeDecomposition<T> treeDecomposition) {
+    public DynammicProgrammingOnTreeDecomposition(Graph<T> graph,StateVectorFactory<T> leafFactory, boolean veryNice, TreeDecomposition<T> treeDecomposition) {
         this.leafFactory = leafFactory;
         this.worksOnVeryNiceTreeDecomposition = veryNice;
+        this.graph = graph;
         this.treeDecomposition = treeDecomposition;
         initialize();
     }
@@ -116,7 +128,13 @@ public class DynammicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
     private void initialize() {
         LOG.info("Start initialization of dynamic program.");
         this.stateVectorStack = new Stack<>();
-        if (this.treeDecomposition == null); //TODO tree-decomposition exact / compute heuristic stuff
+        if (this.treeDecomposition == null) {
+            try {
+                this.treeDecomposition = new SmartDecomposer<T>(graph).call();
+            } catch (Exception e) {
+                LOG.log(Level.SEVERE, "Dynamic Program could not be exectued because there was an error during the computation of the tree-decomposition.", e);
+            }
+        }
         this.niceTreeDecomposition = new NiceTreeDecomposition<>(treeDecomposition);
         this.treeDecomposition = niceTreeDecomposition.getProcessedTreeDecomposition(); // actually compute nice tree-decomposition
         LOG.info("Initialization of dynamic program completed.");
