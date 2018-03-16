@@ -59,6 +59,7 @@ public class ImproveTreeDecomposition<T extends Comparable<T>> extends Postproce
     /**
      * Improve a bag by computing a minimum separator for it and splitting it according to the separator.
      * See "Treewidth computations I. Upper bounds" by Bodlaender and Koster.
+     *
      * @param b the bag to improve
      */
     public void improveBag(Bag<T> b){
@@ -111,6 +112,7 @@ public class ImproveTreeDecomposition<T extends Comparable<T>> extends Postproce
      * Construct a graph from a bag.
      * It consists of all vertices from the bag and all graph edges.
      * In addition, it also contains {u,v}, if there is another bag that contains u and v.
+     *
      * @param b the bag
      * @return the graph constructed from the bag
      */
@@ -133,6 +135,7 @@ public class ImproveTreeDecomposition<T extends Comparable<T>> extends Postproce
 
     /**
      * Computes whether another bag exists that contains u and v.
+     *
      * @param u the first node u
      * @param v the second node v
      * @param b the original bag that contains u and v

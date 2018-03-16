@@ -6,7 +6,7 @@ package jdrasil.workontd;
  * methods of the \JClass{StateVector} interface.
  *
  * Use an initialization of this interface to provide a dynamic program (i.\,e., a implementation of @see \JClass{StateVector})
- * to @see DynammicProgrammingOnTreeDecomposition.
+ * to @see DynamicProgrammingOnTreeDecomposition.
  *
  * @author Max Bannach
  */

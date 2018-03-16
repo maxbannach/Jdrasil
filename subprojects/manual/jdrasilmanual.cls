@@ -353,3 +353,15 @@ Compiled: \today{}
   }
   \fi
 }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% JavaParser
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% load the parser
+\luaexec{ JavaParser = require("JavaParser") }
+
+% parse the given Java source code file and include its doc
+\newcommand{\includeJavaDoc}[1]{%
+  \luaexec{ JavaParser.parse("#1") }
+}

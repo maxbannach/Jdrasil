@@ -83,7 +83,8 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      * @param treeDecomposition The tree-decomposition to be postprocessed.
      * @param veryNice Decide whether edge bags should be computed or not.
      */
-    public NiceTreeDecomposition(TreeDecomposition<T> treeDecomposition, boolean veryNice) {
+    public NiceTreeDecomposition(TreeDecomposition<T> treeDecomposition,
+                                 boolean veryNice) {
         super(treeDecomposition);
         this.isVeryNice = veryNice;
     }
@@ -113,8 +114,9 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
     }
 
     /**
-     * Make the tree-decomposition \emph{nice} starting at the given root. Note that the root bag may not be the given bag,
+     * Make the tree-decomposition nice starting at the given root. Note that the root bag may not be the given bag,
      * but will lead by a path of forget-bags to it.
+     *
      * @param root A bag at which we shall root the tree-decomposition.
      * @return The actual root bag of the constructed nice tree-decomposition.
      */
@@ -403,6 +405,7 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
 
     /**
      * Returns the root bag of the nice tree-decomposition.
+     *
      * @return The unique root bag.
      */
     public Bag<T> getRoot() {

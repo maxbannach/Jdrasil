@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 /**
  * This class implements a \emph{general framework} for executing dynamic programs over (nice) tree-decompositions.
- * Starting with a provided tree-decomposition or with one computed by \JClass{SmartDecomposer}, this class will
+ * Starting with a provided tree-decomposition or with a decomposition computed by \JClass{SmartDecomposer}, this class will
  * optimize the tree-decomposition and transform it into a nice one. Then it will traverse the decomposition in
  * post-order and simulate a stack machine while doing so. On leaf bags, the stack machine will push new
  * \JClass{StateConfigurations} using a provided \JClass{StateVectorFactory}. For all other bag types, the stack machine
@@ -27,7 +27,7 @@ import java.util.logging.Logger;
  *
  * @author Max Bannach
  */
-public class DynammicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
+public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
 
     /** Jdrasils Logger */
     private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
@@ -75,7 +75,8 @@ public class DynammicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      * @param graph The graph for which the program shall be executed.
      * @param leafFactory A StateVectorFactory that generates (usually empty) state vectors for leafs.
      */
-    public DynammicProgrammingOnTreeDecomposition(Graph<T> graph, StateVectorFactory<T> leafFactory) {
+    public DynamicProgrammingOnTreeDecomposition(Graph<T> graph,
+                                                 StateVectorFactory<T> leafFactory) {
         this(graph, leafFactory, false);
     }
 
@@ -90,7 +91,8 @@ public class DynammicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      * @param leafFactory A StateVectorFactory that generates (usually empty) state vectors for leafs.
      * @param veryNice Indicates if the program should be executed on a \emph{very} nice tree-decomposition.
      */
-    public DynammicProgrammingOnTreeDecomposition(Graph<T> graph,StateVectorFactory<T> leafFactory, boolean veryNice) {
+    public DynamicProgrammingOnTreeDecomposition(Graph<T> graph,
+                                                 StateVectorFactory<T> leafFactory, boolean veryNice) {
         this(graph, leafFactory, false, null);
     }
 
@@ -109,7 +111,9 @@ public class DynammicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      * @param veryNice Indicates if the program should be executed on a \emph{very} nice tree-decomposition.
      * @param treeDecomposition A given tree-decomposition on which the program shall run.
      */
-    public DynammicProgrammingOnTreeDecomposition(Graph<T> graph,StateVectorFactory<T> leafFactory, boolean veryNice, TreeDecomposition<T> treeDecomposition) {
+    public DynamicProgrammingOnTreeDecomposition(Graph<T> graph,
+                                                 StateVectorFactory<T> leafFactory, boolean veryNice,
+                                                 TreeDecomposition<T> treeDecomposition) {
         this.leafFactory = leafFactory;
         this.worksOnVeryNiceTreeDecomposition = veryNice;
         this.graph = graph;
