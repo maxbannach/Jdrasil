@@ -146,6 +146,7 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
         }
         this.niceTreeDecomposition = new NiceTreeDecomposition<>(treeDecomposition);
         this.treeDecomposition = niceTreeDecomposition.getProcessedTreeDecomposition(); // actually compute nice tree-decomposition
+        this.tw = this.treeDecomposition.getWidth();
         LOG.info("Initialization of dynamic program completed.");
     }
 
