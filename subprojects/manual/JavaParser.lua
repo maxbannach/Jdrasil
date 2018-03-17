@@ -16,8 +16,12 @@ end
 function JavaParser.printFunctionName(func)
    if func:find("\n") then
       tex.print("\\begin{lstlisting}[language=Java]")
+      local i = 0
       for line in func:gmatch("([^\n]+)") do
-	 tex.print(trim(line))
+	 line = trim(line)
+	 if i > 0 then line = "  "..line end
+	 tex.print(line)
+	 i = i + 1
       end
       tex.print("\\end{lstlisting}")
    else
@@ -85,7 +89,7 @@ function JavaParser.parse(path)
    local s = table.concat(content, "\n")
    for comment,func in s:gmatch("/%*%*(.-)%*/\n(.-)[{;]") do
       tex.sprint("\\goodbreak{%")
-      if not func:match(" class ") then
+      if not func:match(" class ") and not func:match(" interface ") then
 	 JavaParser.printFunctionName(func)
 	 JavaParser.printFunctionComment(comment, "0.5cm")
       else
