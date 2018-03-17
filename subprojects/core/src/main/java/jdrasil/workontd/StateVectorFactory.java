@@ -13,9 +13,12 @@ package jdrasil.workontd;
 public interface StateVectorFactory<T extends Comparable<T>> {
 
     /**
-     * Generate a \JClass{StateVector} object for a leaf of the tree-decomposition. These are usually empty.
+     * Generate a \JClass{StateVector} object for a leaf of the tree-decomposition. These are usually empty, but may store the
+     * tree width of the graph or initialize some data structures.
+     *
+     * @param tw The tree width of the decomposition on which the dynamic program is executed.
      * @return A \JClass{StateVector} object.
      */
-    public StateVector<T> createStateVectorForLeaf();
+    public StateVector<T> createStateVectorForLeaf(int tw);
 
 }

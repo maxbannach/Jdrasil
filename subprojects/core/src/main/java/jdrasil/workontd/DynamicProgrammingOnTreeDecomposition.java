@@ -60,6 +60,11 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
     private NiceTreeDecomposition<T> niceTreeDecomposition;
 
     /**
+     * The tree with of the nice (or very nice) tree decomposition.
+     */
+    private int tw;
+
+    /**
      * While the tree-decomposition is processed in a post-order traversal, we store the results of the individual bags
      * on a stack, which simulates the ``bubble-up'' of the dynamic program.
      */
@@ -186,7 +191,7 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
         StateVector<T> sv;
         switch (niceTreeDecomposition.bagType.get(bag)) {
             case LEAF:
-                stateVectorStack.push(leafFactory.createStateVectorForLeaf());
+                stateVectorStack.push(leafFactory.createStateVectorForLeaf(tw));
                 break;
             case INTRODUCE:
                 sv = stateVectorStack.pop();
