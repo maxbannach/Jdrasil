@@ -39,8 +39,8 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
     private StateVectorFactory<T> leafFactory;
 
     /**
-     * Indicates if the program runs on a \emph{very} nice tree-decomposition, that is, a nice
-     * tree-decomposition that also uses edge bags.
+     * Indicates if the program runs on a \emph{very} nice tree decomposition, that is, a nice
+     * tree decomposition that also uses edge bags.
      */
     private boolean worksOnVeryNiceTreeDecomposition;
 
@@ -94,7 +94,7 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      *
      * @param graph The graph for which the program shall be executed.
      * @param leafFactory A StateVectorFactory that generates (usually empty) state vectors for leafs.
-     * @param veryNice Indicates if the program should be executed on a \emph{very} nice tree-decomposition.
+     * @param veryNice Indicates if the program should be executed on a \emph{very} nice tree decomposition.
      */
     public DynamicProgrammingOnTreeDecomposition(Graph<T> graph,
                                                  StateVectorFactory<T> leafFactory, boolean veryNice) {
@@ -106,15 +106,15 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      * produce state vectors of the dynamic program for leafs. Note that this implies all other state vectors and, thus,
      * is essentially the program code.
      *
-     * The program may be executed on a \emph{very} nice tree-decomposition (which does have edge bags).
+     * The program may be executed on a \emph{very} nice tree decomposition (which does have edge bags).
      *
      * The given tree-decomposition will be transformed to an optimized nice (or very nice) tree-decomposition on which
-     * the program then is executed. The given tree-decomposition may be null, in which case a new one will be computed.
+     * the program then is executed. The given tree decomposition may be null, in which case a new one will be computed.
      *
      * @param graph The graph for which the program shall be executed.
      * @param leafFactory A StateVectorFactory that generates (usually empty) state vectors for leafs.
-     * @param veryNice Indicates if the program should be executed on a \emph{very} nice tree-decomposition.
-     * @param treeDecomposition A given tree-decomposition on which the program shall run.
+     * @param veryNice Indicates if the program should be executed on a \emph{very} nice tree decomposition.
+     * @param treeDecomposition A given tree decomposition on which the program shall run.
      */
     public DynamicProgrammingOnTreeDecomposition(Graph<T> graph,
                                                  StateVectorFactory<T> leafFactory, boolean veryNice,
@@ -183,7 +183,7 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
     }
 
     /**
-     * Handle a bag of the (very) nice tree-decomposition. This functions assumes that the children of the bag where
+     * Handle a bag of the nice tree decomposition. This functions assumes that the children of the bag where
      * already handled and stored on the state vector stack.
      *
      * @param bag The bag to be processed.

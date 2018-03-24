@@ -1194,12 +1194,8 @@ program selects between different algorithms, in particular it will:
 \begin{enumerate}
   \item split the graph into safe components using \JClass{GraphSplitter};
   \item reduce the graph using \JClass{GraphReducer};
-  \item solve the problem with \JClass{SATDecomposer} if a SAT solver
-    is available;
-  \item solve with \JClass{CopsAndRobber}.
+  \item solve it with \JClass{CatchAndGlue}
 \end{enumerate}
-The selection of \JClass{SATDecomposer} and \JClass{CopsAndRobber} is
-also separated in the class \JClass{ExactDecomposer}.
 
 \section{Branch and Bound}
 The class \JClass{BranchAndBoundDecomposer} implements a classical branch and bound algorithm based on QuickBB~\cite{GogateD2004} and its successors.
@@ -1324,7 +1320,7 @@ decompositions in \Jdrasil{}, we will turn to the most simple example:
 graph coloring. More precisely, we wish to implement an algorithm that
 determines if a given graph can be vertex-colored with $3$ colors such
 that no two adjacent vertices get the same color. To get started, we
-have to implement a class \JClass{ColoringStateVector} that implements the \JClass{StateVector}
+have to implement a class that implements the \JClass{StateVector}
 interface. This class should represent the states of the dynamic
 program at a single node of the tree decomposition. A state in the
 graph coloring problem is a specific coloring of the vertices of the
@@ -1604,7 +1600,7 @@ largest clique in the graph.
 
 \section{The Formula Class}\label{section:satFormula}
 The main interface of \Jdrasil\ to use boolean logic is the class
-\JClass{jdrasil.utilities.sat.Formula}, which represents a boolean formula in
+\JClass{Formula}, which represents a boolean formula in
 CNF. This class is always available and can always be used to create
 and manage logic formulas. 
 
@@ -1872,15 +1868,15 @@ documentation.
 
 \Jdrasil\ implements core functionality of SAT4J completely over
 reflections. This is done in the \emph{intern} class
-\JClass{jdrasil.utilities.sat.SAT4JSolver}, which is a
-\JClass{jdrasil.utilities.sat.ISATSolver}. If the SAT4J library is found in
+\JClass{SAT4JSolver}, which is a
+\JClass{ISATSolver}. If the SAT4J library is found in
 \Jdrasil's classpath, this class will be used by
-\JClass{jdrasil.utilities.sat.Formula} (see~\ref{section:satFormula}) to find a
+\JClass{Formula} (see~\ref{section:satFormula}) to find a
 model. This is fully capsuled from the user, which only has to work
 with the formula class. 
 
 If SAT4J is available in the classpath,
-\JMethod(canRegisterSATSolver()) of \JClass{jdrasil.utilities.sat.Formula} will
+\JMethod(canRegisterSATSolver()) of \JClass{Formula} will
 return true, if SAT4J is also used (this depends on \Jdrasil\ and other
 loaded upgrades), the method \JMethod{init()} will return the String
 ``SAT4J''. 
@@ -1939,13 +1935,13 @@ the API of modern solvers as Lingeling or PicoSAT, so that such
 solvers can easily be linked against IPASIR.
 
 \Jdrasil\ can use an IPASIR solver as upgrade using the class
-\JClass{jdrasil.utilities.sat.NativeSATSolver}, which implements the interface
-\JClass{jdrasil.utilities.sat.ISATSolver} with native methods. Note how this
+\JClass{NativeSATSolver}, which implements the interface
+\JClass{ISATSolver} with native methods. Note how this
 interface, which we also use for other solvers like SAT4J, is closely
 related to IPASIR. 
 
-The corresponding C interface of \JClass{jdrasil.utilities.sat.NativeSATSolver} can be found
-in the header file \file{jdrasil_sat_NativeSATSolver.h}, which is
+The C interface of \JClass{NativeSATSolver} can be found
+in \file{jdrasil_sat_NativeSATSolver.h}, which is
 located in the corresponding subproject folder at \file{subprojects/upgrades/ipasir/}.\note{We can always create this file with
 \lstinline[basicstyle=\footnotesize\codefamily]{./gradlew cinterface}} The
 corresponding C/C++ implementation
