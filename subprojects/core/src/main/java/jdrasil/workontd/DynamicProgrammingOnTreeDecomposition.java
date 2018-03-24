@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  * optimize the tree-decomposition and transform it into a nice one. Then it will traverse the decomposition in
  * post-order and simulate a stack machine while doing so. On leaf bags, the stack machine will push new
  * \JClass{StateConfigurations} using a provided \JClass{StateVectorFactory}. For all other bag types, the stack machine
- * will only use the top the stack and the methods of \JClass{StateVector}.
+ * will only use the top of the stack and the methods of \JClass{StateVector}.
  *
  * Note that the \emph{actual} program that will be executed is encoded in the \JClass{StateVector} class, which is provided
  * to the stack machine in form the the given \JClass{StateVectorFactory}. All operations performed by this class
@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  */
 public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
 
-    /** Jdrasils Logger */
+    /* Jdrasils Logger */
     private final static Logger LOG = Logger.getLogger(JdrasilLogger.getName());
 
     /**
@@ -98,7 +98,7 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      */
     public DynamicProgrammingOnTreeDecomposition(Graph<T> graph,
                                                  StateVectorFactory<T> leafFactory, boolean veryNice) {
-        this(graph, leafFactory, false, null);
+        this(graph, leafFactory, veryNice, null);
     }
 
     /**
@@ -144,7 +144,7 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
                 LOG.log(Level.SEVERE, "Dynamic Program could not be exectued because there was an error during the computation of the tree-decomposition.", e);
             }
         }
-        this.niceTreeDecomposition = new NiceTreeDecomposition<>(treeDecomposition);
+        this.niceTreeDecomposition = new NiceTreeDecomposition<>(treeDecomposition, this.worksOnVeryNiceTreeDecomposition);
         this.treeDecomposition = niceTreeDecomposition.getProcessedTreeDecomposition(); // actually compute nice tree-decomposition
         this.tw = this.treeDecomposition.getWidth();
         LOG.info("Initialization of dynamic program completed.");

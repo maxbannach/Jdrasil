@@ -1318,6 +1318,219 @@ installed as upgrade, see Section~\ref{upgrade:sat} for details.
 \section{State Factor Factory}
 \includeJavaDoc{../core/src/main/java/jdrasil/workontd/StateVectorFactory.java}
 
+\section{Example: Graph Coloring}
+To illustrate the usage of dynamic programming over tree
+decompositions in \Jdrasil{}, we will turn to the most simple example:
+graph coloring. More precisely, we wish to implement an algorithm that
+determines if a given graph can be vertex-colored with $3$ colors such
+that no two adjacent vertices get the same color. To get started, we
+have to implement a class \JClass{ColoringStateVector} that implements the \JClass{StateVector}
+interface. This class should represent the states of the dynamic
+program at a single node of the tree decomposition. A state in the
+graph coloring problem is a specific coloring of the vertices of the
+bag, so \JClass{ColoringStateVector} should represent a collection of
+possible colorings of the vertices in the bag represented by the node.
+
+To represent a single coloring, we will introduce a simple wrapper
+class \JClass{State}, which essentially manages an array that assigns
+colors to vertices. Observe that the array has only size bounded by
+the tree width, as we may use the tree index to index it.
+\begin{lstlisting}[language=Java]
+class State {
+  int[] colors;
+
+  public State(int tw) {
+    this.colors = new int[tw+1];
+  }
+
+  public State(State o) {
+    this.colors = Arrays.copyOf(o.colors, o.colors.length);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    State that = (State) o;
+    return Arrays.equals(colors, that.colors);
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(colors);
+  }
+}
+\end{lstlisting}
+
+Given the wrapper class, our \JClass{ColoringStateVector} essentially
+boils down to mange a set of states, i.\,e., \JMethod{Set<State>
+  states}. We now have to implement the behaviour for introducing or
+forgetting vertices, joining bags, and introducing edges. We handle
+\emph{introduce vertex} first. This is quite easy, as we just have to
+assign the new vertex one of the three possible colors. This means
+that we have to create three copies of every old state and assign the
+new vertex a different color in each of these copies. Observe that we
+use the given tree index to assign a color in the state. Also observe that we
+assign the colors $1$, $2$, and $3$~--~we use ``color'' $0$ to
+indicate that a vertex with this index is not in the bag.
+
+\note{For simplicity, we do not care about adjacent vertices getting the same color
+  here, as we will use edge bags for this purpose. Of course, we could
+also perform this test directly here and do not use edge bags at all.}
+\begin{lstlisting}[language=Java]
+@Override
+public StateVector<Integer> introduce(Bag<Integer> bag, Integer v,
+    Map<Integer, Integer> treeIndex) {
+  Set<State> newStates = new HashSet<>();
+  for (State state : states) {
+    for (int color = 1; color <= 3; color++) {
+      State newState = new State(state);
+      newState.colors[treeIndex.get(v)] = color;
+      newStates.add(newState);
+    }
+  }
+  this.states = newStates;
+  return this;
+}
+\end{lstlisting}
+
+The next thing on our checklist are forget bags in which we have to
+\emph{forget a vertex}. This essentially means that we set the entry
+of its tree index to $0$ (meaning that there is no vertex with this
+index in the bag). The crucial point is that this may result in
+multiple states being equivalent (for instance, assume we have a bag
+with four vertices and the states $(1,2,3,3)$ and $(1,2,3,4)$~--~if we
+delete the last vertex both states are the same). In order to
+guarantee the usual run time of a dynamic program over tree
+decompositions, we are not allowed to carry duplicates
+around. Therefore, we have to detect all duplicates created by the
+forget bag and remove them from the state set. Fortunately for us,
+this property can automatically be enforced by the underling hash set.
+
+\begin{lstlisting}[language=Java]
+@Override
+public StateVector<Integer> forget(Bag<Integer> bag, Integer v,
+    Map<Integer, Integer> treeIndex) {
+  Set<State> newStates = new HashSet<>();
+  for (State state : states) {
+    state.colors[treeIndex.get(v)] = 0;
+    newStates.add(state);
+  }
+  this.states = newStates;
+  return this;
+}
+\end{lstlisting}
+
+The third bag type we have to handle are join bags, which connect two
+children with the same content. Recall that a state is a coloring of
+the current bag that is valid for the whole subtree rooted at this
+bag. Hence, valid states at a joint bag are exactly the once's that
+appear in both children. This means that all we have to do at a join
+bag is to simply compute the intersection of the two state vectors.
+
+\begin{lstlisting}[language=Java]
+@Override
+public StateVector<Integer> join(Bag<Integer> bag,
+StateVector<Integer> stateVector,
+    Map<Integer, Integer> treeIndex) {
+  ColoringStateVector o = (ColoringStateVector) stateVector;
+
+  Set<State> newStates = new HashSet<>();
+  if (this.states.size() < o.states.size()) {
+    for (State state : this.states) {
+      if (o.states.contains(state)) newStates.add(state);
+    }
+  } else {
+    for (State state : o.states) {
+      if (this.states.contains(state)) newStates.add(state);
+    }
+  }
+
+  this.states = newStates;
+  return this;
+}
+\end{lstlisting}
+
+The last thing on our checklist are edge bags, which \emph{introduce
+  an edge} to the bag. Recall that every edge is introduced exactly
+once. Since we do not check if the coloring is valid when we introduce
+a new vertex, we have to do this now, i.\,e., given the introduced
+edge we have to verify that the two connected vertices have different
+colors. States in which this property is not satisfied have to be
+removed.
+
+\begin{lstlisting}[language=Java]
+@Override
+public StateVector<Integer> edge(Bag<Integer> bag, Integer v, Integer w,
+    Map<Integer, Integer> treeIndex) {
+  Set<State> newStates = new HashSet<>();
+  for (State state : states) {
+    if (state.colors[treeIndex.get(v)] != treeIndex.colors[map.get(w)])
+      newStates.add(state);
+  }
+  this.states = newStates;
+  return this;
+}
+\end{lstlisting}
+
+We are actually almost done. The class \JClass{ColoringStateVector}
+does everything it has to. The only thing missing is a way to tell
+\Jdrasil{} to use this state vector class. This is done by providing a
+class that implements the \JClass{StateVectorFactory} interface and
+that is able to produce state vectors for the leafs. Usually these
+state vectors are just empty~--~this is true for the coloring
+problem. We can therefore use a quite simple implementation for
+\JClass{StateVectorFactory}.
+
+\note{If we wish to compute the chromatic number of the graph (i.\,e.,
+the smallest number of colors needed), a convenient way is to give the
+coloring state vector a parameter $q$ of allowed colors and to
+provide different factories to the solver.}
+\begin{lstlisting}[language=Java]
+public class ColoringStateVectorFactory
+    implements StateVectorFactory<Integer> {
+
+  @Override
+  public StateVector<Integer> createStateVectorForLeaf(int tw) {
+    return new ColoringStateVector(tw);
+  }
+  
+}
+\end{lstlisting}
+
+We are now finally ready to run the algorithm. Essentially, all we have to do
+is to provide
+the \JClass{DynamicProgrammingOnTreeDecomposition} class with the
+input graph and an instance of our factory. If we run the program the
+``magic'' happens in the background, i.\,e., a tree decomposition is
+computed, optimized, and traversed. The \JClass{ColoringStateVector}
+class is internally used to transfer information from the leafs to the
+root and, finally, we obtain the state vector assigned to the root. If
+this vector is not empty, the graph is 3 colorable (as the valid
+colorings of the bag correspond to valid colorings of the whole
+subtree). On the other hand, if the vector is empty the graph can not
+be colored with 3 colors.
+
+\note{If we would provide ``false'' to the solver it would not compute
+edge bags. Our algorithm would then not work. However, if we would check the
+coloring when we introduce a vertex we would obtain a correct algorithm again.}
+\begin{lstlisting}[language=Java]
+Graph<Integer> G = GraphFactory.emptyGraph();
+// fill G with custom content
+
+DynamicProgrammingOnTreeDecomposition<Integer> solver
+  = new DynamicProgrammingOnTreeDecomposition<Integer>(
+    G, new ColoringStateVectorFactory(), true
+  );
+ColoringStateVector rootVector = (ColoringStateVector) solver.run();
+
+if (rootVector.states.size() >= 0) {
+  System.out.println("3 colorable");
+} else {
+  System.out.println("not 3 colorable");
+}
+\end{lstlisting}
+
 \part{Upgrades}\label{part:upgrades}
 
 \Jdrasil\ is designed as a modular and platform independent library,

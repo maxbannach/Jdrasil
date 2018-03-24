@@ -15,7 +15,7 @@ import java.util.*;
  *  \item A \emph{forget} bag has exactly one child bag and contains all but one vertex of its child (it ``forgets''
  *    this vertex).
  *  \item A \emph{join} bag has two children which both have the same content as the join bag.
- *  \item A \emph{edge} bag has one child with the same connected as that child and ``introduces'' one edge in that bag.
+ *  \item An \emph{edge} bag has one child with the same content as that child and ``introduces'' one edge in that bag.
  *     It is required that every edge is introduces exactly once.
  * \end{enumerate}
  *
@@ -96,7 +96,7 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
         optimizeDecomposition();
         classifyBags();
         computeTreeIndex();
-        computeEdgeBags();
+        if (isVeryNice) computeEdgeBags();
         return treeDecomposition;
     }
 
@@ -302,15 +302,15 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
      * of $O(n)$ per bag.
      *
      * This function computes a so called \emph{tree-index}, which is a mapping from the vertices of the graph to
-     * $\{0,\dots,k\}$, where $k$ is the width of the given tree-decomposition. It guarantees, that in no bag two vertices
+     * $\{0,\dots,k\}$, where $k$ is the width of the given tree-decomposition. It guarantees that in no bag two vertices
      * have the same tree-index, i.\,e., it can be used to access data.
      *
      * The tree-index can be computed by the following simple algorithm (which also shows that something like the tree-index
      * exists at all): Start at the root with a pool of available indices ($\{0,\dots,k\}$). Whenever you encounter a
      * forget bag (say for $v$), pop a index from the queue and assign it to vertex $v$. In every child-branch, if you encounter
-     * a join bag for this vertex, add the index back to the queue. Observe that there is only one forget bag for every vertex
-     * such that every vertex optains just one index, and since there can not be a chain of more then $k$ forget vertex,
-     * we also have always a index in the queue.
+     * an introduce bag for this vertex, add the index back to the queue. Observe that there is only one forget bag for every vertex
+     * and, therefore, every vertex optains just one index. Since there can not be a chain of more then $k$ forget vertices,
+     * we also have always an index in the queue.
      *
      */
     private void computeTreeIndex() {
