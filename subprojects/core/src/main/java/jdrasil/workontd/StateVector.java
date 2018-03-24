@@ -78,4 +78,32 @@ public interface StateVector<T extends Comparable<T>> {
     public StateVector<T> edge(Bag<T> bag, T v, T w,
                                Map<T, Integer> treeIndex);
 
+
+    /**
+     * A state vector can eventually be further reduced (for instance, if it contains equivalent states). A typical example
+     * is the rank-based reduction for steiner tree. However, such a reduction is eventually expensive and we do not want
+     * to compute it at every node of the tree decomposition.
+     *
+     * This method shall (quickly) test if it is a good idea to try to reduce the state vector. If it returns true, the
+     * method @see reduce is executed. Otherwise nothing happens.
+     *
+     * A state vector that does not support reduction may always return false and may not implement @see reduce.
+     *
+     * @param bag The current bag.
+     * @param treeIndex A reference to the tree-index.
+     * @return True if the state vector should be reduced.
+     */
+    public boolean shouldReduce(Bag<T> bag, Map<T, Integer> treeIndex);
+
+    /**
+     * A state vector may contain equivalent states and can be reduced by removing some of these. This method test
+     * if such states exists and, if so, filters them out.
+     *
+     * This function may be expensive, as it is only called if @see shouldReduce returns true.
+     *
+     * @param bag The current bag.
+     * @param treeIndex A reference to the tree-index.
+     */
+    public void reduce(Bag<T> bag, Map<T, Integer> treeIndex);
+
 }

@@ -217,6 +217,10 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
                 stateVectorStack.push(sv);
                 break;
         }
+
+        // eventually reduce the state vector
+        sv = stateVectorStack.peek();
+        if (sv.shouldReduce(bag, niceTreeDecomposition.treeIndex)) sv.reduce(bag, niceTreeDecomposition.treeIndex);
     }
 
 }
