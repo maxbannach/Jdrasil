@@ -34,6 +34,9 @@ public class SmartDecomposer<T extends Comparable<T>> implements TreeDecomposer<
     /** Maximum number of vertices that have to be in the graph to make us solve the problem exactly. */
     private final int EXACT_CAP = 600;
 
+    /** Maximum number of vertices that an atom can have to solve it exactly. */
+    private final int ATOM_EXACT_CAP = 40;
+
     /**
      * The graph that will be decomposed.
      */
@@ -83,7 +86,7 @@ public class SmartDecomposer<T extends Comparable<T>> implements TreeDecomposer<
         int lb = Math.max(4, new MinorMinWidthLowerbound<>(H).call());
         GraphSplitter<T> splitter = new GraphSplitter<T>(H, atom -> {
             try {
-                if (shouldSolveExactly()) return new CatchAndGlue<T>(atom).call();
+                if (shouldSolveExactly() && atom.getNumVertices() < ATOM_EXACT_CAP) return new CatchAndGlue<T>(atom).call();
                 return new StochasticGreedyPermutationDecomposer<>(atom).call();
             } catch (Exception e) {
                 LOG.warning(e.getMessage());
