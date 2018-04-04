@@ -173,6 +173,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 			List<T> N = new ArrayList<T>();
 			/* Just to make sure I don't get into trouble with some side effects*/
 			N.addAll(work.getNeighborhood(next));
+			N.remove(next); // in case of self-loops
 			if(N.size() <= maxDegree){
 				Set<T> newBag = new HashSet<>();
 				newBag.add(next);
@@ -180,7 +181,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 				bags.push(newBag);
 				work.eliminateVertex(next);
 				for(T v : N){
-					if(work.getNeighborhood(v).size() <= maxDegree && !seen.contains(v)){
+					if(work.containsNode(v) && work.getNeighborhood(v).size() <= maxDegree && !seen.contains(v)){
 						q.add(v);
 						seen.add(v);
 					}
@@ -188,15 +189,15 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 			}
 		}
 	}
-	
+
 	/**
-	 * Eliminate several nodes in one run. 
-	 * This combines partial applications of several rules: 
+	 * Eliminate several nodes in one run.
+	 * This combines partial applications of several rules:
 	 * 	- we eliminate all nodes with fill value of at most 1 - these are either simplicial, or almost simplicial
 	 * 	- we eliminate nodes with degree <=3, and fill-in value of <= 2 - this is the triangle rule.
-	 * Before this, make sure that no nodes with degree <= 2 have not been eliminated yet. 
+	 * Before this, make sure that no nodes with degree <= 2 have not been eliminated yet.
 	 * @param work
-	 * @return Whether at least one node has been eliminated or not. 
+	 * @return Whether at least one node has been eliminated or not.
 	 */
 	private boolean singlePass(Graph<T> work){
 		int numApplications = 0;
@@ -211,6 +212,7 @@ public class GraphReducer<T extends Comparable<T>> extends Preprocessor<T> {
 		}
 		while(!q.isEmpty()){
 			T v = q.poll();
+			if (!work.containsNode(v)) continue;
 			int fillValue = work.getFillInValue(v);
 			onQueue.remove(v);
 			boolean eliminate = fillValue < 1 || (fillValue == 1 && work.getNeighborhood(v).size() < low);
