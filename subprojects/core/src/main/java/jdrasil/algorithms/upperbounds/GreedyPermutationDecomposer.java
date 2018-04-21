@@ -20,11 +20,13 @@ package jdrasil.algorithms.upperbounds;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -227,7 +229,9 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 			workingCopy.setLogEdgesInNeighbourhood(false);
 		}
 		UpdatablePriorityQueue<T, Integer> q = new UpdatablePriorityQueue<T, Integer>();
-		for(T v : graph.getCopyOfVertices()){
+		ArrayList<T> helper = new ArrayList<>(graph.getCopyOfVertices());
+		Collections.shuffle(helper, new Random(RandomNumberGenerator.nextLong()));
+		for(T v : helper){
 			VertexValue vv = getValue(graph, v);
 			q.insert(vv.vertex, vv.value);
 		}

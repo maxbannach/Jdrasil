@@ -64,6 +64,8 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 	/** The best permutation that is computed. */
 	public List<T> permutation;
 	
+	private int upper_bound;
+	
 	/**
 	 * The algorithm is initialized with a graph that should be decomposed.
 	 * @param graph to be decomposed
@@ -72,16 +74,17 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 		this.graph = graph;
 		this.decomposition = new TreeDecomposition<T>(graph);
 		this.decomposition.createBag(graph.getCopyOfVertices());
+		setUpper_bound(graph.getNumVertices());
 	}
 
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
 
 		// an upper bound that will be improved during the run of the algortihm
-		int ub = graph.getCopyOfVertices().size();
+		//int ub = graph.getCopyOfVertices().size();
 
 		// iterating sqrt(n) times, at least 100
-		int itr = (int) Math.max(Math.sqrt(ub), 1000);
+		int itr = (int) Math.max(Math.sqrt(getUpper_bound()), 10000);
 		int iterationsPerformed = 0;
 		// each run will call the Greed-Permutation heuristic
 		while (itr --> 0) {
@@ -91,26 +94,26 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 				break;
 			GreedyPermutationDecomposer<T> greedyPermutation = new GreedyPermutationDecomposer<T>(graph);
 
-			if(iterationsPerformed < 3){
-				greedyPermutation.setToRun(Algorithm.Degree);
-			}
-			else if(iterationsPerformed < 4){
+			if(iterationsPerformed < 2){
 				greedyPermutation.setToRun(Algorithm.SparsestSubgraph);
+			}
+			else if(iterationsPerformed < 3){
+				greedyPermutation.setToRun(Algorithm.FillIn);
 			}
 			else{
 				// choose an algorithm at random
 				// with probability 0.5 we choose fill-in, as this algorithm performs very well,
 				// the other algorithms have probability 0.1
 				double p = RandomNumberGenerator.nextDouble();
-				if (p > 0.9) {
+				if (p > 0.95) {
 					greedyPermutation.setToRun(Algorithm.Degree);
 				} else if (p > 0.8) {
 					greedyPermutation.setToRun(Algorithm.DegreePlusFillIn);
-				} else if (p > 0.7) {
-					greedyPermutation.setToRun(Algorithm.SparsestSubgraph);
-				} else if (p > 0.6) {
-					greedyPermutation.setToRun(Algorithm.FillInDegree);
 				} else if (p > 0.5) {
+					greedyPermutation.setToRun(Algorithm.SparsestSubgraph);
+				} else if (p > 0.45) {
+					greedyPermutation.setToRun(Algorithm.FillInDegree);
+				} else if (p > 0.4) {
 					greedyPermutation.setToRun(Algorithm.DegreeFillIn);
 				} else {
 					greedyPermutation.setToRun(Algorithm.FillIn);
@@ -118,12 +121,12 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 			}
 
 			// compute the decomposition
-			TreeDecomposition<T> newDec = greedyPermutation.call(ub);
+			TreeDecomposition<T> newDec = greedyPermutation.call(getUpper_bound());
 
 			// we we get one, and if this decomposition improves the currently best -> update bound
-			if (newDec != null && newDec.getWidth() < ub) {
-				ub = newDec.getWidth();
-				LOG.info("new upper bound: " + ub);
+			if (newDec != null && newDec.getWidth() < getUpper_bound()) {
+				setUpper_bound(newDec.getWidth());
+				LOG.info("new upper bound: " + getUpper_bound());
 				LOG.info("Algorithm was " + greedyPermutation.getToRun());
 				decomposition = newDec;
 				permutation = greedyPermutation.getPermutation();
@@ -152,6 +155,14 @@ public class StochasticGreedyPermutationDecomposer<T extends Comparable<T>> impl
 	@Override
 	public TreeDecomposition<T> getCurrentSolution() {
 		return decomposition;
+	}
+
+	public int getUpper_bound() {
+		return upper_bound;
+	}
+
+	public void setUpper_bound(int upper_bound) {
+		this.upper_bound = upper_bound;
 	}
 	
 }

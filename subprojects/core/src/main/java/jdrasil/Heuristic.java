@@ -22,7 +22,6 @@ import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.algorithms.upperbounds.LocalSearchDecomposer;
 import jdrasil.algorithms.upperbounds.PaceGreedyDegreeDecomposer;
 import jdrasil.algorithms.upperbounds.StochasticGreedyPermutationDecomposer;
-import jdrasil.graph.Bag;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposition;
@@ -31,6 +30,7 @@ import jdrasil.utilities.logging.JdrasilLogger;
 import sun.misc.Signal;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -73,8 +73,8 @@ public class Heuristic implements sun.misc.SignalHandler {
     /** The local search decomposer used in the third phase */
     private LocalSearchDecomposer<Integer> localSearchDecomposer;
 
-    public static boolean shutdownFlag;
-    
+    public static volatile boolean shutdownFlag;
+
     /**
      * Entry point to Jdrasil in heuristic mode. The program, started with this method, will read a graph from standard
      * input and compute an heurstic decomposition.
@@ -87,7 +87,7 @@ public class Heuristic implements sun.misc.SignalHandler {
         // if Jdrasil is used as standalone, use dimacs logging
         JdrasilLogger.setToDimacsLogging();
 
-        
+
         shutdownFlag = false;
         // initialize the heuristic, this will also handle system signals
         new Heuristic();
@@ -107,52 +107,67 @@ public class Heuristic implements sun.misc.SignalHandler {
             input = GraphFactory.graphFromStdin();
             int upperBound = input.getNumVertices();
             boolean needsPostProcessing = false;
-            for(int i = 0 ; i < 10 && !JdrasilProperties.timeout() && !Heuristic.shutdownFlag ; i++){
-	            PaceGreedyDegreeDecomposer pcdd = new PaceGreedyDegreeDecomposer(input);
-	            TreeDecomposition<Integer> td =  pcdd.computeTreeDecomposition(upperBound);
-	            if(td != null && td.getWidth() < upperBound){
-	            	this.decomposition = td;
-	            	upperBound = td.getWidth();
-	            }
-            }
-            
-            /* Compute a explicit decomposition */
-            tstart = System.nanoTime();
-
-            LOG.info("reducing the graph");
-            reducer = new GraphReducer<>(input);
-            Graph<Integer> reduced = reducer.getProcessedGraph();
-            if (reduced.getCopyOfVertices().size() > 0) {
-                LOG.info("reduced the graph to " + reduced.getCopyOfVertices().size() + " vertices");
-
-                // temporary tree decomposition to avoid raise conditions
-                TreeDecomposition<Integer> tmp;
-
-                LOG.info("Starting greedy permutation phase");
-                greedyPermutationDecomposer = new StochasticGreedyPermutationDecomposer<>(reduced);
-                tmp = greedyPermutationDecomposer.call();
-                synchronized (this) {
-                	if(this.decomposition == null || 
-                			(tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
-                		this.decomposition = tmp;
-                		needsPostProcessing = true;
-                	}
+            List<Integer> perm = null;
+            for(int i = 0 ; i < 30 && !JdrasilProperties.timeout() && !Heuristic.shutdownFlag ; i++){
+                PaceGreedyDegreeDecomposer pcdd = new PaceGreedyDegreeDecomposer(input);
+                TreeDecomposition<Integer> td =  pcdd.computeTreeDecomposition(upperBound);
+                if(td != null && td.getWidth() < upperBound){
+                    this.decomposition = td;
+                    upperBound = td.getWidth();
+                    if(i > 3 && upperBound < 1000)
+                        break;
                 }
+            }
+            if(!Heuristic.shutdownFlag){
+                /* Compute a explicit decomposition */
+                tstart = System.nanoTime();
 
-                // we may skip the local search phase
-                if (!Heuristic.shutdownFlag &&  !JdrasilProperties.timeout() &&  !JdrasilProperties.containsKey("instant")) {
+                LOG.info("reducing the graph");
+                reducer = new GraphReducer<>(input);
+                Graph<Integer> reduced = reducer.getProcessedGraph();
+                if (reduced.getCopyOfVertices().size() > 0) {
+                    LOG.info("reduced the graph to " + reduced.getCopyOfVertices().size() + " vertices");
 
-                    LOG.info("Starting local search phase");
-                    localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE, 30, greedyPermutationDecomposer.getPermutation());
-                    tmp = localSearchDecomposer.call();
+                    // temporary tree decomposition to avoid raise conditions
+                    TreeDecomposition<Integer> tmp;
+
+                    LOG.info("Starting greedy permutation phase");
+                    greedyPermutationDecomposer = new StochasticGreedyPermutationDecomposer<>(reduced);
+                    //greedyPermutationDecomposer.setUpper_bound(upperBound);
+                    tmp = greedyPermutationDecomposer.call();
                     synchronized (this) {
-                    	if(this.decomposition == null || 
-                    			(tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
-                    		this.decomposition = tmp;
-                    		needsPostProcessing = true;
-                    	}
+                        if(this.decomposition == null ||
+                                (tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
+                            this.decomposition = tmp;
+                            needsPostProcessing = true;
+                        }
                     }
+                    //                if(!JdrasilProperties.timeout() ){
+                    //	                LOG.info("Improving the decomposition");
+                    //	                tmp = this.decomposition.copy();
+                    //	                tmp.improveDecomposition();
+                    //	                synchronized (this) {
+                    //	                    this.decomposition = tmp;
+                    //	                }
+                    //                }
 
+                    // we may skip the local search phase
+                    if (!Heuristic.shutdownFlag &&  !JdrasilProperties.timeout() &&  !JdrasilProperties.containsKey("instant")) {
+
+                        LOG.info("Starting local search phase");
+                        if(greedyPermutationDecomposer.getPermutation() != null)
+                            perm = greedyPermutationDecomposer.getPermutation();
+                        localSearchDecomposer = new LocalSearchDecomposer<>(reduced, Integer.MAX_VALUE, 30, perm);
+                        tmp = localSearchDecomposer.call();
+                        synchronized (this) {
+                            if(this.decomposition == null ||
+                                    (tmp != null && tmp.getWidth() < this.decomposition.getWidth())){
+                                this.decomposition = tmp;
+                                needsPostProcessing = true;
+                            }
+                        }
+
+                    }
                 }
             }
             // print and exit
@@ -174,10 +189,10 @@ public class Heuristic implements sun.misc.SignalHandler {
      * @param td a tree decomposition of the reduced graph
      */
     private synchronized void printSolution(TreeDecomposition<Integer> td, boolean needsPostProcessing) {
-    	if(needsPostProcessing){
-	        if (reducer.getProcessedGraph().getCopyOfVertices().size() != 0) reducer.addbackTreeDecomposition(td);
-	        this.decomposition = reducer.getTreeDecomposition();
-    	}
+        if(needsPostProcessing){
+            if (reducer.getProcessedGraph().getCopyOfVertices().size() != 0) reducer.addbackTreeDecomposition(td);
+            this.decomposition = reducer.getTreeDecomposition();
+        }
         this.decomposition.connectComponents();
         tend = System.nanoTime();
         System.out.println(this.decomposition);
@@ -191,8 +206,8 @@ public class Heuristic implements sun.misc.SignalHandler {
     @Override
     public void handle(Signal arg0) {
 
-    	
-    	Heuristic.shutdownFlag = true;
+
+        Heuristic.shutdownFlag = true;
 //        // catch super early abort
 //        if (input == null) {
 //            LOG.warning("Did not finish reading the graph!");
