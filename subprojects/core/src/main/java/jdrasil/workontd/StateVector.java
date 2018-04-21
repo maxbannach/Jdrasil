@@ -5,7 +5,7 @@ import jdrasil.graph.Bag;
 import java.util.Map;
 
 /**
- * A state vector describes the state of a dynamic program working on a tree-decomposition at a specific bag. For instance,
+ * A state vector describes the state of a dynamic program working on a tree decomposition at a specific bag. For instance,
  * in a program that checks if the graph is 3-colorable, the state vector of a bag could be the set of all possible
  * 3-colorings of that bag that are consistent to colorings of the subgraph of the subtree rooted at the bag.
  *
@@ -21,7 +21,7 @@ import java.util.Map;
  * while traversing the tree decomposition.
  *
  * All methods of the interface are always called with the parent bag, eventually some special vertices (for instance
- * the introduced vertex), and a so called \emph{tree index}. The later is a mapping $\phi\colon V\rightarrow\{0,\dots,\mathrm{tw}\}$
+ * the introduced vertex), and a so called \emph{tree-index}. The later is a mapping $\phi\colon V\rightarrow\{0,\dots,\mathrm{tw}\}$
  * that maps an integer to every vertex such that no two vertices that appear in a common bag share an index.
  * With other words, the tree-index can be used, for instance, to index an array that stores information for the vertices
  * in a bag.

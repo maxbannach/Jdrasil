@@ -1,17 +1,18 @@
 package jdrasil.algorithms.postprocessing;
 
 import jdrasil.graph.Bag;
+import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposition;
 
 import java.util.*;
 
 /**
- * A \emph{nice} tree-decomposition is \emph{rooted} tree-decomposition in which each bag has one of the following types:
+ * A \emph{nice} tree decomposition is a \emph{rooted} tree decomposition in which each bag has one of the following types:
  *
  * \begin{enumerate}
  *  \item A \emph{leaf} bag has no children and stores and empty set.
  *  \item An \emph{introduce} bag has exactly one child bag and has the same content as its child up to one
- *    addional vertex (which was ``introduced'' at this bag.
+ *    addional vertex (which was ``introduced'' at this bag).
  *  \item A \emph{forget} bag has exactly one child bag and contains all but one vertex of its child (it ``forgets''
  *    this vertex).
  *  \item A \emph{join} bag has two children which both have the same content as the join bag.
@@ -19,9 +20,9 @@ import java.util.*;
  *     It is required that every edge is introduces exactly once.
  * \end{enumerate}
  *
- * It is well known that to every tree-decomposition there can be found a nice tree-decomposition of the same width.
- * This class will perform this transformation for a given tree-decomposition. The modifiction will be performed
- * \emph{inplace}, i.\,e., the given tree-decomposition will be modified.
+ * It is well known that to every tree decomposition there can be found a nice tree decomposition of the same width.
+ * This class will perform this transformation for a given tree decomposition. The modifiction will be performed
+ * \emph{inplace}, i.\,e., the given tree decomposition will be modified.
  *
  * @author Max Bannach
  */
@@ -29,12 +30,12 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
 
     /**
      * The tree-index is a mapping $\phi\colon V\rightarrow\{0,\dots,\mathrm{tw}\}$ that maps every vertex of the graph
-     * to an index such that no two vertex appearing in a bag share the same index. Therefore, the tree-index can be used
-     * to index data structures when working on the tree-decomposition.
+     * to an index such that no two vertices appearing in a bag share the same index. Therefore, the tree-index can be used
+     * to index data structures when working on the tree decomposition.
      */
     public Map<T, Integer> treeIndex;
 
-    /** Every bag in a nice tree-decomposition has a specific type (leaf, join, introduce, forget, edge). */
+    /** Every bag in a nice tree decomposition has a specific type (leaf, join, introduce, forget, edge). */
     public enum BagType {
         LEAF,
         INTRODUCE,
@@ -57,30 +58,30 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
     public Map<Bag<T>, T> secondSpecialVertex;
 
     /**
-     * The root bag of the nice tree-decomposition.
+     * The root bag of the nice tree decomposition.
      */
     private Bag<T> root;
 
     /**
-     * A very nice tree-decomposition as edge bags as well.
+     * A very nice tree decomposition has edge bags as well.
      */
     private boolean isVeryNice;
 
     /**
-     * The constructor just initialize some internal data structures and stores the tree-decomposition that should
+     * The constructor just initializes some internal data structures and stores the tree decomposition that should
      * be postprocessed.
      *
-     * @param treeDecomposition The tree-decomposition to be postprocessed.
+     * @param treeDecomposition The tree decomposition to be postprocessed.
      */
     public NiceTreeDecomposition(TreeDecomposition<T> treeDecomposition) {
         this(treeDecomposition, false);
     }
 
     /**
-     * The constructor just initialize some internal data structures and stores the tree-decomposition that should
+     * The constructor just initializes some internal data structures and stores the tree decomposition that should
      * be postprocessed.
      *
-     * @param treeDecomposition The tree-decomposition to be postprocessed.
+     * @param treeDecomposition The tree decomposition to be postprocessed.
      * @param veryNice Decide whether edge bags should be computed or not.
      */
     public NiceTreeDecomposition(TreeDecomposition<T> treeDecomposition,
@@ -91,173 +92,136 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
 
     @Override
     protected TreeDecomposition<T> postprocessTreeDecomposition() {
+        // first simplify the decomposition
+        new FlattenTreeDecomposition<T>(treeDecomposition).getProcessedTreeDecomposition();
+
+        // find a root and root the decomposition on it
         Bag<T> suitableRoot = findSuitableRoot();
         this.root = makeNice(suitableRoot);
+
+        // we may improve the quality of the decomposition for the DP
         optimizeDecomposition();
+
+        // compute some meta-data
         classifyBags();
         computeTreeIndex();
+
+        for (Bag<T> v : treeDecomposition.getBags()) if (treeDecomposition.getNeighborhood(v).size() == 0) System.out.println("ISOLATED");
+
+        // eventually add even more details
         if (isVeryNice) computeEdgeBags();
         return treeDecomposition;
     }
 
     /**
-     * A nice tree-decomposition is computed from a chosen root bag down to the leafs. The choose of this root bag
-     * may dramatically change the structure of the nice tree-decomposition which may have an impact on the performance
+     * A nice tree decomposition is computed from a chosen root bag down to the leafs. The choose of this root bag
+     * may dramatically change the structure of the nice tree decomposition which may have an impact on the performance
      * of algorithms that later work on the decomposition.
      *
      * This method implements an heurictic that tries to find a ``good'' candidate for such an root.
      *
-     * @return A suitable root bag from which on we can build a nice tree-decomposition.
+     * @return A suitable root bag from which on we can build a nice tree decomposition.
      */
     private Bag<T> findSuitableRoot() {
-        return null;
+        return treeDecomposition.getTree().iterator().next();
     }
 
     /**
-     * Make the tree-decomposition nice starting at the given root. Note that the root bag may not be the given bag,
+     * Make the tree decomposition nice starting at the given root. Note that the root bag may not be the given bag,
      * but will lead by a path of forget-bags to it.
      *
-     * @param root A bag at which we shall root the tree-decomposition.
-     * @return The actual root bag of the constructed nice tree-decomposition.
+     * @param suitableRoot A bag at which we shall root the tree decomposition.
+     * @return The actual root bag of the constructed nice tree decomposition.
      */
-    private Bag<T> makeNice(Bag<T> root) {
-        if (treeDecomposition.getNumberOfBags()==0) {
-            return null;
-        }
+    private Bag<T> makeNice(Bag<T> suitableRoot) {
 
-        // remove duplicates
-        new FlattenTreeDecomposition<T>(treeDecomposition).getProcessedTreeDecomposition();
+        // add a new root (roots need to be leafs)
+        Graph<Bag<T>> tree = treeDecomposition.getTree();
+        Bag<T> root = treeDecomposition.createBag(new HashSet<>());
+        treeDecomposition.addTreeEdge(root, suitableRoot);
 
-        Set<Bag<T>> visited=new HashSet<>();
-        Stack<Bag<T>> S = new Stack<>();
+        // perform a DFS to add "nice" bags
+        Stack<Bag<T>> stack = new Stack<>();
+        Set<Bag<T>> visited = new HashSet();
+        stack.push(root);
 
-        // find a leaf as root, so that path decompositions remain paths
-        root=null;
-        for (Bag<T> v : treeDecomposition.getTree()) {
-            if (treeDecomposition.getTree().getNeighborhood(v).size()<=1) {
-                root=v;
-                break;
-            }
-        }
-        S.push(root);
-        visited.add(root);
+        while (!stack.isEmpty()) {
+            Bag<T> v = stack.pop();
+            visited.add(v);
 
-        // Add bags: from root bag to empty bag one by one
-        if (root.vertices.size() > 0) {
-            Set<T> currentRootSet=new HashSet<>(root.vertices);
-            Bag<T> prevRoot=root;
-            for (T v : root.vertices) {
-                currentRootSet.remove(v);
-                Bag<T> b=treeDecomposition.createBag(new HashSet<T>(currentRootSet));
-                treeDecomposition.addTreeEdge(b, prevRoot);
-                prevRoot=b;
-                visited.add(b); // these nodes are already nice
-            }
-            root = prevRoot;
-        }
+            // compute number of non-visited neighbors
+            long k = treeDecomposition.getNeighborhood(v).stream().filter( x -> !visited.contains(x) ).count();
+            if (k == 0 && !v.vertices.isEmpty()) {
+                // we have no children, but we are not empty too
+                Bag<T> leaf = treeDecomposition.createBag(new HashSet<>());
+                treeDecomposition.addTreeEdge(v, leaf);
+                stack.push(v); // continue on v
+            } else if (k == 1) {
+                // one child -> get it
+                Bag<T> w = treeDecomposition.getNeighborhood(v).stream().filter( x -> !visited.contains(x) ).findAny().get();
 
-        while (!S.isEmpty()) {
-            Bag<T> parent = S.pop();
-            Set<Bag<T>> childs=new HashSet<>();
-            for (Bag<T> v : treeDecomposition.getTree().getNeighborhood(parent)) {
-                if (!visited.contains(v)) {
-                    childs.add(v);
-                }
-            }
-            int childsToCome=childs.size();
-            // if leaf, then add bags: remove vertices one by one
-            if (childsToCome==0) {
-                Set<T> currentSet=new HashSet<>(parent.vertices);
-                Bag<T> prevParent=parent;
-                for (T v : parent.vertices) {
-                    currentSet.remove(v);
-                    Bag<T> b=treeDecomposition.createBag(new HashSet<T>(currentSet));
-                    treeDecomposition.addTreeEdge(prevParent, b);
-                    prevParent=b;
-                    //visited.add(b); not needed
-                }
-            }
-            // else iterate over childs
-            for (Bag<T> child : childs) {
-                // remove edges; we probably will create new nodes in between.
-                treeDecomposition.getTree().removeEdge(parent, child);
-                //if (child.vertices.equals(parent.vertices)) {
-                //	System.out.println("error on " + parent);
-                //}
-            }
-            for (Bag<T> child : childs) {
-                Bag<T> leftParent=parent;
-                Bag<T> rightParent=null;
-                // if there is more than one child left, make the node a join node
-                if (childsToCome>1) {
-                    leftParent=treeDecomposition.createBag(new HashSet<T>(parent.vertices));
-                    treeDecomposition.addTreeEdge(parent, leftParent);
-                    visited.add(leftParent);
-                    rightParent=treeDecomposition.createBag(new HashSet<T>(parent.vertices));
-                    treeDecomposition.addTreeEdge(parent, rightParent);
-                    visited.add(rightParent);
+                // if it is the same, contract the edge and continue
+                if (v.vertices.equals(w.vertices)) {
+                    tree.contract(v, w);
+                    stack.push(v);
+                    continue;
                 }
 
-                // Append the child (to the left parent, if join node; otherwise,
-                // leftParent is the right parent from the iteration before).
-                // Do this nicely, so remove or add one vertex at a time.
-
-                Set<T> removedVertices=new HashSet<>(parent.vertices);
-                removedVertices.removeAll(child.vertices);
-                Set<T> addedVertices=new HashSet<>(child.vertices);
-                addedVertices.removeAll(parent.vertices);
-                int diffSize=removedVertices.size()+addedVertices.size();
-
-                Set<T> currentSet=new HashSet<>(parent.vertices);
-                // in the following, at least one for loop will be executed once.
-                Bag<T> newChild=null;
-                for (T v : removedVertices) {
-                    currentSet.remove(v);
-                    diffSize--;
-                    if (diffSize==0) {
-                        newChild=child;
+                // otherwise we have to reduce the distance
+                Set<T> newBagVertices = null;
+                Set<T> delta = new HashSet<>(v.vertices);
+                delta.removeAll(w.vertices);
+                if (delta.size() > 0) {
+                    newBagVertices = new HashSet<>(v.vertices);
+                    newBagVertices.remove(delta.iterator().next());
+                } else {
+                    delta = new HashSet<>(w.vertices);
+                    delta.removeAll(v.vertices);
+                    newBagVertices = new HashSet<>(v.vertices);
+                    newBagVertices.add(delta.iterator().next());
+                }
+                Bag<T> newBag = treeDecomposition.createBag(newBagVertices);
+                tree.removeEdge(v, w);
+                tree.addEdge(v, newBag);
+                tree.addEdge(newBag, w);
+                stack.push(newBag);
+            } else if (k >= 2) {
+                Bag<T> left = treeDecomposition.createBag(v.vertices);
+                Bag<T> right = treeDecomposition.createBag(v.vertices);
+                Set<Bag<T>> neighbors = new HashSet<>();
+                treeDecomposition.getNeighborhood(v).stream().filter( x -> !visited.contains(x)).forEach(x -> neighbors.add(x));
+                for (Bag<T> w : neighbors) tree.removeEdge(v, w);
+                tree.addEdge(v, left);
+                tree.addEdge(v, right);
+                int i = 0;
+                for (Bag<T> w : neighbors) {
+                    if (i < neighbors.size()/2) {
+                        tree.addEdge(left, w);
                     } else {
-                        newChild=treeDecomposition.createBag(new HashSet<T>(currentSet));
-                        visited.add(newChild);
+                        tree.addEdge(right, w);
                     }
-                    treeDecomposition.addTreeEdge(leftParent, newChild);
-                    leftParent=newChild;
+                    i = i + 1;
                 }
-                for (T v : addedVertices) {
-                    currentSet.add(v);
-                    diffSize--;
-                    if (diffSize==0) {
-                        newChild=child;
-                    } else {
-                        newChild=treeDecomposition.createBag(new HashSet<T>(currentSet));
-                        visited.add(newChild);
-                    }
-                    treeDecomposition.addTreeEdge(leftParent, newChild);
-                    leftParent=newChild;
-                }
-
-                // In the following, newChild is the same as child.
-                S.push(newChild);
-                visited.add(newChild);
-
-                parent=rightParent;
-                childsToCome--;
+                stack.push(left);
+                stack.push(right);
             }
         }
-
+        treeDecomposition.setNumberOfBags(tree.getCopyOfVertices().size());
+        int id = 1;
+        for (Bag<T> v : tree) v.id = id++;
         return root;
     }
 
     /**
-     * The structure of a nice tree-decomposition is crucial for the performance of algorithms working on it.
+     * The structure of a nice tree decomposition is crucial for the performance of algorithms working on it.
      * This method tries to optimize the structure by, for instance, rearranging join bags.
      */
     private void optimizeDecomposition() {
     }
 
     /**
-     * In a \emph{nice} tree-decomposition, the bags are partitioned into $\{\text{join}, \text{introduce}, \text{forget}, \text{leafs}\}$
-     * bags. This function computes, given a nice tree-decomposition, the type of each bag.
+     * In a \emph{nice} tree decomposition, the bags are partitioned into $\{\text{join}, \text{introduce}, \text{forget}, \text{leafs}\}$
+     * bags. This function computes, given a nice tree decomposition, the type of each bag.
      */
     private void classifyBags() {
         bagType = new HashMap<>();
@@ -273,7 +237,6 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
             if (treeDecomposition.getNeighborhood(v).size() == 3) bagType.put(v, BagType.JOIN);
             for (Bag<T> w : treeDecomposition.getNeighborhood(v)) {
                 if (visited.contains(w)) continue; // parent
-
                 if (!bagType.containsKey(v)) {
                     Set<T> tmp = new HashSet<>(v.vertices);
                     tmp.removeAll(w.vertices);
@@ -297,12 +260,12 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
     }
 
     /**
-     * Given a bag of a tree-decomposition, we may which to index data using the elements of this bag. For instance, we
+     * Given a bag of a tree decomposition, we may which to index data using the elements of this bag. For instance, we
      * which to to know which vertex is ``the first vertex in the bag'', since we do not want to allocate space in the range
      * of $O(n)$ per bag.
      *
      * This function computes a so called \emph{tree-index}, which is a mapping from the vertices of the graph to
-     * $\{0,\dots,k\}$, where $k$ is the width of the given tree-decomposition. It guarantees that in no bag two vertices
+     * $\{0,\dots,k\}$, where $k$ is the width of the given tree decomposition. It guarantees that in no bag two vertices
      * have the same tree-index, i.\,e., it can be used to access data.
      *
      * The tree-index can be computed by the following simple algorithm (which also shows that something like the tree-index
@@ -355,7 +318,7 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
 
     /**
      * Compute all edge bags for the decomposition.
-     * This will change the tree-decomposition and the labeling of bags function.
+     * This will change the tree decomposition and the labeling of bags function.
      * However, it will not change the tree-index.
      */
     private void computeEdgeBags() {
@@ -404,7 +367,7 @@ public class NiceTreeDecomposition<T extends Comparable<T>> extends Postprocesso
     }
 
     /**
-     * Returns the root bag of the nice tree-decomposition.
+     * Returns the root bag of the nice tree decomposition.
      *
      * @return The unique root bag.
      */

@@ -21,6 +21,7 @@ package jdrasil;
 import jdrasil.algorithms.GraphSplitter;
 import jdrasil.algorithms.exact.CatchAndGlue;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
+import jdrasil.algorithms.postprocessing.NiceTreeDecomposition;
 import jdrasil.algorithms.preprocessing.GraphReducer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
@@ -97,7 +98,8 @@ public class Exact {
             }
 
             long tend = System.nanoTime();
-            System.out.print(decomposition);
+            //System.out.print(decomposition);
+            System.out.print(new NiceTreeDecomposition<>(decomposition).getProcessedTreeDecomposition());
             System.out.println();
 
             LOG.info("");

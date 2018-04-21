@@ -88,9 +88,7 @@ public class FlattenTreeDecomposition<T extends Comparable<T>> extends Postproce
 
         treeDecomposition.setNumberOfBags(tree.getCopyOfVertices().size());
         int id = 1;
-        for (Bag<T> v : tree) {
-            v.id = id++;
-        }
+        for (Bag<T> v : tree) v.id = id++;
     }
 
 }

@@ -14,16 +14,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This class implements a \emph{general framework} for executing dynamic programs over (nice) tree-decompositions.
- * Starting with a provided tree-decomposition or with a decomposition computed by \JClass{SmartDecomposer}, this class will
- * optimize the tree-decomposition and transform it into a nice one. Then it will traverse the decomposition in
+ * This class implements a \emph{general framework} for executing dynamic programs over (nice) tree decompositions.
+ * Starting with a provided tree decomposition or with a decomposition computed by \JClass{SmartDecomposer}, this class will
+ * optimize the tree decomposition and transform it into a nice one. Then it will traverse the decomposition in
  * post-order and simulate a stack machine while doing so. On leaf bags, the stack machine will push new
  * \JClass{StateConfigurations} using a provided \JClass{StateVectorFactory}. For all other bag types, the stack machine
  * will only use the top of the stack and the methods of \JClass{StateVector}.
  *
  * Note that the \emph{actual} program that will be executed is encoded in the \JClass{StateVector} class, which is provided
  * to the stack machine in form the the given \JClass{StateVectorFactory}. All operations performed by this class
- * universally apply to all dynamic programs over tree-decompositions.
+ * universally apply to all dynamic programs over tree decompositions.
  *
  * @author Max Bannach
  */
@@ -50,32 +50,32 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
     private Graph<T> graph;
 
     /**
-     * The tree-decomposition on which the dynamic program runs.
+     * The tree decomposition on which the dynamic program runs.
      */
     private TreeDecomposition<T> treeDecomposition;
 
     /**
-     * The nice (or very nice) tree-decomposition.
+     * The nice (or very nice) tree decomposition.
      */
     private NiceTreeDecomposition<T> niceTreeDecomposition;
 
     /**
-     * The tree with of the nice (or very nice) tree decomposition.
+     * The tree width of the nice (or very nice) tree decomposition.
      */
     private int tw;
 
     /**
-     * While the tree-decomposition is processed in a post-order traversal, we store the results of the individual bags
+     * While the tree decomposition is processed in a post-order traversal, we store the results of the individual bags
      * on a stack, which simulates the ``bubble-up'' of the dynamic program.
      */
     private Stack<StateVector<T>> stateVectorStack;
 
     /**
-     * Initialize a new instance of a program that runs over a tree-decomposition. The given leaf factory is used to
+     * Initialize a new instance of a program that runs over a tree decomposition. The given leaf factory is used to
      * produce state vectors of the dynamic program for leafs. Note that this implies all other state vectors and, thus,
      * is essentially the program code.
      *
-     * The program will be executed on a nice tree-decomposition (which does not have edge bags).
+     * The program will be executed on a nice tree decomposition (which does not have edge bags).
      *
      * @param graph The graph for which the program shall be executed.
      * @param leafFactory A StateVectorFactory that generates (usually empty) state vectors for leafs.
@@ -86,11 +86,11 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
     }
 
     /**
-     * Initialize a new instance of a program that runs over a tree-decomposition. The given leaf factory is used to
+     * Initialize a new instance of a program that runs over a tree decomposition. The given leaf factory is used to
      * produce state vectors of the dynamic program for leafs. Note that this implies all other state vectors and, thus,
      * is essentially the program code.
      *
-     * The program may be executed on a \emph{very} nice tree-decomposition (which does have edge bags).
+     * The program may be executed on a \emph{very} nice tree decomposition (which does have edge bags).
      *
      * @param graph The graph for which the program shall be executed.
      * @param leafFactory A StateVectorFactory that generates (usually empty) state vectors for leafs.
@@ -102,13 +102,13 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
     }
 
     /**
-     * Initialize a new instance of a program that runs over a tree-decomposition. The given leaf factory is used to
+     * Initialize a new instance of a program that runs over a tree decomposition. The given leaf factory is used to
      * produce state vectors of the dynamic program for leafs. Note that this implies all other state vectors and, thus,
      * is essentially the program code.
      *
      * The program may be executed on a \emph{very} nice tree decomposition (which does have edge bags).
      *
-     * The given tree-decomposition will be transformed to an optimized nice (or very nice) tree-decomposition on which
+     * The given tree decomposition will be transformed to an optimized nice (or very nice) tree decomposition on which
      * the program then is executed. The given tree decomposition may be null, in which case a new one will be computed.
      *
      * @param graph The graph for which the program shall be executed.
@@ -129,7 +129,7 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
     /**
      * Initialize the dynamic program. This will
      * \begin{enumerate}
-     *  \item Compute a tree-decomposition if no one is given;
+     *  \item Compute a tree decomposition if no one is given;
      *  \item Make the decomposition nice or very nice;
      *  \item Heuristically optimize the decomposition.
      * \end{enumerate}
@@ -141,11 +141,11 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
             try {
                 this.treeDecomposition = new SmartDecomposer<T>(graph).call();
             } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Dynamic Program could not be exectued because there was an error during the computation of the tree-decomposition.", e);
+                LOG.log(Level.SEVERE, "Dynamic Program could not be exectued because there was an error during the computation of the tree decomposition.", e);
             }
         }
         this.niceTreeDecomposition = new NiceTreeDecomposition<>(treeDecomposition, this.worksOnVeryNiceTreeDecomposition);
-        this.treeDecomposition = niceTreeDecomposition.getProcessedTreeDecomposition(); // actually compute nice tree-decomposition
+        this.treeDecomposition = niceTreeDecomposition.getProcessedTreeDecomposition(); // actually compute nice tree decomposition
         this.tw = this.treeDecomposition.getWidth();
         LOG.info("Initialization of dynamic program completed.");
     }
@@ -158,10 +158,10 @@ public class DynamicProgrammingOnTreeDecomposition<T extends Comparable<T>> {
      */
     public StateVector<T> run() {
 
-        // traverse the tree-decomposition in post-order
+        // traverse the tree decomposition in post-order
         Set<Bag<T>> visited = new HashSet<>();
         Stack<Bag<T>> stack = new Stack<>();
-        stack.push(niceTreeDecomposition.getRoot()); // start at the root of the tree-decomposition
+        stack.push(niceTreeDecomposition.getRoot()); // start at the root of the tree decomposition
 
         // post-order DFS
         while (!stack.isEmpty()) {
