@@ -1,14 +1,14 @@
 # Jdrasil
 A Modular Library for Computing Tree Decompositions
 
-Authors: [Max Bannach](http://www.tcs.uni-luebeck.de/de/mitarbeiter/bannach/), [Sebastian Berndt](http://www.tcs.uni-luebeck.de/de/mitarbeiter/berndt/), and [Thorsten Ehlers](http://www.zs.informatik.uni-kiel.de/de/mitarbeiter)
+Authors: [Max Bannach](http://www.tcs.uni-luebeck.de/de/mitarbeiter/bannach/), [Sebastian Berndt](https://seberndt.github.io), and [Thorsten Ehlers](http://www.zs.informatik.uni-kiel.de/de/mitarbeiter)
 
 # About
 Jdrasil is a library to compute tree decompositions of simple, undirected graphs. It was developed for the first Parameterized Algorithms and Computational Experiments Challenge [(PACE)](https://pacechallenge.wordpress.com). It provides exact sequential and parallel, as well as heuristic, and approximation algorithms.
 
 Jdrasil is build in a very modular fashion. This allows researchers to simply add new algorithms, heuristics, or preprocessing routines, which can then be combined in any way.
 
-You can obtain the latest stable version of Jdrasil [here](https://maxbannach.github.io/Jdrasil/current/Jdrasil.jar). Use the [manual](https://maxbannach.github.io/Jdrasil/current/manual.pdf) for an overview of the features of Jdrasil, or consult the [documentation](https://maxbannach.github.io/Jdrasil/javadoc) for implementation details. You can also build the latest version of Jdrasil manually (see below).
+You can obtain the latest stable version of Jdrasil [here](https://github.com/maxbannach/Jdrasil/raw/snapshot/Jdrasil.jar). Use the [manual](https://github.com/maxbannach/Jdrasil/raw/snapshot/manual.pdf) for an overview of the features of Jdrasil and for some implementation details. You can also build the latest version of Jdrasil manually (see below).
 
 # Installation
 Jdrasil uses [Gradle](https://gradle.org) as build tool. Thanks to the gradle wrapper, nothing extra has to be installed in order to install Jdrasil.
