@@ -21,36 +21,38 @@ package jdrasil.graph;
 import java.util.*;
 
 /**
- * A BitSetGraph stores a graph (with arbitrary vertices) as bitwise adjacency matrix, i.e., as array of BitSets where
+ * A BitSetGraph stores a graph (with arbitrary vertices) as bitwise adjacency matrix, i.\,e., as array of BitSets where
  * the i'th BitSet corresponds to the i'th row of the adjacency matrix. This comes with all the advantages and disadvantages
  * of an adjacency matrix.
  *
  * The crucial advantage is that the graph is compact and that many operations can be performed quickly on the bit level.
  * In particular, dynamic programming over subgraphs can be implemented efficiently, as subgraphs are also just BitSets
  * that can efficiently be hashed.
- *
- * @param <T> the type of vertices the original graph has
- * @author Max Bannach
  */
 public class BitSetGraph<T extends Comparable<T>> {
 
-    /** The underling "real" graph. */
+    /** The underling ``real'' graph. */
     private final Graph<T> graph;
 
     /** The number of vertices in the graph. */
     private final int n;
 
-    /** A bijection from V to {0,...,n-1} */
+    /** A bijection from $V$ to $\{0,...,n-1\}$ */
     private final Map<T, Integer> vToInt;
     private final Map<Integer, T> intToV;
 
-    /** The graph as array of BitSets (aka. bit adjacency matrix). */
+    /** The graph as array of BitSets (aka.\, bit adjacency matrix). */
     private final BitSet[] bitSetGraph;
 
+    /* Data Structures for memorization */
+    private Map<BitSet, List<BitSet>> separateMemory;
+    private Map<BitSet, BitSet> exteriorBorderMemory;
+    private Map<BitSet, Boolean> pmcMemory;
+
     /**
-     * Creates the BitSetGraph from the given graph by computing a bijection from the vertices to {0,...,n-1}
+     * Creates the BitSetGraph from the given graph by computing a bijection from the vertices to $\{0,...,n-1\}$
      * and storing edges in an adjacency matrix represented by an array of BitSets.
-     * @param graph
+     * @param graph The graph to be represented as BitSetGraph.
      */
     public BitSetGraph(Graph<T> graph) {
         // parse given graph
@@ -77,11 +79,16 @@ public class BitSetGraph<T extends Comparable<T>> {
                 bitSetGraph[x].set(y);
             }
         }
+
+        // initialize memorization
+        separateMemory = new HashMap<>();
+        exteriorBorderMemory = new HashMap<>();
+        pmcMemory = new HashMap<>();
     }
 
     /**
      * Getter for the original graph used to create this BitSet graph.
-     * @return
+     * @return The original graph.
      */
     public Graph<T> getGraph() {
         return this.graph;
@@ -89,7 +96,7 @@ public class BitSetGraph<T extends Comparable<T>> {
 
     /**
      * Getter for the number of vertices in the graph.
-     * @return
+     * @return The number of vertices $|V|$.
      */
     public int getN() {
         return this.n;
@@ -98,32 +105,32 @@ public class BitSetGraph<T extends Comparable<T>> {
     /**
      * Getter for the BitSet graph: an array of n BitSets where the i'th BitSet corresponds to the i'th row
      * of the adjacency matrix of the graph.
-     * @return
+     * @return The adjacency matrix of $G$ as Array of BitSets.
      */
     public BitSet[] getBitSetGraph() {
         return this.bitSetGraph;
     }
 
     /**
-     * Get the used mapping that maps the vertices to {0,...,n-1}.
-     * @return
+     * Get the used mapping that maps the vertices to $\{0,...,n-1\}$.
+     * @return A map from vertices to ids.
      */
     public Map<T, Integer> getVToInt() {
         return this.vToInt;
     }
 
     /**
-     * Get the reverse mapping, i.e., from {0,...,n-1} to the vertices of the original graph.
-     * @return
+     * Get the reverse mapping, i.e., from $\{0,...,n-1\}$ to the vertices of the original graph.
+     * @return A map from ids to vertices.
      */
     public Map<Integer, T> getIntToV() {
         return this.intToV;
     }
 
     /**
-     * Computes a set of "real" vertices to the corresponding BitSet.
-     * @param S
-     * @return
+     * Computes a set of ``real'' vertices to the corresponding BitSet.
+     * @param S A vertex set as BitSet.
+     * @return The corresponding set of vertex objects.
      */
     public Set<T> getVertexSet(BitSet S) {
         Set<T> vertexSet = new HashSet<T>();
@@ -134,9 +141,9 @@ public class BitSetGraph<T extends Comparable<T>> {
     }
 
     /**
-     * Computes a corresponding BitSet to a "real" vertex set.
-     * @param vertexSet
-     * @return
+     * Computes a corresponding BitSet to a ``real'' vertex set.
+     * @param vertexSet A vertex set as set of vertex objects.
+     * @return The corresponding BitSet.
      */
     public BitSet getBitSet(Set<T> vertexSet) {
         BitSet S = new BitSet();
@@ -145,60 +152,71 @@ public class BitSetGraph<T extends Comparable<T>> {
     }
 
     /**
-     * Gets the interior border of S, i.e., all vertices v in S that have at least one neighbor outside of S.
-     * @param S
-     * @return
+     * Gets the interior border of $C$, i.\,e., all vertices $v$ in $C$ that have at least one neighbor outside of $C$.
+     * @param C A vertex set $C\subseteq V$.
+     * @return $N(N(C))\cap C$, i.\,e., the vertices inside $C$ that have an outgoing edge.
      */
-    public BitSet interiorBorder(BitSet S) {
+    public BitSet interiorBorder(BitSet C) {
         BitSet border = new BitSet();
-        BitSet outside = (BitSet) S.clone();
+        BitSet outside = (BitSet) C.clone();
         outside.flip(0,n);
-        for (int v = S.nextSetBit(0); v >= 0; v = S.nextSetBit(v+1)) {
+        for (int v = C.nextSetBit(0); v >= 0; v = C.nextSetBit(v+1)) {
             if (bitSetGraph[v].intersects(outside)) border.set(v);
         }
         return border;
     }
 
     /**
-     * Gets the exterior border of S, i.e., all vertices v in G\S that have at least one neighbor in S.
-     * @param S
-     * @return
+     * Gets the exterior border of $C$, i.e., all vertices $v$ in $G[V\setminus C]$ that have at least one neighbor in $C$.
+     * @param C A vertex set $C\subseteq V$.
+     * @return $N(C)$, i.\,e., the vertices that are reachable from $C$ with a single edge.
      */
-    public BitSet exteriorBorder(BitSet S) {
+    public BitSet computeExteriorBorder(BitSet C) {
         BitSet border = new BitSet();
-        BitSet outside = (BitSet) S.clone();
-        outside.flip(0,n);
-        for (int v = S.nextSetBit(0); v >= 0; v = S.nextSetBit(v+1)) {
-            if (bitSetGraph[v].intersects(outside)) border.or(bitSetGraph[v]);
+        for (int v = C.nextSetBit(0); v >= 0; v = C.nextSetBit(v+1)) {
+            border.or(bitSetGraph[v]);
         }
-        border.andNot(S);
+        border.andNot(C);
         return border;
     }
 
     /**
-     * Saturates the subgraph \(S\) by adding all vertices \(v\in N(S)\) of \(V\setminus S\) that have all neighbors in \(S\) or \(N(S)\).
-     * @param S
+     * Gets the exterior border of $C$, i.e., all vertices $v$ in $G[V\setminus C]$ that have at least one neighbor in $C$.
+     * @param C A vertex set $C\subseteq V$. Cashes the result for further use.
+     * @return $N(C)$, i.\,e., the vertices that are reachable from $C$ with a single edge.
      */
-    public void saturate(BitSet S) {
-        BitSet neighbors = exteriorBorder(S);
-        BitSet Sprime = (BitSet) S.clone();
+    public BitSet exteriorBorder(BitSet C) {
+        if (exteriorBorderMemory.containsKey(C)) return exteriorBorderMemory.get(C);
+        BitSet border = computeExteriorBorder(C);
+        exteriorBorderMemory.put(C, border);
+        return border;
+
+    }
+
+    /**
+     * Saturates the subgraph $C$ by adding all vertices $v\in N(C)$ of $V\setminus C$ that have all neighbors in $C$ or $N(C)$.
+     * @param C A vertex set $C\subseteq V$ that should be saturated.
+     */
+    public void saturate(BitSet C) {
+        BitSet neighbors = computeExteriorBorder(C);
+        BitSet Sprime = (BitSet) C.clone();
         Sprime.or(neighbors);
         for (int v = neighbors.nextSetBit(0); v >= 0; v = neighbors.nextSetBit(v+1)) {
             BitSet tmp = (BitSet) bitSetGraph[v].clone();
             tmp.andNot(Sprime);
-            if (tmp.cardinality() == 0) S.set(v);
+            if (tmp.cardinality() == 0) C.set(v);
         }
     }
 
     /**
-     * Finds and returns an arbitrary vertex \(v\in N(S)\) that has only neighbors in \(S\) or \(N(S)\). Returns -1 if no such
+     * Finds and returns an arbitrary vertex $v\in N(C)$ that has only neighbors in $C$ or $N(C)$. Returns $-1$ if no such
      * vertex exists.
-     * @param S
-     * @return
+     * @param C A vertex set $C\subseteq V$.
+     * @return An absorbable vertex $v\in C$, or $-1$ if non exists.
      */
-    public int absorbable(BitSet S) {
-        BitSet neighbors = exteriorBorder(S);
-        BitSet outside = (BitSet) S.clone();
+    public int absorbable(BitSet C) {
+        BitSet neighbors = computeExteriorBorder(C);
+        BitSet outside = (BitSet) C.clone();
         outside.or(neighbors);
         outside.flip(0,n);
         for (int v = neighbors.nextSetBit(0); v >= 0; v = neighbors.nextSetBit(v+1)) {
@@ -208,11 +226,12 @@ public class BitSetGraph<T extends Comparable<T>> {
     }
 
     /**
-     * Compute the connected components of G[V\S], S will not be included in any of these components.
-     * @param S
-     * @return
+     * Compute the connected components of $G[V\setminus S]$, $S$ will not be included in any of these components.
+     * @param S A separator $S\subseteq V$.
+     * @return A list of the connected components of $G[V\setminus S]$, each represented as BitSet.
      */
     public List<BitSet> separate(BitSet S) {
+        if (separateMemory.containsKey(S)) return separateMemory.get(S);
         List<BitSet> components = new ArrayList<>(5);
         BitSet visited = new BitSet();
         visited.or(S);
@@ -239,41 +258,146 @@ public class BitSetGraph<T extends Comparable<T>> {
         }
 
         // done
+        separateMemory.put(S, components);
         return components;
     }
 
     /**
-     * Test if the given set of vertices is a potential maximal clique, i.e., a maximal clique in some minimal triangulation
+     * Test if the given set of vertices is a potential maximal clique, i.\,e., a maximal clique in some minimal triangulation
      * of the graph.
-     * This method uses the local characterisation of potential maximal cliques found by Bouchitte and Todinca "Treewidth
-     * and Minimum Fill-In: Grouping th Minimal Separators".
-     * @param S
-     * @return
+     * This method uses the local characterisation of potential maximal cliques found by Bouchitte and Todinca ``Treewidth
+     * and Minimum Fill-In: Grouping th Minimal Separators''.
+     * @param K A subgraph $K\subseteq V$.
+     * @return True if $K$ is a potential maximal clique.
      */
-    public boolean isPotentialMaximalClique(BitSet S) {
-        List<BitSet> components = separate(S);
+    public boolean isPotentialMaximalClique(BitSet K) {
+        if (pmcMemory.containsKey(K)) return pmcMemory.get(K);
+        List<BitSet> components = separate(K);
 
-        // Test 1: S can not be maximal potential clique, if there is a component C with N(C)=S
-        for (BitSet C : components) {
-            if (exteriorBorder(C).cardinality() == S.cardinality()) return false; // |N(C)|=|S| vs N(C)=S
+        // first test, K may not have a full component
+        for (BitSet component : components) {
+            if (computeExteriorBorder(component).cardinality() == K.cardinality()) return false;
         }
 
-        // Test 2: for every non-edge {u,v} in S, there must be a component C adjacent to both, u and v
-        for (int v = S.nextSetBit(0); v >= 0; v = S.nextSetBit(v+1)) {
-            for (int w = S.nextSetBit(v+1); w >= 0; w = S.nextSetBit(w+1)) {
-                if (bitSetGraph[v].get(w)) continue;
-                boolean completeable = false;
+        // second test, K must be cliquish
+        for (int v = K.nextSetBit(0); v >= 0; v = K.nextSetBit(v+1)) {
+            for (int w = K.nextSetBit(v+1); w >= 0; w = K.nextSetBit(w+1)) {
+                if (bitSetGraph[v].get(w)) continue; // already an edge
+                boolean completable = false;
                 for (BitSet C : components) {
-                    if (C.intersects(bitSetGraph[v]) && C.intersects(bitSetGraph[w])) {
-                        completeable = true;
+                    if (bitSetGraph[v].intersects(C) && bitSetGraph[w].intersects(C)) {
+                        completable = true;
                         break;
                     }
                 }
-                if (!completeable) return false;
+                if (!completable) {
+                    pmcMemory.put(K, false);
+                    return false;
+                }
             }
         }
 
+        // done
+        pmcMemory.put(K, true);
         return true;
+    }
+
+    /**
+     * Compute the unconfined components of $G[V\setminus K]$ with respect to $S$, i.\,e., the components $C$ with $N(C)\not\subseteq S$.
+     * @param S A vertex set $S\subseteq K$.
+     * @param K A vertex set $K\subset V$.
+     * @return The set $\mathrm{unconf}(S,K)$ as list of BitSets.
+     */
+    public List<BitSet> unconf(BitSet S, BitSet K) {
+        List<BitSet> result = new LinkedList<>();
+        List<BitSet> components = separate(K);
+
+        // not S
+        BitSet mask = new BitSet();
+        mask.set(0,n);
+        mask.andNot(S);
+
+        // unconf N(C) subseteq S -> N(C) cap not S = empty
+        for (BitSet C : components) {
+            if (!computeExteriorBorder(C).intersects(mask)) continue;
+            result.add(C);
+        }
+
+        return result;
+    }
+
+    /**
+     * Compute the crib of $K$ with respect to $S$.
+     * @param S A vertex set $S\subseteq K$.
+     * @param K A vertex set $K\subset V$.
+     * @return $(K\setminus S)\cup\bigcup_{D\in\mathrm{unconf(S,K)}}D$ as BitSet.
+     */
+    public BitSet crib(BitSet S, BitSet K) {
+        BitSet crib = (BitSet) K.clone();
+        crib.andNot(S);
+
+        for (BitSet D : unconf(S, K)) {
+            crib.or(D);
+        }
+
+        return crib;
+    }
+
+    /**
+     * Check if the given component is outbound, that is, if it is the minimum of all components with neighborhood $N(C)$.
+     * Minimum is defined with respect to the natural order of the vertices and a component is smaller then another
+     * if it contains a ``smaller'' vertex.
+     * @param C A vertex set $C\subseteq V$.
+     * @return True if $C$ is outbound.
+     */
+    public boolean outbound(BitSet C) {
+        BitSet NC = computeExteriorBorder(C);
+        List<BitSet> components = separate(NC);
+        for (BitSet component : components) {
+            if (computeExteriorBorder(component).cardinality() != NC.cardinality()) continue;
+            if (component.nextSetBit(0) < C.nextSetBit(0)) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Compute the outlet of the given set $K$.
+     * @param K A vertex set $K\subseteq V$.
+     * @return The maximum set $N(A)\subseteq K$ over all non-full and outbound components $A$ associated with $K$.
+     */
+    public BitSet outlet(BitSet K) {
+        BitSet S = new BitSet();
+        List<BitSet> components = separate(K);
+        for (BitSet component : components) {
+            if (!outbound(component)) continue;
+            BitSet NC = computeExteriorBorder(component);
+            if (NC.cardinality() == K.cardinality()) continue;
+            if (NC.cardinality() > S.cardinality()) S = NC;
+        }
+        return S;
+    }
+
+    /**
+     * Compute the support of $K$.
+     * @param K A vertex set $K\subseteq V$.
+     * @return $\mathrm{unconf}(\mathrm{outlet}(K),K)$ as BitSet.
+     */
+    public List<BitSet> support(BitSet K) {
+        return unconf(outlet(K), K);
+    }
+
+    /**
+     * Compute the full-components associated with $K$.
+     * @param K A vertex set $K\subseteq V$.
+     * @return A list of all components $A\in G[V\setminus K]$ with $N(A)=K$.
+     */
+    public List<BitSet> fullComponents(BitSet K) {
+        List<BitSet> components = separate(K);
+        List<BitSet> fullComponents = new LinkedList<>();
+        for (BitSet D : components) {
+            if (computeExteriorBorder(D).cardinality() == K.cardinality()) fullComponents.add(D);
+        }
+        return fullComponents;
     }
 
 }

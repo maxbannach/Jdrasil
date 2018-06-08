@@ -1,6 +1,6 @@
 \documentclass[a4paper, ukenglish, twoside, openright]{jdrasilmanual}
 
-\setversion{0.2}
+\setversion{0.3}
 \author{Max Bannach, Sebastian Berndt, Thorsten Ehlers}
 
 \begin{document}
@@ -604,19 +604,7 @@ capabilities of Ti\emph{k}Z:
 \end{lstlisting}
 
 \section{Storing Graphs on the Bit-Level}
-In addition to the default \JClass{Graph} class, \Jdrasil{} also offers the
-class \JClass{BitSetGraph} that stores a \JClass{Graph} (with
-arbitrary vertices) as bitwise adjacency matrix, i.\,e., as array of
-\JClass{BitSets} where the $i$'th \JClass{BitSet} corresponds to the i'th row of the
-adjacency matrix. This comes with all the advantages and disadvantages
-of an adjacency matrix.
- 
-The crucial advantage is that the graph is compact and that many
-operations can be performed quickly on the bit level.  In particular,
-dynamic programming over subgraphs can be implemented efficiently, as
-subgraphs are also just BitSets that can efficiently be hashed. This
-class is essentially used by exponential time algorithms that work on
-prepossessed (and thus, hopefully small) graphs.
+\includeJavaDoc{../core/src/main/java/jdrasil/graph/BitSetGraph.java}
 
 \chapter{Graph Invariants}
 A graph property is a class of graphs that is closed under
@@ -1245,6 +1233,9 @@ exponential time as well. However, in practice there are much less
 configurations considered over all if we compute the winning strategy
 backwards, as we can discard a lot of ``lose''-configurations and
 sinks in the configuration-graph.
+
+\section{Positive-Driven BT}
+\includeJavaDoc{../core/src/main/java/jdrasil/algorithms/exact/PidBT.java}
 
 \section{Limited Graph Search}
 The tree width of a graph can be characterized from a game theoretic

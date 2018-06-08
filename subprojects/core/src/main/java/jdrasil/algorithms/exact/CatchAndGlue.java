@@ -150,7 +150,7 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         // Prune 2: if the configuration requires to many cops, we can prune it as well
         // The configuration needs cops on its border (otherwise the robber could escape), as well as the cops
         // that are used to produce the next configuration by "fly" on the new vertices (as the robber can move in between).
-        BitSet neighbors = graph.exteriorBorder(S);
+        BitSet neighbors = graph.computeExteriorBorder(S);
         BitSet delta = (BitSet) S.clone();
         for (BitSet f : from) delta.andNot(f);
         if (neighbors.cardinality() + delta.cardinality() > k + 1) return false; // not enough cops
@@ -180,7 +180,7 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
 
         // Prune 4: if we have handled a superset S' of S such that N(S') is a subset of N(S) we can prune
         for (BitSet Sprime : memory.getSuperSets(S)) {
-            BitSet neighborsPrime = graph.exteriorBorder(Sprime);
+            BitSet neighborsPrime = graph.computeExteriorBorder(Sprime);
             boolean cut = true;
             for (int v = neighborsPrime.nextSetBit(0); v >= 0; v = neighborsPrime.nextSetBit(v + 1)) {
                 if (!neighbors.get(v)) {
@@ -234,7 +234,7 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
             configurations++;
             // get currently largest win-configuration
             BitSet S = queue.poll();
-            BitSet delta = graph.exteriorBorder(S);
+            BitSet delta = graph.computeExteriorBorder(S);
 
             // handle the neighbors of S
             for (int v = delta.nextSetBit(0); v >= 0; v = delta.nextSetBit(v+1)) {
@@ -253,12 +253,12 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
                 stack.push(S);
                 while (!stack.isEmpty()) {
                     BitSet current = (BitSet) stack.pop().clone();
-                    BitSet currentNeighbors = graph.exteriorBorder(current);
+                    BitSet currentNeighbors = graph.computeExteriorBorder(current);
                     BitSet mask = (BitSet) current.clone();
                     mask.or(currentNeighbors);
                     mask.flip(0,n);
                     for (BitSet toGlue : tries.get(v).getSubSets(mask)) {
-                        BitSet glueNeighbors = graph.exteriorBorder(toGlue);
+                        BitSet glueNeighbors = graph.computeExteriorBorder(toGlue);
                         glueNeighbors.or(currentNeighbors);
                         if (glueNeighbors.cardinality() > k+1) continue; // not enough cops
                         newS = (BitSet) current.clone();
@@ -299,7 +299,7 @@ public class CatchAndGlue<T extends Comparable<T>> implements TreeDecomposer<T> 
         BitSet bagVertices = (BitSet) S.clone();
 
         for (BitSet f : from.get(S)) bagVertices.andNot(f); // reduce to delta
-        bagVertices.or(graph.exteriorBorder(S));            // add neighbors
+        bagVertices.or(graph.computeExteriorBorder(S));            // add neighbors
         Bag<T> bag = td.createBag(graph.getVertexSet(bagVertices));
 
         // 2. compute children and glue to them

@@ -19,10 +19,11 @@
 package jdrasil;
 
 import jdrasil.algorithms.GraphSplitter;
-import jdrasil.algorithms.exact.CatchAndGlue;
+import jdrasil.algorithms.exact.PidBT;
 import jdrasil.algorithms.lowerbounds.MinorMinWidthLowerbound;
 import jdrasil.algorithms.postprocessing.NiceTreeDecomposition;
 import jdrasil.algorithms.preprocessing.GraphReducer;
+import jdrasil.algorithms.upperbounds.GreedyPermutationDecomposer;
 import jdrasil.graph.Graph;
 import jdrasil.graph.GraphFactory;
 import jdrasil.graph.TreeDecomposition;
@@ -81,10 +82,11 @@ public class Exact {
 
                 // use the separator based decomposer, i.e., split the graph using safe seperators and decompose the atoms
                 GraphSplitter<Integer> splitter = new GraphSplitter<Integer>(H, atom -> {
-                    CatchAndGlue<Integer> catchAndGlue = new CatchAndGlue<>(atom);
-//                    catchAndGlue.setMode(CatchAndGlue.Mode.improveUpperbound);
                     try {
-                        return catchAndGlue.call();
+                        int atomLB = new MinorMinWidthLowerbound<>(atom).call();
+                        TreeDecomposition<Integer> ubDecomposition = new GreedyPermutationDecomposer<>(atom).call();
+                        PidBT<Integer> pidBT = new PidBT<>(atom, atomLB, ubDecomposition.getWidth(), ubDecomposition);
+                        return pidBT.call();
                     } catch (Exception e) {
                         LOG.warning(e.getMessage());
                         return null;
@@ -98,8 +100,7 @@ public class Exact {
             }
 
             long tend = System.nanoTime();
-            //System.out.print(decomposition);
-            System.out.print(new NiceTreeDecomposition<>(decomposition).getProcessedTreeDecomposition());
+            System.out.print(decomposition);
             System.out.println();
 
             LOG.info("");
