@@ -4,7 +4,7 @@ A Modular Library for Computing Tree Decompositions
 Authors: [Max Bannach](http://www.tcs.uni-luebeck.de/de/mitarbeiter/bannach/), [Sebastian Berndt](https://seberndt.github.io), and [Thorsten Ehlers](http://www.zs.informatik.uni-kiel.de/de/mitarbeiter)
 
 # About
-Jdrasil is a library to compute tree decompositions of simple, undirected graphs. It was developed for the first Parameterized Algorithms and Computational Experiments Challenge [(PACE)](https://pacechallenge.wordpress.com). It provides exact sequential and parallel, as well as heuristic, and approximation algorithms.
+Jdrasil is a library to compute tree decompositions of simple, undirected graphs. It was developed for the first Parameterized Algorithms and Computational Experiments Challenge [(PACE)](https://pacechallenge.org). It provides exact sequential and parallel, as well as heuristic, and approximation algorithms.
 
 Jdrasil is build in a very modular fashion. This allows researchers to simply add new algorithms, heuristics, or preprocessing routines, which can then be combined in any way.
 
