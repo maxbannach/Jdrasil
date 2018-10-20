@@ -28,9 +28,9 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
-import jdrasil.utilities.sat.Formula;
-import jdrasil.utilities.sat.formulations.BaseEncoder;
-import jdrasil.utilities.sat.formulations.ImprovedEncoder;
+import jdrasil.sat.Formula;
+import jdrasil.sat.formulations.BaseEncoder;
+import jdrasil.sat.formulations.ImprovedEncoder;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
@@ -53,7 +53,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	 */
 	public enum Encoding {
 		BASE,
-		IMPROVED;
+		IMPROVED
 	}
 	
 	/** The graph that we want to decompose. */
@@ -87,7 +87,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	/**
 	 * Initialize the algorithm. The problem will be solved by sending multiple formulas
 	 * of the base encoding the given SATSolver. The optimal tree-width is searched in the interval [lb,ub].
-	 * @param graph
+	 * @param graph The graph to be decomposed.
 	 */
 	public SATDecomposer(Graph<T> graph, Encoding encoding, int lb, int ub) {
 		this.graph = graph;
@@ -100,11 +100,11 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	 * Compute a optimal elimination order for the graph based on SAT-techniques.
 	 * @see BaseEncoder
 	 * @see ImprovedEncoder
-	 * @return
+	 * @return The computed elimination order.
 	 */
 	protected List<T> computePermutation() {
 		// load the selected encoding
-		BaseEncoder<T> encoder = null;
+		BaseEncoder<T> encoder;
 		switch (encoding) {
 			case BASE:
 				encoder = new BaseEncoder<>(graph);
@@ -146,7 +146,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 	@Override
 	public TreeDecomposition<T> call() throws Exception {
 		// catch the empty graph
-		if (graph.getCopyOfVertices().size() == 0) return new TreeDecomposition<T>(graph);
+		if (graph.getCopyOfVertices().size() == 0) return new TreeDecomposition<>(graph);
 
 		// compute the permutation with respect to the choose encoding
 		List<T> permutation = computePermutation();
@@ -159,7 +159,7 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 		}
 		
 		// done – return a corresponding decomposition
-		return new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Exact).call();
+		return new EliminationOrderDecomposer<>(graph, permutation, TreeDecompositionQuality.Exact).call();
 	}
 
 	@Override
@@ -172,10 +172,10 @@ public class SATDecomposer<T extends Comparable<T>> implements TreeDecomposer<T>
 		try {
 			switch (encoding) {
 			case BASE:
-				if (permutation != null) return new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
+				if (permutation != null) return new EliminationOrderDecomposer<>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
 				break;
 			case IMPROVED:
-				if (permutation != null) return new EliminationOrderDecomposer<T>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
+				if (permutation != null) return new EliminationOrderDecomposer<>(graph, permutation, TreeDecompositionQuality.Heuristic).call();
 				break;
 			}
 		} catch (Exception e) {

@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import jdrasil.graph.Graph;
-import jdrasil.utilities.sat.Formula;
+import jdrasil.sat.Formula;
 
 /**
  * A clique in a graph is a subset of its vertices such that all vertices within the clique are pairwise adjacent.
@@ -40,7 +40,7 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 	private boolean maximum;
 	
 	/**
-	 * @param graph
+	 * @param graph The graph in which we search the clique.
 	 */
 	public Clique(Graph<T> graph) {
 		super(graph);
@@ -49,7 +49,7 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 	/**
 	 * Compute the maximum clique of the graph using the SAT solver.
 	 * This method can return null if no SAT solver is available or the SAT solver fails.
-	 * @return
+	 * @return The model of the clique.
 	 */
 	private Map<T, Boolean> computeModelWithSAT() {
 
@@ -115,11 +115,11 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 		// otherwise find a greedy clique in O(n^2)
 		if (clique == null) {
 			this.maximum = false;
-			clique = new HashMap<T, Boolean>();
+			clique = new HashMap<>();
 			for (T v : graph) clique.put(v, false);
 			
 			Set<T> V = new HashSet<>(graph.getCopyOfVertices()); // vertices that we can consider
-			Map<T, Integer> d = new HashMap<T, Integer>(); // degree vector of remaining vertices
+			Map<T, Integer> d = new HashMap<>(); // degree vector of remaining vertices
 			for (T v : graph) d.put(v, graph.getNeighborhood(v).size());
 			while (!V.isEmpty()) {
 				
@@ -166,7 +166,7 @@ public class Clique<T extends Comparable<T>> extends Invariant<T, Integer, Boole
 
 	/**
 	 * Returns the model as set, i.e., the clique as subset of the vertices.
-	 * @return
+	 * @return The clique as set.
 	 */
 	public Set<T> getClique() {
 		return getModel().entrySet().stream().filter( x -> x.getValue() ).map( x -> x.getKey()).collect(Collectors.toSet());

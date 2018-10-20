@@ -242,7 +242,7 @@ public class GreedyPermutationDecomposer<T extends Comparable<T>> implements Tre
 		for (int i = 0; i < graph.getNumVertices() && q.size() > 0; i++) {
 			if(workingCopy.getNumVertices() != q.size())
 				throw new RuntimeException("Queue is wrong???");
-			/***********************************************************************************
+			/*-**********************************************************************************
 			 * 				Check for termination. 
 			 * - Check if it make sense to finalize this decomposition by putting all remaining 
 			 * 		nodes into one single bag. If this yields a decomposition which improves 

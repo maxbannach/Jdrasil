@@ -47,7 +47,7 @@ public class JdrasilLogger {
     /** Local instance of the Logger. */
     private final static Logger LOGGER = Logger.getLogger(NAME);
 
-    /**
+    /*
      * Static constructor to set up logger configuration.
      *
      * Default configuration is:

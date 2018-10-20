@@ -32,7 +32,7 @@ import jdrasil.graph.Graph;
 import jdrasil.graph.TreeDecomposer;
 import jdrasil.graph.TreeDecomposition;
 import jdrasil.graph.TreeDecomposition.TreeDecompositionQuality;
-import jdrasil.utilities.sat.Formula;
+import jdrasil.sat.Formula;
 import jdrasil.utilities.logging.JdrasilLogger;
 
 /**
@@ -97,7 +97,7 @@ public class ExactDecomposer<T extends Comparable<T>> implements TreeDecomposer<
 		// first compute lower and upper bounds on the tree-width
 		int lb = new MinorMinWidthLowerbound<>(reduced).call();
 		LOG.info("Computed lower bound: " + lb);
-		TreeDecomposition<T> ubDecomposition = new StochasticGreedyPermutationDecomposer<T>(reduced).call();
+		TreeDecomposition<T> ubDecomposition = new StochasticGreedyPermutationDecomposer<>(reduced).call();
 		int ub = ubDecomposition.getWidth();
 		LOG.info("Computed upper bound: " + ub);
 

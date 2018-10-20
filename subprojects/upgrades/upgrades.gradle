@@ -62,7 +62,7 @@ task cinterface(type: Exec, description: "Building Jdrasil's C-interface (needed
   commandLine "javah", "-jni",
   "-cp", classesDir,
   "-d", ipasirDir,
-  "jdrasil.utilities.sat.NativeSATSolver"
+  "jdrasil.sat.NativeSATSolver"
 }
 
 /** 

@@ -16,11 +16,11 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.utilities.sat.encodings;
+package jdrasil.sat.encodings;
 
 import java.util.Set;
 
-import jdrasil.utilities.sat.Formula;
+import jdrasil.sat.Formula;
 
 /**
  * This class implements an incremental cardinality constraint for a given (fixed) formula 
@@ -72,8 +72,8 @@ public class IncrementalCardinalityEncoder {
 	 * The constructor will compute the sorting network and add it to the formula.
 	 * I.e., this method _will modify_ phi already. 
 	 * The constructor will not add any cardinality constraints what so ever, just the sorting network.
-	 * @param phi
-	 * @param variables
+	 * @param phi The formula.
+	 * @param variables The variables affected by the constraint.
 	 */
 	public IncrementalCardinalityEncoder(Formula phi, Set<Integer> variables) {
 		this.phi = phi;
@@ -107,8 +107,8 @@ public class IncrementalCardinalityEncoder {
 	 * Computes the sorting network for the output gates in the given range (i.e., "sorts" the given range).
 	 * This method will call its save recursively and will change the variables in @see output to variables that represent the output
 	 * of comparators. 
-	 * @param low
-	 * @param high
+	 * @param low The left index.
+	 * @param high The right index.
 	 */
 	private void computeNetwork(int low, int high) {
 		if (low >= high) return;
@@ -120,9 +120,9 @@ public class IncrementalCardinalityEncoder {
 	
 	/**
 	 * Merge to "sorted" lists to a new one, i.e., replaces variables by the result of comparators.
-	 * @param low
-	 * @param high
-	 * @param r
+	 * @param low The left index.
+	 * @param high The right index.
+	 * @param r The depth of the network.
 	 */
 	private void merge(int low, int high, int r) {
 		int step = 2 * r;
@@ -138,8 +138,8 @@ public class IncrementalCardinalityEncoder {
 	/**
 	 * Replaces the variables output[i] and output[j] with new auxiliary variables, that represent
 	 * the result of a comparison of the two values (of a corresponding model, not the variable names).
-	 * @param i
-	 * @param j
+	 * @param i The first index.
+	 * @param j The second index.
 	 */
 	private void addComparator(int i, int j) {
 
@@ -167,7 +167,7 @@ public class IncrementalCardinalityEncoder {
 	/**
 	 * Adds an at least k constraint (for the initial variables) to the formula.
 	 * This will add a single unit clause and is equivalent to @see literalForAtLeast followed by @see Formula.addClause.
-	 * @param k
+	 * @param k The bound.
 	 */
 	public void addAtLeast(int k) {
 		int var = literalForAtLeast(k);
@@ -178,7 +178,7 @@ public class IncrementalCardinalityEncoder {
 	/**
 	 * Adds an at most k constraint (for the initial variables) to the formula.
 	 * This will add a single unit clause and is equivalent to @see literalForAtMost followed by @see Formula.addClause.
-	 * @param k
+	 * @param k The bound.
 	 */
 	public void addAtMost(int k) {
 		int var = literalForAtMost(k);
@@ -193,8 +193,8 @@ public class IncrementalCardinalityEncoder {
 	 * This method assumes \(k \gt 0\) and \(k \leq n\), since at least 0 does would have no effect; and at least most then n has no meaning.
 	 * In case of \(k \le 0\) or \(k \gt n\), this method will return 0;
 	 * 
-	 * @param k
-	 * @return
+	 * @param k The bound.
+	 * @return The literal.
 	 */
 	public int literalForAtLeast(int k) {
 		if (k <= 0 || k > n) return 0;
@@ -209,8 +209,8 @@ public class IncrementalCardinalityEncoder {
 	 * For \(k \ge n\), this method returns 0;
 	 * On the other hand, k is not allowed to be negative, since this makes no sense. In this case the method also returns 0.
 	 * 
-	 * @param k
-	 * @return
+	 * @param k The bound.
+	 * @return The literal.
 	 */
 	public int literalForAtMost(int k) {
 		if (k < 0 || k >= n) return 0;

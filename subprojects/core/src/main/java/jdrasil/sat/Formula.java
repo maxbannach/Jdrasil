@@ -16,7 +16,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.utilities.sat;
+package jdrasil.sat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jdrasil.utilities.sat.ISATSolver.SATSolverNotAvailableException;
-import jdrasil.utilities.sat.encodings.BasicCardinalityEncoder;
-import jdrasil.utilities.sat.encodings.DecreasingCardinalityEncoder;
-import jdrasil.utilities.sat.encodings.IncrementalCardinalityEncoder;
+import jdrasil.sat.ISATSolver.SATSolverNotAvailableException;
+import jdrasil.sat.encodings.BasicCardinalityEncoder;
+import jdrasil.sat.encodings.DecreasingCardinalityEncoder;
+import jdrasil.sat.encodings.IncrementalCardinalityEncoder;
 
 /**
  * This class represents a formula of propositional logic in CNF.
@@ -42,7 +42,7 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * Checks if Jdrasil can register a SAT solver to the formula, that is, checks
 	 * whether or not there is a SAT solver in Jdrasils class or library path.
-	 * @return
+	 * @return True if Jdrasil has found a SAT-Solver.
 	 */
 	public static boolean canRegisterSATSolver() {
 		if (NativeSATSolver.isAvailable()) return true;
@@ -128,7 +128,7 @@ public class Formula implements Iterable<List<Integer>> {
 	public Formula() {
 		data = new ArrayList<>();
 		variables = new HashSet<>();
-		auxiliaryVariables = new HashSet<Integer>();
+		auxiliaryVariables = new HashSet<>();
 		this.incrementalEncoder = new HashMap<>();
 		this.decreasingEncoder = new HashMap<>();
 		highestVariable = 0;
@@ -138,12 +138,12 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * Initialize the formula and the stored data structures.
 	 * The value of the expected number of clauses to preallocate memory.
-	 * @param expectedClauses
+	 * @param expectedClauses The expected number of clauses.
 	 */
 	public Formula(int expectedClauses) {
 		data = new ArrayList<>(expectedClauses);
 		variables = new HashSet<>();
-		auxiliaryVariables = new HashSet<Integer>();
+		auxiliaryVariables = new HashSet<>();
 		highestVariable = 0;
 		solver = null;
 	}
@@ -153,7 +153,7 @@ public class Formula implements Iterable<List<Integer>> {
 	 * as well as calling add(0);
 	 * A ISATSolver must be registered in order to use this method.
 	 * 
-	 * @param C
+	 * @param C The clause that will be added to the formula.
 	 */
 	private void transferClauseToSolver(List<Integer> C) {
 		for (int literal : C) {
@@ -169,7 +169,7 @@ public class Formula implements Iterable<List<Integer>> {
 	 * manually. However, sometimes one wishes to "register" and variable before we use it. In this case
 	 * this method is useful.
 	 * 
-	 * @param var
+	 * @param var The variable that will be added to the formula.
 	 */
 	public void addVariable(int var) {
 		if (variables.contains(var) || auxiliaryVariables.contains(var)) return;
@@ -179,7 +179,7 @@ public class Formula implements Iterable<List<Integer>> {
 	
 	/**
 	 * Works as @see addVariable, but finds a safe variable number by it self and returns the new variable.
-	 * @return
+	 * @return A freshly added variable.
 	 */
 	public int newVariable() {
 		int newVar = this.highestVariable+1;
@@ -190,7 +190,7 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * Works as @see addVariable, but finds a safe variable number by it self and returns the new variable.
 	 * Marks the variable as auxiliary was well.
-	 * @return
+	 * @return A freshly added variable.
 	 */
 	public int newAuxillaryVariable() {
 		int newVar = this.highestVariable + 1;
@@ -202,7 +202,7 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * Add a clause to the formula.
 	 * If a SATSolver is registered, this will also transfer the clause directly to the solver.
-	 * @param C
+	 * @param C The clause that will be added to the Formula.
 	 */
 	public void addClause(List<Integer> C) {
 		for (Integer literal : C) {
@@ -215,7 +215,7 @@ public class Formula implements Iterable<List<Integer>> {
 
 	/**
 	 * Add a clause to the formula in form of a set of (non zero) integers.
-	 * @param vars
+	 * @param vars Variables that form the clause.
 	 */
 	public void addClause(Set<Integer> vars) {
 		List<Integer> C = new ArrayList<>(vars.size());
@@ -275,8 +275,8 @@ public class Formula implements Iterable<List<Integer>> {
 	
 	/**
 	 * Abbreviation for @see removeClause(List C)
-	 * @param vars
-	 * @throws SATSolverRegisteredException
+	 * @param vars The clause to be removed.
+	 * @throws SATSolverRegisteredException If there is an error with the solver.
 	 */
 	public void removeClause(Integer... vars) throws SATSolverRegisteredException {
 		List<Integer> C = new ArrayList<>(vars.length);
@@ -286,29 +286,25 @@ public class Formula implements Iterable<List<Integer>> {
 	
 	/**
 	 * Set the status of the variable to "auxiliary".
-	 * @param var
+	 * @param var The variable to be marked as auxiliary.
 	 */
 	public void markAuxiliary(Integer var) {
-		if (variables.contains(var)) {
-			variables.remove(var);
-		}
+        variables.remove(var);
 		auxiliaryVariables.add(var);
 	}
 	
 	/**
 	 * Set the status of the variable to be a "normal variable".
-	 * @param var
+	 * @param var The variable to be unmarked.
 	 */
 	public void unmarkAuxiliary(Integer var) {
-		if (auxiliaryVariables.contains(var)) {
-			auxiliaryVariables.remove(var);
-		}
+        auxiliaryVariables.remove(var);
 		variables.add(var);
 	}
 	
 	/**
 	 * Get a set with the variables used in this formula.
-	 * @return
+	 * @return The variables in the formula
 	 */
 	public Set<Integer> getVariables() {
 		return variables;
@@ -316,7 +312,7 @@ public class Formula implements Iterable<List<Integer>> {
 	
 	/**
 	 * Get a set with the auxiliary variables of this formula.
-	 * @return
+	 * @return The auxiliary variables in the formula
 	 */
 	public Set<Integer> getAuxiliaryVariables() {
 		return auxiliaryVariables;
@@ -326,10 +322,10 @@ public class Formula implements Iterable<List<Integer>> {
 	 * Return a set of all variables used in this formula.
 	 * This method actually computes the set from the set of variables and the set of
 	 * auxiliary variables, i.e., the time is not constant.
-	 * @return
+	 * @return The set of all variables.
 	 */
 	public Set<Integer> getAllVariables() {
-		Set<Integer> S = new HashSet<Integer>();
+		Set<Integer> S = new HashSet<>();
 		S.addAll(getVariables());
 		S.addAll(getAuxiliaryVariables());
 		return S;
@@ -337,7 +333,7 @@ public class Formula implements Iterable<List<Integer>> {
 	
 	/**
 	 * Return the number of clauses stored in this formula.
-	 * @return
+	 * @return The number of clauses.
 	 */
 	public int numberOfClauses() {
 		return data.size();
@@ -345,7 +341,7 @@ public class Formula implements Iterable<List<Integer>> {
 	
 	/**
 	 * Return the number of variables used in this formula.
-	 * @return
+	 * @return The number of variables.
 	 */
 	public int numberOfVariables() {
 		return variables.size();
@@ -353,7 +349,7 @@ public class Formula implements Iterable<List<Integer>> {
 	
 	/**
 	 * Return the number of auxiliary variables used in this formula
-	 * @return
+	 * @return The number of auxiliary variables.
 	 */
 	public int numberOfAuxiliaryVariables() {
 		return auxiliaryVariables.size();
@@ -361,7 +357,7 @@ public class Formula implements Iterable<List<Integer>> {
 	
 	/**
 	 * Return the total number of variables used in this formula.
-	 * @return
+	 * @return Number of variables + number of uxiliary variables.
 	 */
 	public int numberOfAllVariables() {
 		return numberOfVariables() + numberOfAuxiliaryVariables();
@@ -370,7 +366,7 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * Get the "name" of the highest variable used in this formula.
 	 * This value should be used to identify an range of "fresh" variables.
-	 * @return
+	 * @return The name of the highest variable used.
 	 */
 	public Integer getHighestVariable() {
 		return highestVariable;
@@ -379,7 +375,7 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * Set the (name of the) highest variable, this may be needed if an algorithms will add new variables,
 	 * but did not add them to the formula yet. 
-	 * @param value
+	 * @param value Set name of highest variable.
 	 */
 	public void setHighestVariable(Integer value) {
 		this.highestVariable = value;
@@ -388,7 +384,7 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * Compute a logic and of this formula and another one.
 	 * This is done by simply adding the clauses of the other formula to this one.
-	 * @param psi
+	 * @param psi The formula that is combined to this formula.
 	 */
 	public void and(Formula psi) {
 		for (List<Integer> C : psi) {
@@ -399,8 +395,8 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * Adds an at-most-k constraint to the formula with respect to the given set of variables,
 	 * i.e., only models that set not more the k of the given variables of true can satisfy the formula.
-	 * @param k
-	 * @param variables
+	 * @param k The bound.
+	 * @param variables The variables for which the constraint shall hold.
 	 */
 	public void addAtMost(int k, Set<Integer> variables) {
 		
@@ -428,8 +424,8 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * Adds an at-least-k constraint to the formula with respect to the given set of variables,
 	 * i.e., only models that set k ore more of the given variables of true can satisfy the formula.
-	 * @param k
-	 * @param variables
+     * @param k The bound.
+     * @param variables The variables for which the constraint shall hold.
 	 */
 	public void addAtLeast(int k, Set<Integer> variables) {
 		
@@ -471,9 +467,9 @@ public class Formula implements Iterable<List<Integer>> {
 	 *  
 	 * This methods adds O(n*log^2 n) variables to the formula, so it is also worth for big k.
 	 *  
-	 * @param lb
-	 * @param ub
-	 * @param variables
+	 * @param lb The lowerbound.
+	 * @param ub The upperbound
+	 * @param variables The variables for which the constraint shall hold.
 	 */
 	public void addCardinalityConstraint(int lb, int ub, Set<Integer> variables) {
 		if (!incrementalEncoder.containsKey(variables)) {
@@ -488,9 +484,9 @@ public class Formula implements Iterable<List<Integer>> {
 	 * This method works similar as @see addCardinalityConstraint(), but does only support atMostK-constraints.
 	 * 
 	 * It adds O(k*n) variables to the formula, so it is only valuable for small k.
-	 * 
-	 * @param k
-	 * @param variables
+	 *
+     * @param k The bound.
+     * @param variables The variables for which the constraint shall hold.
 	 */
 	public void addDecreasingAtMost(int k, Set<Integer> variables) {
 		if (!decreasingEncoder.containsKey(variables)) {
@@ -505,11 +501,11 @@ public class Formula implements Iterable<List<Integer>> {
 	 * so that this method can be used incrementally as well).
 	 * 
 	 * As this method does make an assumption, it only works if a SAT solver is registered (other wise a @see NoSATSolverRegisteredException will be thrown).
-	 *  
-	 * @param lb
-	 * @param ub
-	 * @param variables
-	 * @throws NoSATSolverRegisteredException
+	 *
+     * @param lb The lowerbound.
+     * @param ub The upperbound
+     * @param variables The variables for which the constraint shall hold.
+	 * @throws NoSATSolverRegisteredException If something went wrong with the solver.
 	 */
 	public void assumeCardinalityConstraint(int lb, int ub, Set<Integer> variables) throws NoSATSolverRegisteredException {
 		if (this.solver == null) throw new NoSATSolverRegisteredException();
@@ -535,8 +531,8 @@ public class Formula implements Iterable<List<Integer>> {
 	 * 
 	 * You can check whether or not this method will throw an exception with @see canRegisterSATSolver()
 	 * 
-	 * @return String the signature of the loaded solver
-	 * @throws SATSolverNotAvailableException if Jdrasil has no access to any SATSolver
+	 * @return String the signature of the loaded solver.
+	 * @throws SATSolverNotAvailableException if Jdrasil has no access to any SATSolver.
 	 */
 	public String registerSATSolver() throws ISATSolver.SATSolverNotAvailableException {
 		
@@ -603,8 +599,8 @@ public class Formula implements Iterable<List<Integer>> {
 	 * If the formula is satisfiable, this method can be used to obtain a model.
 	 * A model will only be available if @see isSatisfiable() was called and has returned true.
 	 * The model will correspond to the last (successful) call of @see isSatisfiable().
-	 * @return
-	 * @throws NoModelAvailableException
+	 * @return The model of the formula.
+	 * @throws NoModelAvailableException If the formula was not solved yet.
 	 */
 	public Map<Integer, Boolean> getModel() throws NoModelAvailableException {
 		if (this.model == null) {
@@ -621,6 +617,7 @@ public class Formula implements Iterable<List<Integer>> {
 	/**
 	 * An iterator that iterates over the clauses of the formula, i.e.,
 	 * over the lists that represent such clauses.
+     * @return An iterator over the clauses.
 	 */
 	class ClauseIterator implements Iterator<List<Integer>> {
 		private final Iterator<List<Integer>> itr;

@@ -21,10 +21,6 @@ package jdrasil.algorithms.upperbounds;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-/**
- * StochasticGreedyPermutationDecomposer.java
- * @author bannach
- */
 import java.util.logging.Logger;
 
 import jdrasil.Heuristic;

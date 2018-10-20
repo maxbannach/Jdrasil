@@ -58,7 +58,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 	
 	private static final long serialVersionUID = -6506030235954373541L;
 	
-	/**
+	/*
 	 * The graph is stored as adjacency list, i.e., for every vertex of the graph
 	 * there is one entry in the map that points to a list of neighbors.
 	 */
@@ -573,13 +573,13 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 				}
 			}
 			
-			/**
+			/*
 			 * Actually update the fill-values. Distinguish 3 cases: 
 			 */
 			for(T u : getNeighborhood(v)){
 				if(N_u.get(u).size() > 0){
 					if(N_a.get(u).size() > 0){
-						/**
+						/*
 						 * N_u and N_a are non-empty. 
 						 */
 						// Count the number of edges between nodes in N_a and N_u. All of them will appear newly in the neighbourhood of u!
@@ -605,7 +605,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 						predicedValues.put(u, n-newFill);
 					}
 					else{
-						/**
+						/*
 						 * N_a is empty. 
 						 * This is, u will not get any new neighbours. 
 						 */
@@ -620,7 +620,7 @@ public class Graph<T extends Comparable<T>> implements Iterable<T>, Serializable
 					}
 				}
 				else{
-					/**
+					/*
 					 * There are no unaffected neighbours. This is, after eliminating v, the neighbours of u will form a clique, thus, the new fill value will equal zero! 
 					 */
 					int n = N_e.get(u).size() + N_a.get(u).size();

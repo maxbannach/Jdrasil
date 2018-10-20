@@ -16,13 +16,13 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.utilities.sat.encodings;
+package jdrasil.sat.encodings;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import jdrasil.utilities.sat.Formula;
+import jdrasil.sat.Formula;
 
 /**
  * An decreasing cardinality constraint is an "atMostK" constraint that is reduced between multiple calls 
@@ -51,9 +51,9 @@ public class DecreasingCardinalityEncoder {
 	/**
 	 * The constructor will encode the sequential counter (i.e., modify the formula), but will not yet
 	 * add an constraint to it.
-	 * @param phi
-	 * @param k
-	 * @param variables
+	 * @param phi The formula to which the constraint is added,
+	 * @param k The bound.
+	 * @param variables The variables to which the constraint is applied.
 	 */
 	public DecreasingCardinalityEncoder(Formula phi, int k, Set<Integer> variables) {
 		this.phi = phi;
@@ -65,7 +65,7 @@ public class DecreasingCardinalityEncoder {
 	/**
 	 * Encodes the base sequential counter into the formula.
 	 * After this, k can only be decreased.
-	 * @param variables
+	 * @param variables The variables to which the constraint is applied.
 	 */
 	private void addSequentialCounter(Set<Integer> variables) {
 		inputVariables = new ArrayList<>(variables);
@@ -122,7 +122,7 @@ public class DecreasingCardinalityEncoder {
 	/**
 	 * Adds an atMostK constraint to the formula. This will only add new clauses, not new variables.
 	 * This method has only an effect if k is smaller then the last k and is not negative.
-	 * @param k
+	 * @param k The bound.
 	 */
 	public void addAtMost(int k) {
 		if (k < 0 || k >= this.k) return;

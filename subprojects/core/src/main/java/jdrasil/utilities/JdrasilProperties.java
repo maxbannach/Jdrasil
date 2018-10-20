@@ -37,7 +37,7 @@ public class JdrasilProperties {
     /** Version of the program. */
     private static final float VERSION = 0.1f;
 
-    /** Static constructor for the properties object. */
+    /* Static constructor for the properties object. */
     static {
         properties = new Properties();
     }

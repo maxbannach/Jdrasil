@@ -39,7 +39,7 @@ public class Bag<T extends Comparable<T>> implements Comparable<Bag<T>>, Seriali
 	
 	/**
 	 * A bag is just constructed with corresponding vertices.
-	 * @param vertices
+	 * @param vertices Vertices added to the bag.
 	 */
 	Bag(Set<T> vertices, int id) {
 		this.vertices = vertices;

@@ -83,7 +83,7 @@ public class BitSetTrie {
      * have to iterate over the whole bitmask which gives us the \(O(|U|)\) term (which is still fast because its a
      * simple bit iteration).
      *
-     * @param s
+     * @param s The bitset we add.
      */
     public void insert(BitSet s) {
         if (s.cardinality() == 0) { containsEmptySet = true; return; } // empty set is special
@@ -115,8 +115,8 @@ public class BitSetTrie {
      * have to iterate over the whole bitmask which gives us the \(O(|U|)\) term (which is still fast because its a
      * simple bit iteration).
      *
-     * @param s
-     * @return
+     * @param s The bitset we test.
+     * @return True if the bitset is contained in the tree.
      */
     public boolean contains(BitSet s) {
         if (s.cardinality() == 0) return containsEmptySet; // handle empty set
@@ -143,7 +143,7 @@ public class BitSetTrie {
      * have to iterate over the whole bitmask which gives us the \(O(|U|)\) term (which is still fast because its a
      * simple bit iteration).
      *
-     * @param s
+     * @param s The bitset we want to remove.
      */
     public void remove(BitSet s) {
         if (s.cardinality() == 0) { containsEmptySet = false; return; } // handle empty set
@@ -178,8 +178,8 @@ public class BitSetTrie {
     /**
      * Returns an iterator over the subsets of the given set s that are stored in the trie.
      * If the given set is stored in the trie, the iterator will iterate over it as well.
-     * @param s
-     * @return
+     * @param s The bitset we query.
+     * @return An iterator over contained subsets.
      */
     public Iterable<BitSet> getSubSets(BitSet s) {
         return new Iterable<BitSet>() {
@@ -256,8 +256,8 @@ public class BitSetTrie {
     /**
      * Returns an iterator over the inclusion maximal subsets of the given set s that are stored in the trie.
      * If the given set is stored in the trie, the iterator will iterate over it as well.
-     * @param s
-     * @return
+     * @param s The bitset we query.
+     * @return An iterator over bitsets that contain the given one.
      */
     public Iterable<BitSet> getMaxSubSets(BitSet s) {
         return new Iterable<BitSet>() {
@@ -336,8 +336,8 @@ public class BitSetTrie {
     /**
      * Returns an iterator over supersets of the given set s.
      * If the given set is stored in the trie, the iterator will iterate over it as well.
-     * @param s
-     * @return
+     * @param s The bitset we query.
+     * @return An iterator over supersets.
      */
     public Iterable<BitSet> getSuperSets(BitSet s) {
         return new Iterable<BitSet>() {

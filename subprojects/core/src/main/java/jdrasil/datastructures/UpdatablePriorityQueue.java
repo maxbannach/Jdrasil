@@ -1,6 +1,3 @@
-/**
- * 
- */
 package jdrasil.datastructures;
 
 import java.util.ArrayList;

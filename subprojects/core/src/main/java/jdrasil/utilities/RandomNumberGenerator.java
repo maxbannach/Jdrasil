@@ -36,7 +36,7 @@ public class RandomNumberGenerator {
     /** The random source of Jdrasil. */
     private static Random dice;
 
-    /** Static constructor that just will load the Random object. */
+    /* Static constructor that just will load the Random object. */
     static {
         dice = new Random();
     }

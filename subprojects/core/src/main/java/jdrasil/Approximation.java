@@ -42,7 +42,7 @@ public class Approximation {
     /**
      * Entry point to Jdrasil in approximation mode. The program, started with this method, will read a graph from standard
      * input and compute an tree decomposition of width at most 4k+4.
-     * @param args
+     * @param args Program arguments, see manual.
      */
     public static void main(String[] args) {
 

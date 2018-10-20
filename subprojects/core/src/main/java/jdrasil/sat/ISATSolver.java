@@ -16,7 +16,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.utilities.sat;
+package jdrasil.sat;
 
 
 
@@ -30,13 +30,13 @@ package jdrasil.utilities.sat;
 public interface ISATSolver {
 
 	/** This value is returned by @see solve if the formula is satisfiable */
-	final int SATISFIABLE   = 10;
+	int SATISFIABLE   = 10;
 	
 	/** This value is returned by @see solve if the formula is unsatisfiable */	
-	final int UNSATISFIABLE = 20;
+	int UNSATISFIABLE = 20;
 	
 	/** This value is returned by @see solve if the solving process was canceld */
-	final int UNKNOWN       = 0;
+	int UNKNOWN       = 0;
 		
 	/**
 	 * The solver can be in three different states (after the IPASIR interface).
@@ -51,20 +51,20 @@ public interface ISATSolver {
 	/**
 	 * Set the state of the sat solver with respect to the IPASIR interface.
 	 * When ever the state of the solver changes, an implementation of this interface should call this method.
-	 * @param state
+	 * @param state The state in which the sat solver is.
 	 */
 	void setCurrentState(State state);
 
 	/**
 	 * Gets the current state of the solver.
-	 * @see ISATSolver#setCurrentState(jdrasil.utilities.sat.ISATSolver.State) and @see State
-	 * @return
+	 * @see ISATSolver#setCurrentState(jdrasil.sat.ISATSolver.State) and @see State
+	 * @return The current state of the solver.
 	 */
 	State getCurrentState();
 
 	/**
 	 * Gets a string representing the solver / the used library, i.e., its name.
-	 * @return
+	 * @return Return string representation of the solver.
 	 */
 	String signature();
 	
@@ -146,8 +146,8 @@ public interface ISATSolver {
 	 * 
 	 * If called for a native solver, use the pointer stored in the callingObject to identify the solver.
 	 * 
-	 * @param literal
-	 * @return
+	 * @param literal The literal to be checked.
+	 * @return True if the literal was required to proof unsatisfiability.
 	 * 
 	 * State: UNSAT to UNSAT
 	 */

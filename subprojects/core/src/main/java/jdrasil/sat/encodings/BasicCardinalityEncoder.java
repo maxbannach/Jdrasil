@@ -16,7 +16,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.utilities.sat.encodings;
+package jdrasil.sat.encodings;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import jdrasil.utilities.sat.Formula;
+import jdrasil.sat.Formula;
 
 /**
  * This class provides methods to encode cardinality constraints into a formula of propositional logic.
@@ -44,7 +44,7 @@ public class BasicCardinalityEncoder {
 			
 	//MARK: Binomial Encoding
 	
-	/** @see BasicCardinalityEncoder#binomialAMK(jdrasil.utilities.sat.Formula, java.util.Set, int) */
+	/** @see BasicCardinalityEncoder#binomialAMK(jdrasil.sat.Formula, java.util.Set, int) */
 	private static void binomialAMK(Formula phi, List<Integer> variables, List<Integer> C, int k, int pos) {
 		
 		// construction of subset complete
@@ -68,9 +68,9 @@ public class BasicCardinalityEncoder {
 	 * Add an At-Most-k cardinality constraint for the given set of variables to the formula.
 	 * This method encodes the constraint using the binomial encoding, which uses n^k new clauses, but
 	 * does not introduce new variables.
-	 * @param phi
-	 * @param variables
-	 * @param k
+     * @param phi The formula to which the constraint is added,
+     * @param variables The variables to which the constraint is applied.
+     * @param k The bound.
 	 */
 	public static void binomialAMK(Formula phi, Set<Integer> variables, int k) {
 		binomialAMK(phi, new ArrayList<>(variables), new LinkedList<>(), k+1, 0);
@@ -79,9 +79,9 @@ public class BasicCardinalityEncoder {
 	/**
 	 * Add an At-Least-k cardinality constraint for the given set of variables to the formula.
 	 * This method encodes the constraint using the binomial At-Most-(n-k) constraint.
-	 * @param phi
-	 * @param variables
-	 * @param k
+     * @param phi The formula to which the constraint is added,
+     * @param variables The variables to which the constraint is applied.
+     * @param k The bound.
 	 */
 	public static void binomialALK(Formula phi, Set<Integer> variables, int k) {
 		List<Integer> neg = new ArrayList<>(variables);
@@ -94,9 +94,9 @@ public class BasicCardinalityEncoder {
 	/**
 	 * Add an At-Most-k cardinality constraint to the given formula using the binary encoding.
 	 * This encoding introduce O(kn log n) clauses and O(kn) new variables.
-	 * @param phi
-	 * @param variables
-	 * @param k
+     * @param phi The formula to which the constraint is added,
+     * @param variables The variables to which the constraint is applied.
+     * @param k The bound.
 	 */
 	public static void binaryAMK(Formula phi, Set<Integer> variables, int k) {
 		List<Integer> vars = new ArrayList<>(variables);
@@ -161,9 +161,9 @@ public class BasicCardinalityEncoder {
 	/**
 	 * Add an At-Least-k cardinality constraint for the given set of variables to the formula.
 	 * This method encodes the constraint using the binary At-Most-(n-k) constraint.
-	 * @param phi
-	 * @param variables
-	 * @param k
+     * @param phi The formula to which the constraint is added,
+     * @param variables The variables to which the constraint is applied.
+     * @param k The bound.
 	 */
 	public static void binaryALK(Formula phi, Set<Integer> variables, int k) {
 		Set<Integer> neg = new HashSet<>();
@@ -176,9 +176,9 @@ public class BasicCardinalityEncoder {
 	/**
 	 * Add an At-Most-k cardinality constraint to the given formula using the sequential counter encoding.
 	 * This encoding introduce O(kn) clauses and O(kn) new variables.
-	 * @param phi
-	 * @param variables
-	 * @param k
+     * @param phi The formula to which the constraint is added,
+     * @param variables The variables to which the constraint is applied.
+     * @param k The bound.
 	 */
 	public static void sequentialAMK(Formula phi, Set<Integer> variables, int k) {
 		
@@ -236,9 +236,9 @@ public class BasicCardinalityEncoder {
 	/**
 	 * Add an At-Least-k cardinality constraint for the given set of variables to the formula.
 	 * This method encodes the constraint using the sequential counter At-Most-(n-k) constraint.
-	 * @param phi
-	 * @param variables
-	 * @param k
+     * @param phi The formula to which the constraint is added,
+     * @param variables The variables to which the constraint is applied.
+     * @param k The bound.
 	 */
 	public static void sequentialALK(Formula phi, Set<Integer> variables, int k) {
 		

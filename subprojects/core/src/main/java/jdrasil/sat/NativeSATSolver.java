@@ -16,7 +16,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.utilities.sat;
+package jdrasil.sat;
 
 
 /**
@@ -27,7 +27,7 @@ package jdrasil.utilities.sat;
  */
 class NativeSATSolver implements ISATSolver {
 	
-	/**
+	/*
 	 * The static constructor of the NativeSATSolver tries to load the native library (i.e., if it is available
 	 * in JDrasils library.path). If this is the case, the library is loaded and @see isAvailable() will return true, otherwise
 	 * the library is not loaded and @see isAvailable() will return false.
@@ -38,7 +38,7 @@ class NativeSATSolver implements ISATSolver {
 			 System.loadLibrary("jdrasil_sat_NativeSATSolver");
 			 success = true;
 		 } catch (UnsatisfiedLinkError e) {
-			 success = false; 
+			 // success = false;
 		 }		
 		 libraryLoaded = success;
 	 }
@@ -69,7 +69,7 @@ class NativeSATSolver implements ISATSolver {
 	  * otherwise this method will generate an exception.
 	  * You can check whether or not a native solver is available by calling @see isAvailable()
 	  * 
-	  * @throws SATSolverNotAvailableException
+	  * @throws SATSolverNotAvailableException if no SAT-Solver is present.
 	  */
 	 NativeSATSolver() throws SATSolverNotAvailableException {
 		 if (!NativeSATSolver.isAvailable()) throw new ISATSolver.SATSolverNotAvailableException();
@@ -92,7 +92,7 @@ class NativeSATSolver implements ISATSolver {
 	 
 	 /*
 	  * (non-Javadoc)
-	  * @see jdrasil.utilities.sat.ISATSolver#setCurrentState(jdrasil.utilities.sat.ISATSolver.State)
+	  * @see jdrasil.sat.ISATSolver#setCurrentState(jdrasil.sat.ISATSolver.State)
 	  */
 	 @Override
 	 public void setCurrentState(State state) {
@@ -101,7 +101,7 @@ class NativeSATSolver implements ISATSolver {
 	 
 	 /*
 	  * (non-Javadoc)
-	  * @see jdrasil.utilities.sat.ISATSolver#getCurrentState()
+	  * @see jdrasil.sat.ISATSolver#getCurrentState()
 	  */
 	 @Override
 	 public State getCurrentState() {
@@ -109,55 +109,55 @@ class NativeSATSolver implements ISATSolver {
 	 }
 	 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#signature()
+	 * @see jdrasil.sat.ISATSolver#signature()
 	 */
 	@Override
 	public native String signature();
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#init()
+	 * @see jdrasil.sat.ISATSolver#init()
 	 */
 	@Override
 	public native void init();
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#release()
+	 * @see jdrasil.sat.ISATSolver#release()
 	 */
 	@Override
 	public native void release();
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#add(int)
+	 * @see jdrasil.sat.ISATSolver#add(int)
 	 */
 	@Override
 	public native void add(int literal);
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#assume(int)
+	 * @see jdrasil.sat.ISATSolver#assume(int)
 	 */
 	@Override
 	public native void assume(int literal);
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#solve()
+	 * @see jdrasil.sat.ISATSolver#solve()
 	 */
 	@Override
 	public native int solve();
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#val(int)
+	 * @see jdrasil.sat.ISATSolver#val(int)
 	 */
 	@Override
 	public native int val(int literal);
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#failed(int)
+	 * @see jdrasil.sat.ISATSolver#failed(int)
 	 */
 	@Override
 	public native boolean failed(int literal);
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#terminate()
+	 * @see jdrasil.sat.ISATSolver#terminate()
 	 */
 	@Override
 	public native void terminate();

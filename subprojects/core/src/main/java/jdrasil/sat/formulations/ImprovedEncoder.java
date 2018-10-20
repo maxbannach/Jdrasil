@@ -16,13 +16,13 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.utilities.sat.formulations;
+package jdrasil.sat.formulations;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import jdrasil.graph.Graph;
-import jdrasil.utilities.sat.Formula;
+import jdrasil.sat.Formula;
 
 /**
  * This class produces to a given graph G=(V,E) a formula phi that is satisfiable if, and only if,
@@ -36,7 +36,7 @@ public class ImprovedEncoder<T extends Comparable<T>> extends BaseEncoder<T> {
 
 	/**
 	 * The default constructor that initializes all variables. @see BaseEncoder()
-	 * @param graph
+	 * @param graph The graph that we encode.
 	 */
 	public ImprovedEncoder(Graph<T> graph) {
 		super(graph);	

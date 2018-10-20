@@ -16,7 +16,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.utilities.sat.formulations;
+package jdrasil.sat.formulations;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ import java.util.Set;
 import jdrasil.graph.Graph;
 import jdrasil.graph.invariants.Clique;
 import jdrasil.graph.invariants.TwinDecomposition;
-import jdrasil.utilities.sat.Formula;
+import jdrasil.sat.Formula;
 
 /**
  * This class produces to a given graph G=(V,E) a formula phi that is satisfiable if, and only if,
@@ -73,7 +73,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 	
 	/**
 	 * Default constructor that initializes all the variables.
-	 * @param graph
+	 * @param graph The graph that we encode.
 	 */
 	public BaseEncoder(Graph<T> graph) {
 		this.graph = graph;
@@ -305,7 +305,7 @@ public class BaseEncoder<T extends Comparable<T>> {
 	
 	/**
 	 * Getter for the actual, current formula that encodes that the initial graph has tree-width at most k.
-	 * @return
+	 * @return The formula.
 	 */
 	public Formula getFormula() {
 		return phi;
@@ -314,8 +314,8 @@ public class BaseEncoder<T extends Comparable<T>> {
 	/**
 	 * Given a model for the formula, this method computes an actual permutation of the vertices such that the elimination
 	 * of this permutation yields to an tree-decomposition of size at most k.
-	 * @param model
-	 * @return
+	 * @param model A model of the formula.
+	 * @return The elimination order encoded by the model.
 	 */
 	public List<T> getPermutation(Map<Integer, Boolean> model) {
 		List<T> permutation = new ArrayList<>(n);

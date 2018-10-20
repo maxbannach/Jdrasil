@@ -16,7 +16,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package jdrasil.utilities.sat;
+package jdrasil.sat;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -39,7 +39,7 @@ class SAT4JSolver implements ISATSolver {
 
 	 /**
 	  * Checks whether or not the SAT4J library is available.
-	  * @return 
+	  * @return True if SAT4J is loaded.
 	  */
 	 protected static boolean isAvailable() {
 		 try {
@@ -125,7 +125,7 @@ class SAT4JSolver implements ISATSolver {
 	
 	/**
 	 * The default constructor will just invoke @see init()
-	 * @throws SATSolverNotAvailableException 
+	 * @throws SATSolverNotAvailableException If SAT4J is not available.
 	 */
 	public SAT4JSolver() throws SATSolverNotAvailableException {
 		if (!SAT4JSolver.isAvailable()) throw new ISATSolver.SATSolverNotAvailableException();
@@ -136,7 +136,7 @@ class SAT4JSolver implements ISATSolver {
 	
 	/*
 	 * (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#setCurrentState(jdrasil.utilities.sat.ISATSolver.State)
+	 * @see jdrasil.sat.ISATSolver#setCurrentState(jdrasil.sat.ISATSolver.State)
 	 */
 	@Override
 	public void setCurrentState(State state) {
@@ -145,7 +145,7 @@ class SAT4JSolver implements ISATSolver {
 	
 	/*
 	 * (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#getCurrentState()
+	 * @see jdrasil.sat.ISATSolver#getCurrentState()
 	 */
 	@Override
 	public State getCurrentState() {
@@ -153,7 +153,7 @@ class SAT4JSolver implements ISATSolver {
 	}
 	
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#signature()
+	 * @see jdrasil.sat.ISATSolver#signature()
 	 */
 	@Override
 	public String signature() {
@@ -161,7 +161,7 @@ class SAT4JSolver implements ISATSolver {
 	}
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#init()
+	 * @see jdrasil.sat.ISATSolver#init()
 	 */
 	@Override
 	public void init() {
@@ -203,7 +203,7 @@ class SAT4JSolver implements ISATSolver {
 	}
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#release()
+	 * @see jdrasil.sat.ISATSolver#release()
 	 */
 	@Override
 	public void release() {
@@ -211,7 +211,7 @@ class SAT4JSolver implements ISATSolver {
 	}
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#add(int)
+	 * @see jdrasil.sat.ISATSolver#add(int)
 	 */
 	@Override
 	public void add(int literal) {
@@ -235,7 +235,7 @@ class SAT4JSolver implements ISATSolver {
 	}
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#assume(int)
+	 * @see jdrasil.sat.ISATSolver#assume(int)
 	 */
 	@Override
 	public void assume(int literal) {
@@ -250,7 +250,7 @@ class SAT4JSolver implements ISATSolver {
 	}
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#solve()
+	 * @see jdrasil.sat.ISATSolver#solve()
 	 */
 	@Override
 	public int solve() {
@@ -283,13 +283,13 @@ class SAT4JSolver implements ISATSolver {
 	}
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#val(int)
+	 * @see jdrasil.sat.ISATSolver#val(int)
 	 */
 	@Override
 	public int val(int literal) {
 		if (this.currentState != State.SAT) return UNKNOWN;
 		
-		Boolean value = (Boolean) null;
+		Boolean value = null;
 		try {
 			value = (boolean) model.invoke(this.solver, Math.abs(literal));
 		} catch (Exception e) {
@@ -301,7 +301,7 @@ class SAT4JSolver implements ISATSolver {
 	}
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#failed(int)
+	 * @see jdrasil.sat.ISATSolver#failed(int)
 	 */
 	@Override
 	public boolean failed(int literal) {
@@ -320,7 +320,7 @@ class SAT4JSolver implements ISATSolver {
 	}
 
 	/* (non-Javadoc)
-	 * @see jdrasil.utilities.sat.ISATSolver#terminate()
+	 * @see jdrasil.sat.ISATSolver#terminate()
 	 */
 	@Override
 	public void terminate() {

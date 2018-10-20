@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import jdrasil.graph.Graph;
-import jdrasil.utilities.sat.Formula;
+import jdrasil.sat.Formula;
 
 /**
  * A vertex-cover of a graph is a subset of its vertices such that every edge is incident to at least one of these vertices.
@@ -49,7 +49,7 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 	/**
 	 * Formulate the vertex-cover problem as SAT instance and solve it with a SAT solver (if possible).
 	 * Can return null, if there is no SAT solver or the SAT solver fails.
-	 * @return
+	 * @return The model as map.
 	 */
 	private Map<T, Boolean> computeWithSAT() {
 		// compute a bijection from the vertices to {1,...,n}
@@ -114,7 +114,7 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 		if (vertexCover == null) {
 			this.minimal = false;
 			// compute simple 2-approximation
-			vertexCover = new HashMap<T, Boolean>();
+			vertexCover = new HashMap<>();
 			for (T v : graph) vertexCover.put(v, false);
 			for (T v : graph) {				
 				for (T u : graph) {
@@ -144,7 +144,7 @@ public class VertexCover<T extends Comparable<T>> extends Invariant<T, Integer, 
 	
 	/**
 	 * Compute a set representation of the model. I.e., a set containing all vertices in the vertex-cover.
-	 * @return
+	 * @return The vertex-cover as set of vertices.
 	 */
 	public Set<T> getCover() {		
 		return getModel().entrySet().stream().filter(x -> x.getValue()).map(x -> x.getKey()).collect(Collectors.toSet());		
