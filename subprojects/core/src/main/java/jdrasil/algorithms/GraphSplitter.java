@@ -179,7 +179,7 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         if (mode.ordinal() >= targetConnectivity.ordinal()) mode = Connectivity.ATOM;
 
         // if connectivity is set to DC, we will only compute connected components (i.e., there is an empty separator).
-        if (mode == Connectivity.DC) {
+        if (mode == Connectivity.DC && graph.getConnectedComponents().size() > 1) {
             LOG.info("separate into connected components");
             return forkOnSeparator(new HashSet<>(), Connectivity.CC);
         }
