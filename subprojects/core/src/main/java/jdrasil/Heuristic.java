@@ -118,7 +118,7 @@ public class Heuristic implements sun.misc.SignalHandler {
                         break;
                 }
             }
-            if(!Heuristic.shutdownFlag){
+            if(!Heuristic.shutdownFlag && !JdrasilProperties.containsKey("instant")){
                 /* Compute a explicit decomposition */
                 tstart = System.nanoTime();
 
