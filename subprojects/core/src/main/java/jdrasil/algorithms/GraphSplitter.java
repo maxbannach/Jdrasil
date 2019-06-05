@@ -182,6 +182,8 @@ public class GraphSplitter<T extends Comparable<T>> extends RecursiveTask<TreeDe
         if (mode == Connectivity.DC && graph.getConnectedComponents().size() > 1) {
             LOG.info("separate into connected components");
             return forkOnSeparator(new HashSet<>(), Connectivity.CC);
+        } else if (mode == Connectivity.DC) {
+            mode = Connectivity.CC;
         }
 
         // if the graph is small, we will just solve it
