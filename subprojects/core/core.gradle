@@ -45,9 +45,14 @@ jar {
 
 /* Change name and place of the compiled jar. */
 jar.doFirst {
-  archiveName = "Jdrasil.jar"
-  destinationDir = jarDir
+  mkdir jarDir
+  destinationDirectory = jarDir
 }
+jar.doLast{
+ ant.copy file: "${buildDir}/libs/core.jar",
+           tofile: "${buildDir}/jars/Jdrasil.jar"
+}
+
 
 /* Enable mathjax in JavaDoc */
 javadoc.doFirst {
