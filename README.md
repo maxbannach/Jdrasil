@@ -8,8 +8,6 @@ Jdrasil is a library to compute tree decompositions of simple, undirected graphs
 
 Jdrasil is build in a very modular fashion. This allows researchers to simply add new algorithms, heuristics, or preprocessing routines, which can then be combined in any way.
 
-You can obtain the latest stable version of Jdrasil [here](https://maxbannach.github.io/Jdrasil/current/Jdrasil.jar). Use the [manual](https://maxbannach.github.io/Jdrasil/current/manual.pdf) for an overview of the features of Jdrasil, or browse the [JavaDoc](https://maxbannach.github.io/Jdrasil/javadoc) for some implementation details. You can also build the latest version of Jdrasil manually (see below).
-
 # Installation
 Jdrasil uses [Gradle](https://gradle.org) as build tool. Thanks to the gradle wrapper, nothing extra has to be installed in order to install Jdrasil.
 
