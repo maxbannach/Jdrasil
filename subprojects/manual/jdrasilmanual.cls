@@ -172,7 +172,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 \makeatletter
 \renewcommand{\maketitle}{%
 \pagestyle{empty}
-\newgeometry{ left = 2cm, right = 2cm, top = 2cm, bottom = 2cm}
+%\newgeometry{ left = 2cm, right = 2cm, top = 2cm, bottom = 2cm}
 
 ~\vspace{2.5cm}
 
@@ -191,7 +191,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 Compiled: \today{}
 \end{flushright}
 \clearpage
-\restoregeometry
+%\restoregeometry
 }
 \makeatother
 
